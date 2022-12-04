@@ -1,0 +1,33 @@
+# -*- encoding:utf-8 -*-
+"""
+date: 2020/11/1
+author: Berserker
+"""
+
+from sqlalchemy import Column, ForeignKey, BigInteger, Float, Integer
+from sqlalchemy.dialects.mysql import DATETIME
+from sqlalchemy.orm import relationship
+from .base import Base
+
+
+class KDataHourly(Base):
+    __tablename__ = 'k_data_hourly'
+    """
+    time: 交易所行情时间(YYYY-MM-DD HH:MM:SS.sss)
+    volume: 成交量(股)
+    """
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    time = Column(DATETIME(fsp=3), nullable=False)
+    stock_id = Column(Integer, ForeignKey('stock.id'), nullable=False)
+    stock = relationship('Stock', back_populates='k_data_hourly')
+    open = Column(Float, nullable=False)
+    high = Column(Float, nullable=False)
+    low = Column(Float, nullable=False)
+    close = Column(Float, nullable=False)
+    volume = Column(BigInteger, nullable=False)
+    amount = Column(Float, nullable=False)
+
+    def __repr__(self):
+        return "<KDataHourly time:%s stock_id:%s>" % (self.time, self.stock_id)
+    
