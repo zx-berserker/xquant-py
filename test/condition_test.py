@@ -3,11 +3,11 @@
 date: 2020/9/6
 author: Berserker
 """
-from src.tool.database.base import SQLAlchemy
-from src.models.stock import Stock
-from src.strategy.condition.base import ConditionTypeEnum
-from src.strategy.condition.volume_condition import VolumeChartPatternCondition
-from src.strategy.condition.price_condition import PriceChartPatternCondition
+from quant.tool.database.base import SQLAlchemy
+from quant.models.stock import Stock
+from quant.strategy.condition.base import ConditionTypeEnum
+from quant.strategy.condition.volume_condition import VolumeChartPatternCondition
+from quant.strategy.condition.price_condition import PriceChartPatternCondition
 
 
 def volume_test():

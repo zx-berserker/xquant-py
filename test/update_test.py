@@ -3,16 +3,16 @@
 date: 2020/8/30
 author: Berserker
 """
-from src.models import Shareholder, FloatShareholder, Stock, KDataDaily, KDataWeekly, KDataMonthly, KDataHourly
-from src.libs.enums import StockTypeEnum
-from src.spider.baostock.query_stock_info import QueryStockInfo
-from src.spider.east_money.shareholder_info import ShareholderInfo
-from src.spider.spider_task_factory import ShareholderSpiderTaskFactory, KDataSpiderTaskFactory, StockInfoSpiderTaskFactory
-from src.tool.database.database_task_factoty import BulkUpdateTaskFactory, CoerUpdateTaskFactory, CacheFileWriterTaskFactory
-from src.tool.database.updater import Updater, MultiProcessUpdater
-from src.tool.database.base import SQLAlchemy
+from quant.models import Shareholder, FloatShareholder, Stock, KDataDaily, KDataWeekly, KDataMonthly, KDataHourly
+from quant.libs.enums import StockTypeEnum
+from quant.spider.baostock.query_stock_info import QueryStockInfo
+from quant.spider.east_money.shareholder_info import ShareholderInfo
+from quant.spider.spider_task_factory import ShareholderSpiderTaskFactory, KDataSpiderTaskFactory, StockInfoSpiderTaskFactory
+from quant.tool.database.database_task_factoty import BulkUpdateTaskFactory, CoerUpdateTaskFactory, CacheFileWriterTaskFactory
+from quant.tool.database.updater import Updater, MultiProcessUpdater
+from quant.tool.database.base import SQLAlchemy
 import numpy as np
-from src.models import StockInfo
+from quant.models import StockInfo
 
 
 def main_update_shareholder():

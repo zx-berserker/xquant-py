@@ -3,11 +3,11 @@
 date: 2022/11/24 
 author: Berserker
 """
-from src.models import Shareholder, FloatShareholder, Stock, KDataDaily, KDataWeekly, KDataMonthly, KDataHourly, StockInfo
-from src.tool.figure_bokeh import FigureBokeh
-from src.tool.database.base import SQLAlchemy
-from src.tool.database.database_tools import DatabaseTools
-from src.strategy.technical_analysis_indicator.price_indicator import PriceIndicator, IndicatorData
+from quant.models import Shareholder, FloatShareholder, Stock, KDataDaily, KDataWeekly, KDataMonthly, KDataHourly, StockInfo
+from quant.tool.figure_bokeh import FigureBokeh
+from quant.tool.database.base import SQLAlchemy
+from quant.tool.database.database_tools import DatabaseTools
+from quant.strategy.technical_analysis_indicator.price_indicator import PriceIndicator, IndicatorData
 import numpy as np
 import pandas as pd
 
