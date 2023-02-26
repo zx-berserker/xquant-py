@@ -3,6 +3,9 @@
 date: 2020/8/30
 author: Berserker
 """
+import os, sys
+sys.path.append(os.getcwd())
+
 from quant.models import Shareholder, FloatShareholder, Stock, KDataDaily, KDataWeekly, KDataMonthly, KDataHourly
 from quant.libs.enums import StockTypeEnum
 from quant.spider.baostock.query_stock_info import QueryStockInfo
@@ -118,7 +121,7 @@ def main_get_stock_info_cache(start_id=None, end_id=None, year=2022, quarter=3):
     
     
 if __name__ == '__main__':
-    # main_get_k_data_cache(1, None, QueryStockInfo.FreqTypeEnum.FREQ_HOURLY, '2022-11-24')
+    main_get_k_data_cache(1, None, QueryStockInfo.FreqTypeEnum.FREQ_DAILY, '2023-02-19')
     # main_get_stock_info_cache(1)
-    main_update_k_data(start_id=155, end_id=None, start_date='2022-11-24', is_mult=True)
+    # main_update_k_data(start_id=155, end_id=None, start_date='2022-11-24', is_mult=True)
     pass
