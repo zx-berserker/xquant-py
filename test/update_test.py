@@ -88,15 +88,16 @@ def main_get_k_data_cache(start_id=None, end_id=None,
     stock_list = data_list[begin:end]
     file_path = 'F:/WorkSpace/DataBase/Cache'
     file_base_name = '' + freq_type.value + '.json'
-    flush_count = 100
+    flush_count = 50
     slice_capacity = 1000
     update_task_factory = CacheFileWriterTaskFactory(file_path, file_base_name, stock_list, flush_count, slice_capacity)
     spider_factory = KDataSpiderTaskFactory(freq_type, start_date)
     updater = Updater(stock_list, update_task_factory, spider_factory)
     Updater.spider_thread_pool_capacity = 1
-    Updater.update_thread_pool_capacity = 3
-    updater.start()
-    updater.join()
+    Updater.update_thread_pool_capacity = 1
+    with QueryStockInfo.login_context():
+        updater.start()
+        updater.join()
     
     
 def main_get_stock_info_cache(start_id=None, end_id=None, year=2022, quarter=3):
@@ -121,7 +122,7 @@ def main_get_stock_info_cache(start_id=None, end_id=None, year=2022, quarter=3):
     
     
 if __name__ == '__main__':
-    main_get_k_data_cache(1, None, QueryStockInfo.FreqTypeEnum.FREQ_DAILY, '2023-02-19')
+    main_get_k_data_cache(1, None, QueryStockInfo.FreqTypeEnum.FREQ_DAILY, '2023-03-05')
     # main_get_stock_info_cache(1)
     # main_update_k_data(start_id=155, end_id=None, start_date='2022-11-24', is_mult=True)
     pass

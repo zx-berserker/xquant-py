@@ -48,6 +48,7 @@ class CacheFileWriterTaskFactory(XTaskFactory):
         else:
             self.temp_stock_list = self.stock_list[:self.slice_capacity]
         self.slice_count = 0
+        self.first_empty = False
         
     def data_to_string_callback(self, handle=None):
         count = handle.get_count() % self.slice_capacity
@@ -55,8 +56,14 @@ class CacheFileWriterTaskFactory(XTaskFactory):
         name_list = handle.get_name().split('-', 2)
         num = int(name_list[0]) - int(name_list[1])
         if num != 0:          
-            temp_str = ',' + str_data[1:]
+            if self.first_empty == True:
+                temp_str = str_data[1:]
+            else:
+                temp_str = ',' + str_data[1:]
+                
             if count == 0:
+                if str_data == '[]':
+                    self.first_empty = True
                 return str_data[:-1]
             elif count == num:
                 if str_data == '[]':
@@ -65,6 +72,8 @@ class CacheFileWriterTaskFactory(XTaskFactory):
             else:
                 if str_data == '[]':
                     return ''
+                if self.first_empty:
+                    self.first_empty = False
                 return temp_str[:-1]
         return str_data
     
