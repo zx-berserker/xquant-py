@@ -86,7 +86,7 @@ def main_get_k_data_cache(start_id=None, end_id=None,
     begin = None if start_id is None else start_id - 1
     end = None if end_id is None else end_id - 1
     stock_list = data_list[begin:end]
-    file_path = 'F:/WorkSpace/DataBase/Cache'
+    file_path = 'C:/WorkSpace/Cache'
     file_base_name = '' + freq_type.value + '.json'
     flush_count = 50
     slice_capacity = 1000
@@ -122,7 +122,7 @@ def main_get_stock_info_cache(start_id=None, end_id=None, year=2022, quarter=3):
     
     
 if __name__ == '__main__':
-    main_get_k_data_cache(1, None, QueryStockInfo.FreqTypeEnum.FREQ_DAILY, '2023-03-05')
+    main_get_k_data_cache(1, None, QueryStockInfo.FreqTypeEnum.FREQ_DAILY, '2023-05-21')
     # main_get_stock_info_cache(1)
     # main_update_k_data(start_id=155, end_id=None, start_date='2022-11-24', is_mult=True)
     pass

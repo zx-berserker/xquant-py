@@ -28,9 +28,9 @@ def static_captial(data_df):
 
 
 def main_capital_static(name, ret_dict=None, get_ret=True):
-    data_b = read_from_csv('./test/cache/capital'+name+'-buy.csv')
+    data_b = read_from_csv('./test/cache/capital/'+name+'-buy.csv')
     ret_b = static_captial(data_b)
-    data_s = read_from_csv('./test/cache/capital'+name+'-sell.csv')
+    data_s = read_from_csv('./test/cache/capital/'+name+'-sell.csv')
     ret_s = static_captial(data_s)
     for key in ret_b.keys():
         if not get_ret:
@@ -93,5 +93,5 @@ def static_all_name_list(file_name_list):
     
 if __name__ == "__main__":
     # main_capital_static('3-9')
-    name_list = ['3-9','3-10','3-13','3-14']
+    name_list = ['4-4','3-30','3-22','3-17','3-16']
     static_all_name_list(name_list)
