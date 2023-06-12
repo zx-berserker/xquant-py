@@ -19,7 +19,11 @@ class XConfigParser(configparser.ConfigParser):
 
 class IniFileReader(object):
 
-    def __init__(self, file_name, encoding='gb18030'):
+    """
+    endcoding="gb18030"
+    endcoding="utf-8"
+    """
+    def __init__(self, file_name, encoding='utf-8'):
         self.ini_file = XConfigParser()
         self.ini_file.read(file_name, encoding=encoding)
         self.sections_options = {}
@@ -33,12 +37,15 @@ class IniFileReader(object):
         return self.sections_options[section]
 
     def get_ini_infos(self, section):
-        ret_list = []
+        # ret_list = []
+        ret_dic = {}
         for option in self.sections_options[section]:
             value = self.ini_file.get(section, option)
-            key_value = {option: value}
-            ret_list.append(key_value)
-        return ret_list
+        #     key_value = {option: value}
+        #     ret_list.append(key_value)
+        # return ret_list
+            ret_dic[option] = value
+        return ret_dic
 
     def get_option_values(self, section, option):
         value = self.ini_file.get(section, option)
@@ -46,6 +53,12 @@ class IniFileReader(object):
 
 
 def main():
-    reader = IniFileReader('./database/file/industry.ini')
+    ret = os.path.exists('./quant/tool/database/file/industry.ini')
+    print(ret)
+    reader = IniFileReader('./quant/tool/database/file/industry.ini')
     info_list = reader.get_ini_infos('name')
     print(info_list)
+    
+    
+# if __name__ == '__main__':
+#     main()
