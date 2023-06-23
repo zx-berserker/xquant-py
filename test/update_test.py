@@ -59,18 +59,6 @@ def main_update_k_data(start_id=1, end_id=None, freq_type=QueryStockInfo.FreqTyp
         updater.join()
 
 
-def main_update_stock_info(start_id=0):
-    SQLAlchemy.create_all()
-    with SQLAlchemy.session_context() as session:
-        data_list = session.query(Stock).all()
-    stock_list = data_list[start_id:]
-    update_task_factory = BulkUpdateTaskFactory(StockInfo)
-    spider_factory = StockInfoSpiderTaskFactory(year=2022)
-    updater = MultiProcessUpdater(stock_list, update_task_factory, spider_factory)
-    with QueryStockInfo.login_context():
-        updater.start()
-        updater.join()
-
 
 def main_get_k_data_cache(start_id=None, end_id=None,
                           freq_type=QueryStockInfo.FreqTypeEnum.FREQ_DAILY, start_date='2022-11-5'):
