@@ -20,15 +20,14 @@ def main_update_stock_info(start_id=1, end_id=None, year=2022,  quarter=None):
     begin = None if start_id is None else start_id - 1
     end = None if end_id is None else end_id - 1
     stock_list = data_list[begin:end]
-    spider_factory = StockInfoSpiderTaskFactory(year, quarter)
-    # file_path = 'C:/WorkSpace/Cache'
-    file_path = "F:/WorkSpace/DataBase/Cache"
+    file_path = 'C:/WorkSpace/Cache'
+    # file_path = "F:/WorkSpace/DataBase/Cache"
     file_base_name = 'stock_info-q'+ str(quarter) +'.json'
     print(file_base_name)
     flush_count = 50
     slice_capacity = 3000
     update_task_factory = CacheFileWriterTaskFactory(file_path, file_base_name, stock_list, flush_count, slice_capacity)
-    spider_factory = StockInfoSpiderTaskFactory(year=2022)
+    spider_factory = StockInfoSpiderTaskFactory(year, quarter)
     updater = Updater(stock_list, update_task_factory, spider_factory)
     Updater.spider_thread_pool_capacity = 1
     Updater.update_thread_pool_capacity = 1
@@ -39,6 +38,6 @@ def main_update_stock_info(start_id=1, end_id=None, year=2022,  quarter=None):
         
 if __name__ == "__main__":
     main_update_stock_info(quarter=1)
-    main_update_stock_info(quarter=2)
+    # main_update_stock_info(quarter=2)
     main_update_stock_info(quarter=3)
     main_update_stock_info(quarter=4)
