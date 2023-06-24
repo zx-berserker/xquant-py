@@ -86,27 +86,7 @@ def main_get_k_data_cache(start_id=None, end_id=None,
     with QueryStockInfo.login_context():
         updater.start()
         updater.join()
-    
-    
-def main_get_stock_info_cache(start_id=None, end_id=None, year=2022, quarter=3):
-    SQLAlchemy.create_all()
-    with SQLAlchemy.session_context() as session:
-        data_list = session.query(Stock).all()
-    begin = None if start_id is None else start_id - 1
-    end = None if end_id is None else end_id - 1
-    stock_list = data_list[begin:end]
-    file_path = 'F:/WorkSpace/DataBase/Cache'
-    file_base_name = 'stock_info' + '.json'
-    flush_count = 100
-    slice_capacity = 1000
-    update_task_factory = CacheFileWriterTaskFactory(file_path, file_base_name, stock_list, flush_count, slice_capacity)
-    spider_factory = StockInfoSpiderTaskFactory(year, quarter)
-    updater = Updater(stock_list, update_task_factory, spider_factory)
-    Updater.spider_thread_pool_capacity = 1
-    Updater.update_thread_pool_capacity = 3
 
-    updater.start()
-    updater.join()
     
     
 if __name__ == '__main__':

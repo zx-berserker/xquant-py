@@ -29,7 +29,7 @@ def code_exist(code, industry_id):
             session.commit()
             return True
 
-def main_update_stock_table(file_path="./quant/tool/database/file/industry.ini"):
+def main_update_stock_table(file_path="./quant/tool/database/file/industry_new.ini"):
     reader = IniFileReader(file_path)
     info_dic = reader.get_ini_infos("industry")
     stock_dicts = []

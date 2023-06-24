@@ -19,6 +19,6 @@ class Block(Base):
     stocks = relationship("Stock", secondary=stock_block_table, back_populates='blocks')
 
     def __repr__(self):
-        return '<Block id:%s name:%s>' % (self.id, self.name)
+        return '<Block id:%s name:%s code:%s>' % (self.id, self.name, self.code)
     
     
