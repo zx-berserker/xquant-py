@@ -14,6 +14,8 @@ from sqlalchemy import func
 from operator import and_
 from quant.tool.database.data_models.block import BlockData
 from quant.tool.file_writer import FileWriterTaskFactory
+from quant.models.stock import Stock
+from quant.models.stock_info import StockInfo
 
 def query_test():
     with SQLAlchemy.session_context() as session:
@@ -39,13 +41,20 @@ def query_block_avg(block, session):
     print(data_list)
 
 
-if __name__ == '__main__':
 
-    data_list = query_test()
-    print(data_list)
-    data = ''
-    for li in data_list:
-        data += str(li)
-    fac = FileWriterTaskFactory('E:/WorkSpace/test', 'name.txt')
-    task = fac.get_task(data)
-    task.executive()
+def query_yearly_net_profit():
+    with SQLAlchemy.session_context() as session:
+        data_list = session.query(
+            Stock.name,
+            func.sum(StockInfo.net_profit)
+        ).filter(
+            Stock.id == StockInfo.stock_id,
+        ).group_by(StockInfo.stock_id).all()
+    for data in data_list:
+        if data[1] > 0:
+            print(data[0])
+
+
+
+if __name__ == '__main__':
+    query_yearly_net_profit()

@@ -10,6 +10,7 @@ from bokeh.io import curdoc
 from bokeh.transform import dodge
 from bokeh.models.tickers import AdaptiveTicker
 from bokeh.core.properties import Datetime
+from bokeh.models import ColumnDataSource
 from contextlib import contextmanager
 from bokeh.models import HoverTool
 import pandas as pd
@@ -32,11 +33,18 @@ class FigureBokeh(object):
         self.df_base_data = None
 
     @contextmanager
-    def show(self, index_type, title):
-        self.fb = figure(x_axis_type=index_type, tools=self.TOOLS, width=self.width, height=self.height, 
-                         title=title, background_fill_color=self.background_color)
+    def line_show(self, temp_df, index_type, title):
+        temp_df[index_type] = pd.to_datetime(temp_df[index_type])
+        temp_df.loc[:, 'timestamp'] = temp_df[index_type].apply(lambda t: str(t))
+        temp_df = temp_df.set_index(temp_df['timestamp'])
+        self.df_len = len(temp_df.index)
+        self.df_base_data = temp_df
+        hover = HoverTool(tooltips=[("y", "$y"), ('index', "$index"), ("name", "@name")])
+        self.fb = figure(x_range=temp_df.index.tolist(), tools=self.TOOLS, width=self.WIDTH, height=self.HEIGHT, 
+                         title=title, background_fill_color=self.BACKGROUND_COLOR)
+        self.fb.add_tools(hover)
         self.fb.xaxis.major_label_orientation = self.LABLE_ORIENTATION
-        yield self.fb
+        yield self
         if self.output_path:
             output_file(self.output_path+title+'.html', title=title)
         show(self.fb)
@@ -72,8 +80,8 @@ class FigureBokeh(object):
         if self.output_path:
             output_file(self.output_path+title+'.html', title=title)
         show(self.fb)
-        
-    def add_a_line(self, data_df, col_name, **kwargs):
+    
+    def candlestick_add_a_line(self, data_df,col_name, **kwargs):
         if self.df_len:
             if self.df_len != len(data_df[col_name]):
                 raise        
@@ -87,3 +95,25 @@ class FigureBokeh(object):
         data_df.loc[:, 'timestamp'] = self.df_base_data.index
         data_df = data_df.set_index(data_df['timestamp'])
         self.fb.line(data_df.index, data_df[col_name], **kwargs)
+    
+    
+    def add_a_line(self, data_df, col_name, **kwargs):
+        if self.df_len:
+            print(len(data_df[col_name]))
+            if self.df_len != len(data_df[col_name]):
+                print("%s is %d not %d" % (col_name, len(data_df[col_name]), self.df_len))
+                return        
+        if self.fb is None:
+            raise
+        num = random.randint(0, len(self.COLOR_LIST)-1)
+        param_dic = dict(line_width=2, color=self.COLOR_LIST[num], legend_label='%d' % num)
+        for key in param_dic.keys():
+            if key not in kwargs.keys():
+                kwargs[key] = param_dic[key]
+        
+        data_df.loc[:, 'timestamp'] = self.df_base_data.index
+        # data_df = data_df.set_index(data_df['timestamp'])
+        data_df.loc[:, 'name'] = col_name
+        print(data_df)
+        source = ColumnDataSource(data_df)
+        self.fb.line(x='timestamp', y=col_name, source=source, **kwargs)
