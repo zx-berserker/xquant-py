@@ -23,7 +23,7 @@ class FigureBokeh(object):
     WIDTH = 1900
     HEIGHT = 1000
     LABLE_ORIENTATION = 0.8
-    COLOR_LIST = ['deepskyblue', 'aqua', 'brown', 'burlywood', 'orangered', 'chartreuse', 'chocolate', 'magenta', 'red', 'gold', "lightsalmon", "skyblue", "azure", "tomato", "pink",  "yellow", "palegoldenrod", "powderblue", "mediumaquamarine", "turquoise", "lemonchiffon", "whitesmoke", "beige", "linen", "hotpink", 'silver']
+    COLOR_LIST = ['deepskyblue', 'lime', 'gold', "pink", 'aqua', 'brown', 'burlywood', 'orangered', 'chartreuse', 'chocolate', 'magenta', 'red',  "lightsalmon", "skyblue", "azure", "tomato",  "yellow", "palegoldenrod", "powderblue", "mediumaquamarine", "turquoise", "lemonchiffon", "whitesmoke", "beige", "linen", "hotpink", 'silver']
     TOOLTIPS = []
     
     def __init__(self, output_path=None):
@@ -31,6 +31,7 @@ class FigureBokeh(object):
         self.fb = None
         self.df_len = None
         self.df_base_data = None
+        self.line_num = 0
 
     @contextmanager
     def line_show(self, temp_df, index_type, title):
@@ -87,7 +88,8 @@ class FigureBokeh(object):
                 raise        
         if self.fb is None:
             raise
-        num = random.randint(0, len(self.COLOR_LIST))
+        # num = random.randint(0, len(self.COLOR_LIST))
+        num = self.line_num % len(self.COLOR_LIST)
         param_dic = dict(line_width=2, color=self.COLOR_LIST[num], legend_label='%d' % num)
         for key in param_dic.keys():
             if key not in kwargs.keys():
@@ -95,7 +97,7 @@ class FigureBokeh(object):
         data_df.loc[:, 'timestamp'] = self.df_base_data.index
         data_df = data_df.set_index(data_df['timestamp'])
         self.fb.line(data_df.index, data_df[col_name], **kwargs)
-    
+        self.line_num+=1
     
     def add_a_line(self, data_df, col_name, **kwargs):
         if self.df_len:
@@ -105,7 +107,8 @@ class FigureBokeh(object):
                 return        
         if self.fb is None:
             raise
-        num = random.randint(0, len(self.COLOR_LIST)-1)
+        # num = random.randint(0, len(self.COLOR_LIST)-1)
+        num = self.line_num % len(self.COLOR_LIST)
         param_dic = dict(line_width=2, color=self.COLOR_LIST[num], legend_label='%d' % num)
         for key in param_dic.keys():
             if key not in kwargs.keys():
@@ -113,7 +116,8 @@ class FigureBokeh(object):
         
         data_df.loc[:, 'timestamp'] = self.df_base_data.index
         # data_df = data_df.set_index(data_df['timestamp'])
-        data_df.loc[:, 'name'] = col_name
+        
         print(data_df)
         source = ColumnDataSource(data_df)
         self.fb.line(x='timestamp', y=col_name, source=source, **kwargs)
+        self.line_num+=1
