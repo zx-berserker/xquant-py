@@ -85,7 +85,8 @@ class PriceChartPatternCondition(Condition):
             ConditionTypeEnum.COND_PRICE_CHART_PATTERN_DROP_DOWN_PEAK.value: self._judge_pattern_drop_down_peak,
             ConditionTypeEnum.COND_PRICE_CHART_PATTERN_GAP.value: self._judge_pattern_gap,
             ConditionTypeEnum.COND_PRICE_CHART_PATTERN_GAP_UP.value: self._judge_pattern_gap_up,
-            ConditionTypeEnum.COND_PRICE_CHART_PATTERN_GAP_DOWN.value: self._judge_pattern_gap_down
+            ConditionTypeEnum.COND_PRICE_CHART_PATTERN_GAP_DOWN.value: self._judge_pattern_gap_down,
+            ConditionTypeEnum.COND_PRICE_CHART_PATTERN_UP_N.value: self._judge_pattern_up_n
         }
         self.close_indicator = CommonIndicator(VariableTypeEnum.K_DATA_CLOSE)
         self.high_indicator = CommonIndicator(VariableTypeEnum.K_DATA_HIGH)
@@ -334,6 +335,21 @@ class PriceChartPatternCondition(Condition):
             self.ret_data = ret_data
             return True
         return False
+    
+    def _judge_pattern_up_n(self, data_period_list):
+        """
+          *
+         *
+        *
+        :return:
+        """
+        data_len = len(data_period_list)
+        for i in range(0,data_len-1):
+            if data_period_list[i]<data_period_list[i+1]:
+                continue
+            else:
+                return False
+        return True
 
 
 class PriceIndicatorCondition(Condition):

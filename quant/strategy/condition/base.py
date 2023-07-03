@@ -36,6 +36,7 @@ class ConditionTypeEnum(Enum):
     COND_PRICE_CHART_PATTERN_GAP = "cond_price_chart_pattern_gap"
     COND_PRICE_CHART_PATTERN_GAP_UP = "cond_price_chart_pattern_gap_up"
     COND_PRICE_CHART_PATTERN_GAP_DOWN = "cond_price_chart_pattern_gap_down"
+    COND_PRICE_CHART_PATTERN_UP_N = "cond_price_chart_pattern_up_n"
     COND_PRICE_INDICATOR_MACD_LONG = "cond_price_indicator_macd_long"
 
 

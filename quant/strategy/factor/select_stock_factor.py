@@ -234,3 +234,18 @@ class StockLivelyFactor(Factor):
             condition_type=ConditionTypeEnum.COND_PRICE_INDICATOR_MACD_LONG,
         )
         return ret
+
+
+
+class StockSimpleCommonFactor(Factor):
+    def __init__(self, start_index, end_index):
+        super(StockSimpleCommonFactor,self).__init__()
+        self.start_index = start_index
+        self.end_index = end_index
+        self.add_condition(
+            PriceChartPatternCondition.name,
+            PriceChartPatternCondition(VariableTypeEnum.K_DATA_CLOSE)
+        )
+        
+    def _prepare(self, data_list):
+        self.condition_prepare(self, data_list)

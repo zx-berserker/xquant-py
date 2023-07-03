@@ -3,7 +3,7 @@
 date: 2022/11/24 
 author: Berserker
 """
-from quant.models import Shareholder, FloatShareholder, Stock, KDataDaily, KDataWeekly, KDataMonthly, KDataHourly, StockInfo, Block
+from quant.models import Shareholder, FloatShareholder, Stock, KDataDaily, KDataWeekly, KDataMonthly, KDataHourly, StockInfo, Block, Industry
 from quant.tool.figure_bokeh import FigureBokeh
 from quant.tool.database.base import SQLAlchemy
 from quant.tool.database.database_tools import DatabaseTools
@@ -80,9 +80,15 @@ def stocks_in_block_bokeh(block_name, file_path="./test/cache/"):
     temp_df = None
     with SQLAlchemy.session_context() as session:
         block = session.query(Block).filter(Block.name == block_name).first()
+        if block is None:
+            print("block is None!!!")
+            return
         stock_list = block.stocks
+        if stock_list is None:
+            print('stock list is None!!!')
+            return
         for stock in stock_list:
-            k_data_list = stock.k_data_daily[-500:-1]
+            k_data_list = stock.k_data_daily[-500:]
             k_data_df = DatabaseTools.CollectionsToDataFrame(k_data_list, ['date', 'close'])
             k_data_df.loc[:,'name'] = stock.name
             stock_k_data_dic[stock.name] = k_data_df
@@ -92,14 +98,81 @@ def stocks_in_block_bokeh(block_name, file_path="./test/cache/"):
     with figuer_bokeh.line_show(temp_df=temp_df, index_type='date', title=block_name) as fb:
         for key in stock_k_data_dic:
             fb.add_a_line(stock_k_data_dic[key], 'close')
-    
+            
+            
+            
+def stocks_in_industry_bokeh(industry_name, file_path='./test/cache'):
+    stock_k_data_dic = {}
+    temp_df = None
+    with SQLAlchemy.session_context() as session:
+        industry = session.query(Industry).filter(Industry.name == industry_name).first()
+        if industry is None:
+            print("industry is None!!!")
+            return
+        stock_list = industry.stocks
+        if stock_list is None:
+            print("stock list is None!!!")
+            return
+        for stock in stock_list:
+            k_data_list = stock.k_data_daily[-500:]
+            k_data_df = DatabaseTools.CollectionsToDataFrame(k_data_list, ['date', 'close'])
+            k_data_df.loc[:, 'name'] = stock.name
+            stock_k_data_dic[stock.name] = k_data_df
+            if len(k_data_list) == 500:
+                temp_df = k_data_df
+    figuer_bokeh = FigureBokeh(file_path)
+    with figuer_bokeh.line_show(temp_df=temp_df, index_type='date', title=industry_name) as fb:
+        for key in stock_k_data_dic:
+            fb.add_a_line(stock_k_data_dic[key], 'close')         
+        
+
+def industry_k_data_daily_bokeh(industry_name_list = None, tile_name="industry", file_path = "./test/cache/"):
+    Industry_k_data_dic = {}
+    temp_df = None
+    Industry_list = []
+    with SQLAlchemy.session_context() as session:
+        if industry_name_list is None:
+            Industry_list = session.query(Industry).all()
+        else:
+            for name in industry_name_list:
+                industry = session.query(Industry).filter(Industry.name == name).first()
+                if not industry is None:
+                    Industry_list.append(industry)
+        for industry in Industry_list:
+            k_data_list = session.query(
+                KDataDaily.date,
+                func.avg(KDataDaily.close)
+            ).filter(and_(
+                industry.id == Stock.industry_id,
+                Stock.id == KDataDaily.stock_id
+            )).order_by(KDataDaily.date).group_by(KDataDaily.date).all()
+            
+            k_data_df = pd.DataFrame(k_data_list[-500:],columns=['date','close'])
+            if k_data_df.empty:
+                continue
+            k_data_df.loc[:, 'name'] = industry.name
+            print(k_data_df)
+            Industry_k_data_dic[industry.name] = k_data_df
+            if len(k_data_list) == 500:
+                temp_df = k_data_df
+            
+    figure_bokeh = FigureBokeh(file_path)
+    with figure_bokeh.line_show(temp_df=temp_df, index_type='date', title=tile_name) as fb:
+        for key in Industry_k_data_dic:
+            print(key)
+            fb.add_a_line(Industry_k_data_dic[key],  'close') 
+        
+        
 if __name__ == '__main__':
     
     # name_list = ['机器人', '减速器', '机器视觉', '人工智能']
     # block_k_data_daily_bokeh(name_list)
     # stocks_in_block_bokeh('减速器')
     # candlestick_with_turn_dma('sh.603533')
-    code_list = ['sz.300059', 'sh.600320', 'sh.600010', 'sz.300355', 'sh.688303', 'sh.600797',
-                 'sz.002415', 'sz.300021', 'sh.600477']
-    for code in code_list:
-        candlestick_with_turn_dma(code)
+    # code_list = ['sz.300059', 'sh.600320', 'sh.600010', 'sz.300355', 'sh.688303', 'sh.600797',
+    #              'sz.002415', 'sz.300021', 'sh.600477']
+    # for code in code_list:
+    #     candlestick_with_turn_dma(code)
+    # industry_k_data_daily_bokeh()
+    
+    stocks_in_industry_bokeh('电力')
