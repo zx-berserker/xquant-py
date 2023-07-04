@@ -65,7 +65,9 @@ def block_k_data_daily_bokeh(block_name_list = None, tile_name="block", file_pat
             print(k_data_df)
             block_k_data_dic[block.name] = k_data_df
             temp_df = k_data_df
-            
+    if temp_df is None:
+        print('temp_df is None!!!')
+        return
     figure_bokeh = FigureBokeh(file_path)
     with figure_bokeh.line_show(temp_df=temp_df, index_type='date', title=tile_name) as fb:
         for key in block_k_data_dic:
@@ -94,6 +96,9 @@ def stocks_in_block_bokeh(block_name, file_path="./test/cache/"):
             stock_k_data_dic[stock.name] = k_data_df
             if len(k_data_list) == 500:
                 temp_df = k_data_df
+    if temp_df is None:
+        print('temp_df is None!!!')
+        return
     figuer_bokeh = FigureBokeh(file_path)
     with figuer_bokeh.line_show(temp_df=temp_df, index_type='date', title=block_name) as fb:
         for key in stock_k_data_dic:
@@ -120,6 +125,9 @@ def stocks_in_industry_bokeh(industry_name, file_path='./test/cache'):
             stock_k_data_dic[stock.name] = k_data_df
             if len(k_data_list) == 500:
                 temp_df = k_data_df
+    if temp_df is None:
+        print('temp_df is None!!!')
+        return
     figuer_bokeh = FigureBokeh(file_path)
     with figuer_bokeh.line_show(temp_df=temp_df, index_type='date', title=industry_name) as fb:
         for key in stock_k_data_dic:
@@ -154,7 +162,9 @@ def industry_k_data_daily_bokeh(industry_name_list = None, tile_name="industry",
             print(k_data_df)
             Industry_k_data_dic[industry.name] = k_data_df
             temp_df = k_data_df
-            
+    if temp_df is None:
+        print('temp_df is None!!!')
+        return           
     figure_bokeh = FigureBokeh(file_path)
     with figure_bokeh.line_show(temp_df=temp_df, index_type='date', title=tile_name) as fb:
         for key in Industry_k_data_dic:
@@ -175,12 +185,12 @@ if __name__ == '__main__':
     # industry_k_data_daily_bokeh()
     
     file_path = "C:/server/nginx/html/"
-    industry_list = ['通信设备','电力','汽车零部件' '汽车整车', '证券']
+    industry_list = ['通信设备','电力','汽车零部件', '汽车整车', '证券']
     industry_k_data_daily_bokeh(industry_list, 'hot-industry', file_path)
     for industry in industry_list:
             stocks_in_industry_bokeh(industry, file_path)
    
-    block_list = ['航天装备', 'PET铜箔', '光伏概念']
-    block_k_data_daily_bokeh(block_list, 'hot-block', file_path)
-    for block in block_list:
-        stocks_in_block_bokeh(block,file_path)
+    # block_list = ['航天装备', 'PET铜箔', '光伏概念']
+    # block_k_data_daily_bokeh(block_list, 'hot-block', file_path)
+    # for block in block_list:
+    #     stocks_in_block_bokeh(block,file_path)
