@@ -92,7 +92,7 @@ def stocks_in_block_bokeh(block_name, file_path="./test/cache/"):
             k_data_df = DatabaseTools.CollectionsToDataFrame(k_data_list, ['date', 'close'])
             k_data_df.loc[:,'name'] = stock.name
             stock_k_data_dic[stock.name] = k_data_df
-            if len(k_data_list) == 499:
+            if len(k_data_list) == 500:
                 temp_df = k_data_df
     figuer_bokeh = FigureBokeh(file_path)
     with figuer_bokeh.line_show(temp_df=temp_df, index_type='date', title=block_name) as fb:
