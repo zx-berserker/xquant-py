@@ -153,8 +153,7 @@ def industry_k_data_daily_bokeh(industry_name_list = None, tile_name="industry",
             k_data_df.loc[:, 'name'] = industry.name
             print(k_data_df)
             Industry_k_data_dic[industry.name] = k_data_df
-            if len(k_data_list) == 500:
-                temp_df = k_data_df
+            temp_df = k_data_df
             
     figure_bokeh = FigureBokeh(file_path)
     with figure_bokeh.line_show(temp_df=temp_df, index_type='date', title=tile_name) as fb:
@@ -175,4 +174,13 @@ if __name__ == '__main__':
     #     candlestick_with_turn_dma(code)
     # industry_k_data_daily_bokeh()
     
-    stocks_in_industry_bokeh('电力')
+    file_path = "C:/server/nginx/html/"
+    industry_list = ['通信设备','电力','汽车零部件' '汽车整车', '证券']
+    industry_k_data_daily_bokeh(industry_list, 'hot-industry', file_path)
+    for industry in industry_list:
+            stocks_in_industry_bokeh(industry, file_path)
+   
+    block_list = ['航天装备', 'PET铜箔', '光伏概念']
+    block_k_data_daily_bokeh(block_list, 'hot-block', file_path)
+    for block in block_list:
+        stocks_in_block_bokeh(block,file_path)

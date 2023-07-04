@@ -8,6 +8,7 @@ import pandas as pd
 
 def test():
     data_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    print(data_list[-3:])
     data_ary = np.asanyarray(data_list)
     np_list = []
     for data in data_ary:
@@ -46,4 +47,4 @@ def test_cache():
         
 
 if __name__ == '__main__':
-    test_cache()
+    test()
