@@ -187,10 +187,13 @@ if __name__ == '__main__':
     # industry_k_data_daily_bokeh()
     
     file_path = "C:/server/nginx/html/"
-    industry_list = ['通信设备','电力','汽车零部件', '汽车整车', '证券']
-    industry_k_data_daily_bokeh(industry_list, 'hot-industry', file_path)
-    for industry in industry_list:
-            stocks_in_industry_bokeh(industry, file_path)
+
+    candlestick_with_turn_dma('sz.002415', 191, file_path)
+    
+    # industry_list = ['通信设备','电力','汽车零部件', '汽车整车', '证券']
+    # industry_k_data_daily_bokeh(industry_list, 'hot-industry', file_path)
+    # for industry in industry_list:
+    #         stocks_in_industry_bokeh(industry, file_path)
    
     # block_list = ['航天装备', 'PET铜箔', '光伏概念']
     # block_k_data_daily_bokeh(block_list, 'hot-block', file_path)

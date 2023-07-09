@@ -94,7 +94,7 @@ class PriceIndicator(object):
             lambda param: param >= coe_turn,
             turn_ary)
         coe = 1000000
-        flex_ary = np.ones(coe_turn * coe) * np.average(price_ary[0:begin])
+        flex_ary = np.ones(int(coe_turn * coe)) * np.average(price_ary[0:begin])
         dma_ary = flex_ary[0:begin]
         temp_ary = None
         for index in range(len(price_ary[begin:])):
