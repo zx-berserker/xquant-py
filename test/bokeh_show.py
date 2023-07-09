@@ -16,7 +16,7 @@ from quant.models.many_to_many_table import stock_block_table
 
 def candlestick_with_turn_dma(code='sh.600797', turn_cycles=100, file_path = "./test/cache/"):
     # 周期数因子
-    coe = 100/turn_cycles 
+    coe = turn_cycles / 100 
     with SQLAlchemy.session_context() as session:
         stock = session.query(Stock).filter(Stock.code == code).first()
         print(stock)
