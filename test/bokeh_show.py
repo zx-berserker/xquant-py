@@ -14,7 +14,9 @@ from sqlalchemy import func
 from operator import and_
 from quant.models.many_to_many_table import stock_block_table
 
-def candlestick_with_turn_dma(code='sh.600797', file_path = "./test/cache/"):
+def candlestick_with_turn_dma(code='sh.600797', turn_cycles=100, file_path = "./test/cache/"):
+    # 周期数因子
+    coe = 100/turn_cycles 
     with SQLAlchemy.session_context() as session:
         stock = session.query(Stock).filter(Stock.code == code).first()
         print(stock)
@@ -23,10 +25,10 @@ def candlestick_with_turn_dma(code='sh.600797', file_path = "./test/cache/"):
     k_data_df = DatabaseTools.CollectionsToDataFrame(k_data_list, ['date', 'close', 'open', 'high', 'low'])
     print(k_data_df)
     ind_data = IndicatorData(k_data_list)
-    dma_dic = dict(dma_turn_100=PriceIndicator.dma_coe_by_turn(ind_data),
-                   dma_up_62=PriceIndicator.dma_coe_by_turn(ind_data, 87),
-                   dma_up_38=PriceIndicator.dma_coe_by_turn(ind_data, 59),
-                   dma_up_10=PriceIndicator.dma_coe_by_turn(ind_data, 17))
+    dma_dic = dict(dma_turn_100=PriceIndicator.dma_coe_by_turn(ind_data, 100/coe),
+                   dma_up_62=PriceIndicator.dma_coe_by_turn(ind_data, 62/coe),
+                   dma_up_38=PriceIndicator.dma_coe_by_turn(ind_data, 38/coe),
+                   dma_up_10=PriceIndicator.dma_coe_by_turn(ind_data, 10/coe))
     line_data_df = pd.DataFrame(dma_dic)
     print(line_data_df)
     figure_bokeh = FigureBokeh(file_path)

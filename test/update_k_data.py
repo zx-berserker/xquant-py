@@ -91,6 +91,7 @@ def main_get_k_data_cache(start_id=None, end_id=None,
     
 if __name__ == '__main__':
     main_get_k_data_cache(1, None, QueryStockInfo.FreqTypeEnum.FREQ_DAILY, '2023-05-21')
+    main_get_k_data_cache(1, None, QueryStockInfo.FreqTypeEnum.FREQ_HOURLY, '2023-05-21')
     # main_get_stock_info_cache(1)
     # main_update_k_data(start_id=155, end_id=None, start_date='2022-11-24', is_mult=True)
     pass
