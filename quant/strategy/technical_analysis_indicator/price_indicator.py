@@ -100,6 +100,6 @@ class PriceIndicator(object):
         for index in range(len(price_ary[begin:])):
             i = begin + index
             temp_ary = np.append(np.ones(int(turn_ary[i] * coe)) * price_ary[i], flex_ary)
-            dma_ary = np.append(dma_ary, np.average(temp_ary[0:coe_turn*coe]))
-            flex_ary = temp_ary[0:coe_turn*coe]
+            dma_ary = np.append(dma_ary, np.average(temp_ary[0:int(coe_turn*coe)]))
+            flex_ary = temp_ary[0:int(coe_turn*coe)]
         return dma_ary
