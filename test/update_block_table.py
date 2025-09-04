@@ -15,7 +15,7 @@ def code_formate(code):
         return 'sz.'+ code
     
     
-def update_block_table(file_name='./quant/tool/database/file/block_conception_2023.ini', section='BLOCK_NAME_MAP_TABLE'):
+def update_block_table(file_name='./quant/tool/database/file/block_conception_2025-09-04.ini', section='BLOCK_NAME_MAP_TABLE'):
     reader = IniFileReader(file_name)
     info_dic = reader.get_ini_infos(section)
     SQLAlchemy.create_all()
@@ -31,10 +31,11 @@ def update_block_table(file_name='./quant/tool/database/file/block_conception_20
             session.commit()
             print(block)
             
-def update_stock_block_table(file_name='./quant/tool/database/file/block_conception_2023.ini', 
+def update_stock_block_table(file_name='./quant/tool/database/file/block_conception_2025-09-04.ini', 
                              section='BLOCK_STOCK_CONTEXT'):
     reader = IniFileReader(file_name)
     context_dic = reader.get_ini_infos(section)
+    SQLAlchemy.create_all()
     with SQLAlchemy.session_context() as session:
         for key in context_dic:
             if context_dic[key] == '':
@@ -63,7 +64,10 @@ def update_stock_block_table(file_name='./quant/tool/database/file/block_concept
 
 if __name__ == '__main__':
     # update_block_table()
-    # update_block_table('./quant/tool/database/file/block_industry_2023.ini','BLOCK_NAME_MAP_TABLE')
+    # update_block_table('./quant/tool/database/file/block_industry_2025-09-04.ini','BLOCK_NAME_MAP_TABLE')
     
     update_stock_block_table()
-    update_stock_block_table('./quant/tool/database/file/block_industry_2023.ini','BLOCK_STOCK_CONTEXT')
+    update_stock_block_table('./quant/tool/database/file/block_industry_2025-09-04.ini','BLOCK_STOCK_CONTEXT')
+
+
+    

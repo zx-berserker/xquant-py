@@ -14,13 +14,14 @@ from quant.tool.baostock import BaoStock
 
 class KDataSpiderTaskFactory(XTaskFactory):
 
-    def __init__(self, freq_type=QueryStockInfo.FreqTypeEnum.FREQ_DAILY, start_date='2006-03-27'):
+    def __init__(self, freq_type=QueryStockInfo.FreqTypeEnum.FREQ_DAILY, start_date='2006-03-27', end_date=None):
         super(KDataSpiderTaskFactory, self).__init__(KDataSpiderTask)
         self._freq_type = freq_type
         self._start_date = start_date
+        self._end_date = end_date
 
     def get_task(self, stock):
-        return self.task_cls(stock, self._freq_type, self._start_date)
+        return self.task_cls(stock, self._freq_type, self._start_date, self._end_date)
 
     def env_prepare(self):
         BaoStock.login()

@@ -13,11 +13,12 @@ from quant.spider.east_money.shareholder_info import ShareholderInfo
 
 class KDataSpiderTask(XTask):
 
-    def __init__(self, stock, freq_type=QueryStockInfo.FreqTypeEnum.FREQ_DAILY, start_date='2006-01-01'):
+    def __init__(self, stock, freq_type=QueryStockInfo.FreqTypeEnum.FREQ_DAILY, start_date='2006-01-01', end_date=None):
         super(KDataSpiderTask, self).__init__()
         self.stock = stock
         self.freq_type = freq_type
         self.start_date = start_date
+        self.end_date = end_date
         if self.stock is None:
             raise XException(ErrorCodeEnum.CODE_PARAMETER_INVALID, "stock is None!!!")
         self.ret_data = None
@@ -26,14 +27,14 @@ class KDataSpiderTask(XTask):
         return self.stock
 
     def task_main(self):
-        k_data_df = QueryStockInfo.query_k_data(self.stock.code, start_date=self.start_date, freq_type=self.freq_type)
+        k_data_df = QueryStockInfo.query_k_data(self.stock.code, start_date=self.start_date, end_date=self.end_date, freq_type=self.freq_type)
         data_list = []
         for index in k_data_df.index:
             data_dict = {
                 'stock_id': self.stock.id,
-                'open': float(k_data_df.loc[index].values[2]),
-                'high': float(k_data_df.loc[index].values[3]),
-                'low': float(k_data_df.loc[index].values[4]),
+                'open': float(check_df_value(k_data_df.loc[index].values[2], 0.0)),
+                'high': float(check_df_value(k_data_df.loc[index].values[3], 0.0)),
+                'low': float(check_df_value(k_data_df.loc[index].values[4], 0.0)),
                 'close': float(check_df_value(k_data_df.loc[index].values[5], 0.0)),
                 'volume': int(check_df_value(k_data_df.loc[index].values[6], 0)),
                 'amount': float(check_df_value(k_data_df.loc[index].values[7], 0.0)),

@@ -16,7 +16,10 @@ class Block(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), nullable=False)
     code = Column(String(20), nullable=False)
-    stocks = relationship("Stock", secondary=stock_block_table, back_populates='blocks')
+    stocks = relationship(
+        "Stock", 
+        secondary=stock_block_table, 
+        back_populates='blocks')
 
     def __repr__(self):
         return '<Block id:%s name:%s code:%s>' % (self.id, self.name, self.code)

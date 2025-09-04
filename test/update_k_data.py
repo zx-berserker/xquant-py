@@ -30,7 +30,7 @@ def main_update_shareholder():
 
 
 def main_update_k_data(start_id=1, end_id=None, freq_type=QueryStockInfo.FreqTypeEnum.FREQ_DAILY,
-                       start_date='2022-11-5', is_mult=True):
+                       start_date='2022-11-5', end_date=None, is_mult=True):
     SQLAlchemy.create_all()
     cls_type = KDataDaily
     if freq_type == QueryStockInfo.FreqTypeEnum.FREQ_MONTHLY:
@@ -46,14 +46,14 @@ def main_update_k_data(start_id=1, end_id=None, freq_type=QueryStockInfo.FreqTyp
     stock_list = data_list[begin:end]
     if is_mult:
         update_task_factory = BulkUpdateTaskFactory(cls_type)
-        spider_factory = KDataSpiderTaskFactory(freq_type, start_date)
+        spider_factory = KDataSpiderTaskFactory(freq_type, start_date, end_date)
         updater = MultiProcessUpdater(stock_list, update_task_factory, spider_factory)
         with QueryStockInfo.login_context():
             updater.start()
             updater.join()
     else:
         update_task_factory = CoerUpdateTaskFactory(cls_type)
-        spider_factory = KDataSpiderTaskFactory(freq_type, start_date)
+        spider_factory = KDataSpiderTaskFactory(freq_type, start_date, end_date)
         updater = Updater(stock_list, update_task_factory, spider_factory)
         updater.start()
         updater.join()
@@ -61,7 +61,7 @@ def main_update_k_data(start_id=1, end_id=None, freq_type=QueryStockInfo.FreqTyp
 
 
 def main_get_k_data_cache(start_id=None, end_id=None,
-                          freq_type=QueryStockInfo.FreqTypeEnum.FREQ_DAILY, start_date='2022-11-5'):
+                          freq_type=QueryStockInfo.FreqTypeEnum.FREQ_DAILY, start_date='2022-11-5', end_date=None):
     if freq_type == QueryStockInfo.FreqTypeEnum.FREQ_MONTHLY:
         cls_type = KDataMonthly
     elif freq_type == QueryStockInfo.FreqTypeEnum.FREQ_HOURLY:
@@ -79,7 +79,7 @@ def main_get_k_data_cache(start_id=None, end_id=None,
     flush_count = 50
     slice_capacity = 1000
     update_task_factory = CacheFileWriterTaskFactory(file_path, file_base_name, stock_list, flush_count, slice_capacity)
-    spider_factory = KDataSpiderTaskFactory(freq_type, start_date)
+    spider_factory = KDataSpiderTaskFactory(freq_type, start_date, end_date)
     updater = Updater(stock_list, update_task_factory, spider_factory)
     Updater.spider_thread_pool_capacity = 1
     Updater.update_thread_pool_capacity = 1
@@ -90,8 +90,8 @@ def main_get_k_data_cache(start_id=None, end_id=None,
     
     
 if __name__ == '__main__':
-    main_get_k_data_cache(1, None, QueryStockInfo.FreqTypeEnum.FREQ_DAILY, '2023-05-21')
-    main_get_k_data_cache(1, None, QueryStockInfo.FreqTypeEnum.FREQ_HOURLY, '2023-05-21')
+    main_get_k_data_cache(3401, None, QueryStockInfo.FreqTypeEnum.FREQ_DAILY, '2023-09-29', '2025-09-01')
+    # main_get_k_data_cache(1, None, QueryStockInfo.FreqTypeEnum.FREQ_HOURLY, '2023-05-21')
     # main_get_stock_info_cache(1)
     # main_update_k_data(start_id=155, end_id=None, start_date='2022-11-24', is_mult=True)
     pass

@@ -10,7 +10,8 @@ from bokeh.io import curdoc
 from bokeh.transform import dodge
 from bokeh.models.tickers import AdaptiveTicker
 from bokeh.core.properties import Datetime
-from bokeh.models import ColumnDataSource
+from bokeh.models import ColumnDataSource, CustomJS, Switch
+from bokeh.models.widgets import CheckboxGroup
 from contextlib import contextmanager
 from bokeh.models import HoverTool
 import pandas as pd
@@ -20,11 +21,13 @@ import random
 class FigureBokeh(object):
     TOOLS = 'crosshair,pan,wheel_zoom,xwheel_zoom,ywheel_zoom,box_zoom,reset,box_select,lasso_select,save,hover'
     BACKGROUND_COLOR = '#efefef'
-    WIDTH = 1900
+    WIDTH = 3000
     HEIGHT = 1000
     LABLE_ORIENTATION = 0.8
     COLOR_LIST = ['deepskyblue', 'lime', 'gold', "pink", 'aqua', 'brown', 'burlywood', 'orangered', 'chartreuse', 'chocolate', 'magenta', 'red',  "lightsalmon", "skyblue", "azure", "tomato",  "yellow", "palegoldenrod", "powderblue", "mediumaquamarine", "turquoise", "lemonchiffon", "whitesmoke", "beige", "linen", "hotpink", 'silver']
     TOOLTIPS = []
+    LEGEND_CAPACITY = 38
+    CHECKBOXGROUP_CAPACITY = 70
     
     def __init__(self, output_path=None):
         self.output_path = output_path
@@ -32,9 +35,10 @@ class FigureBokeh(object):
         self.df_len = None
         self.df_base_data = None
         self.line_num = 0
+        self.line_check_box_list = []
 
     @contextmanager
-    def line_show(self, temp_df, index_type, title):
+    def line_show(self, temp_df, index_type, title, legend_visible=True):
         temp_df[index_type] = pd.to_datetime(temp_df[index_type])
         temp_df.loc[:, 'timestamp'] = temp_df[index_type].apply(lambda t: str(t))
         temp_df = temp_df.set_index(temp_df['timestamp'])
@@ -46,6 +50,91 @@ class FigureBokeh(object):
         self.fb.add_tools(hover)
         self.fb.xaxis.major_label_orientation = self.LABLE_ORIENTATION
         yield self
+        self.fb.legend.location = "right"
+        self.fb.legend.click_policy ="hide"
+        one = 1 if self.line_num % self.LEGEND_CAPACITY > 0 else 0
+        ncols = self.line_num // self.LEGEND_CAPACITY + one
+        if ncols > 2:
+            cbg_list = []
+            self.fb.legend.visible = False
+            ncol = len(self.line_check_box_list) // self.CHECKBOXGROUP_CAPACITY
+            remain = len(self.line_check_box_list) % self.CHECKBOXGROUP_CAPACITY
+            def get_js_callback(line_list:list, active_list:list):
+                callback = CustomJS(args=dict(lines=line_list, act_init=active_list), code="""
+const active_init = act_init;
+const active = new Set(this.active);
+let diff = active_init.filter(x => !active.has(x));
+var line_list = lines
+for (const i of diff) {
+    lines[i].visible = false;
+}
+if(window.old_diff) {
+    let diff_set = new Set(diff);
+    let diff_t = window.old_diff.filter(x => !diff_set.has(x));
+    for(const i of diff_t) {
+        lines[i].visible = true;
+    }
+}
+window.old_diff = diff;
+window.line0 = lines[0];
+""")
+                return callback
+            
+            def get_checkboxgroup_loop(loops:int, start:int,line_check_box_list:list):
+                label_list = []
+                active_list = []
+                line_list = []
+                for i in range(0,loops):
+                    active_list.append(i)
+                    label_list.append(line_check_box_list[start + i]["label"])
+                    line_list.append(line_check_box_list[start + i]["line"])            
+
+                    callback = get_js_callback(line_list, active_list)
+                cbg = CheckboxGroup(labels=label_list,active=active_list)
+                cbg.js_on_change("active",callback)
+                return cbg                
+
+            for n in range(0, ncol):
+                start = n * self.CHECKBOXGROUP_CAPACITY
+                # end = (n + 1) * self.CHECKBOXGROUP_CAPACITY
+                cbg = get_checkboxgroup_loop(self.CHECKBOXGROUP_CAPACITY, start, self.line_check_box_list)
+                cbg_list.append(cbg)
+                self.fb.add_layout(cbg,"right")
+                # label_list = []
+                # active_list = []
+                # line_list = []
+                # for i in range(0,self.CHECKBOXGROUP_CAPACITY):
+                #     active_list.append(i)
+                #     label_list.append(self.line_check_box_list[start + i]["label"])
+                #     line_list.append(self.line_check_box_list[start + i]["line"])            
+
+                #     callback = get_js_callback(line_list, active_list)
+                # cbg = CheckboxGroup(labels=label_list,active=active_list)
+                # cbg.js_on_change("active",callback)
+                # self.fb.add_layout(cbg,"right")
+            if remain > 0:
+                start = ncol * self.CHECKBOXGROUP_CAPACITY
+                cbg = get_checkboxgroup_loop(remain, start, self.line_check_box_list)
+                cbg_list.append(cbg)
+                self.fb.add_layout(cbg,"right")
+
+            swich_callback = CustomJS(args=dict(cbgs=cbg_list), code="""
+for(let cbg of cbgs){
+    cbg.visible = this.active;
+}
+
+""")
+            swich = Switch(active=True)
+            swich.js_on_change("active",swich_callback)
+            self.fb.add_layout(swich,'below')
+
+
+
+        else:
+            self.fb.legend.ncols = ncols
+            self.fb.legend.visible = legend_visible
+
+
         if self.output_path:
             output_file(self.output_path+title+'.html', title=title)
         show(self.fb)
@@ -119,5 +208,13 @@ class FigureBokeh(object):
         
         print(data_df)
         source = ColumnDataSource(data_df)
-        self.fb.line(x='timestamp', y=col_name, source=source, **kwargs)
+        line = self.fb.line(x='timestamp', y=col_name, source=source, **kwargs)
+
+        self.line_check_box_list.append(
+            {
+                "label":kwargs["legend_label"],
+                "line":line
+            }
+        )
+        
         self.line_num+=1

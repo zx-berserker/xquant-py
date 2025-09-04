@@ -57,4 +57,5 @@ def query_yearly_net_profit():
 
 
 if __name__ == '__main__':
-    query_yearly_net_profit()
+    block_list = query_test()
+    print(block_list)

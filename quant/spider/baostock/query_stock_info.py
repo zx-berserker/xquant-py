@@ -75,10 +75,11 @@ class QueryStockInfo(object):
 
     @staticmethod
     @BaoStock.connector
-    def query_k_data(code, start_date='2006-01-01', freq_type=FreqTypeEnum.FREQ_DAILY, adjust_flag='3'):
+    def query_k_data(code, start_date='2006-01-01',end_date=None, freq_type=FreqTypeEnum.FREQ_DAILY, adjust_flag='3'):
         """
         :param code: 股票代码
         :param start_date: 开始日期 格式“YYYY-MM-DD”
+        :param end_date: 结束日期（包含），格式“YYYY-MM-DD”，为空时取最近一个交易日
         :param freq_type: 数据类型 d=日k线、w=周、m=月、5=5分钟、15=15分钟、30=30分钟、60=60分钟k
         :param adjust_flag: 复权类型 3:不复权、1:后复权、2:前复权
         :return: (pandas.DataFrame)
@@ -107,6 +108,7 @@ class QueryStockInfo(object):
             code,
             fields_str,
             start_date=start_date,
+            end_date=end_date,
             frequency=freq_type.value,
             adjustflag=adjust_flag
         )
@@ -129,8 +131,7 @@ class QueryStockInfo(object):
         ret = bs.query_profit_data(code, year, quarter)
         data_list = []
         while (ret.error_code == '0') and ret.next():
-            data_list.append(ret.get_row_data())
-            print(data_list)       
+            data_list.append(ret.get_row_data())     
         data_df = pd.DataFrame(data_list, columns=ret.fields)
         return data_df
     

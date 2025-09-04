@@ -29,7 +29,7 @@ def code_exist(code, industry_id):
             session.commit()
             return True
 
-def main_update_stock_table(file_path="./quant/tool/database/file/industry_new.ini"):
+def main_update_stock_table(file_path="./quant/tool/database/file/industry_2025-09-04.ini"):
     reader = IniFileReader(file_path)
     info_dic = reader.get_ini_infos("industry")
     stock_dicts = []
@@ -61,12 +61,18 @@ def main_update_stock_table(file_path="./quant/tool/database/file/industry_new.i
       
             
 
-def main_update_industry_table(file_path="./quant/tool/database/file/industry.ini"):
+def main_update_industry_table(file_path="./quant/tool/database/file/industry_2025-09-04.ini"):
     SQLAlchemy.create_all()
     reader = IniFileReader(file_path)
     info_dic = reader.get_ini_infos("name")   
     with SQLAlchemy.session_context() as session:
+        code_list = []
+        q_code_list = session.query(Industry.code).all()
+        if len(q_code_list) > 0:
+            code_list = [li[0] for li in q_code_list]
         for key in info_dic:
+            if key in code_list:
+                continue
             industry = Industry(
                 name=info_dic[key].replace(';', ''),
                 code=key
@@ -81,4 +87,4 @@ if __name__ == '__main__':
     # main_update_stock_table()
     # stock_info = QueryStockInfo.query_stock_info('sz.001366')
     # print(stock_info)
-    li = [1,2,3,4,5,6,7,8,9]
+    main_update_stock_table()
