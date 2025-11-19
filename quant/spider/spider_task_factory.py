@@ -37,7 +37,7 @@ class  ProductQuoteSpiderTaskFactory(XTaskFactory):
                 return self
             def __next__(self):
                 if self.current < len(self.data_list):
-                    symbol = "%d.%s" % (self.exg.east_money_code, self.data_list[self.current].code)
+                    symbol = "%s.%s" % (self.exg.east_money_code, self.data_list[self.current].code)
                     param = ProductQuoteSpiderTaskFactory.TaskParam(self.data_list[self.current], symbol)
                     self.current += 1
                     return param

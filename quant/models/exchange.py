@@ -15,7 +15,7 @@ class Exchange(Base):
     id:int = Column(Integer, primary_key=True, autoincrement=True)
     code:str = Column(String(20), unique=True, nullable=False)
     name:str = Column(String(20), unique=True, nullable=False)
-    east_money_code = Column(Integer, unique=True, nullable=True)
+    east_money_code = Column(String(20), unique=True, nullable=True)
     products = relationship('Product', back_populates='exchange')
 
     def __repr__(self):

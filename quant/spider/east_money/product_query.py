@@ -10,8 +10,8 @@ from typing import Tuple, Dict
 import json
 import pandas as pd
 import requests
-from .lib.future import futures_hist_separate_char_and_numbers_em
-from .lib.enum import QuotePeriodEnum
+from quant.spider.east_money.lib.future import futures_hist_separate_char_and_numbers_em
+from quant.spider.east_money.lib.enum import QuotePeriodEnum
 import time
 import random
 from enum import Enum
@@ -191,6 +191,7 @@ class ProductQuery(object):
         data_json = r.json()
         exchg_list = []
         for item in data_json:
+            print(type(item["mktid"]))
             exchg_list.append({
                 "name": item["mktname"],
                 "code": item["mktshort"],
@@ -200,32 +201,32 @@ class ProductQuery(object):
             {
                 "name": "上海证券交易所",
                 "code": "SH",
-                "east_money_code": 1,
+                "east_money_code": "1",
             },
             {
                 "name": "深证证券交易所",
                 "code": "SZ",
-                "east_money_code": 0,
+                "east_money_code": "0",
             },
             {
                 "name": "香港证券交易所",
                 "code": "HK",
-                "east_money_code": 116,
+                "east_money_code": "116",
             },
             {
                 "name": "期货指数加权",
                 "code": "FI",
-                "east_money_code": 159,
+                "east_money_code": "159",
             },
             {
                 "name": "香港指数",
                 "code": "HKI",
-                "east_money_code": 124,
+                "east_money_code": "124",
             },
             {
                 "name": "全球指数",
                 "code": "GI",
-                "east_money_code": 100,
+                "east_money_code": "100",
             },
         ])
         temp_df = pd.DataFrame(exchg_list)
@@ -304,3 +305,8 @@ class ProductQuery(object):
         temp_df["turn"] = pd.to_numeric(temp_df["turn"], errors="coerce")
         temp_df["hold"] = pd.to_numeric(temp_df["hold"], errors="coerce")
         return temp_df
+    
+
+
+if __name__ == "__main__":
+    data = ProductQuery.get_exchange()
