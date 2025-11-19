@@ -9,3 +9,9 @@ from quant.models.shareholder import Shareholder, FloatShareholder
 from quant.models.k_data_hourly import KDataHourly
 from quant.models.stock_info import StockInfo
 from quant.models.k_data_2hourly import KData2Hourly
+from quant.models.exchange import Exchange
+from quant.models.product import Product
+from quant.models.quote_daily import QuoteDaily
+from quant.models.quote_hourly import QuoteHourly
+from quant.models.quote_monthly import QuoteMonthly
+from quant.models.quote_weekly import QuoteWeekly

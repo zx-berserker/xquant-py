@@ -21,7 +21,7 @@ import random
 class FigureBokeh(object):
     TOOLS = 'crosshair,pan,wheel_zoom,xwheel_zoom,ywheel_zoom,box_zoom,reset,box_select,lasso_select,save,hover'
     BACKGROUND_COLOR = '#efefef'
-    WIDTH = 3000
+    WIDTH = 2600
     HEIGHT = 1000
     LABLE_ORIENTATION = 0.8
     COLOR_LIST = ['deepskyblue', 'lime', 'gold', "pink", 'aqua', 'brown', 'burlywood', 'orangered', 'chartreuse', 'chocolate', 'magenta', 'red',  "lightsalmon", "skyblue", "azure", "tomato",  "yellow", "palegoldenrod", "powderblue", "mediumaquamarine", "turquoise", "lemonchiffon", "whitesmoke", "beige", "linen", "hotpink", 'silver']
@@ -54,13 +54,14 @@ class FigureBokeh(object):
         self.fb.legend.click_policy ="hide"
         one = 1 if self.line_num % self.LEGEND_CAPACITY > 0 else 0
         ncols = self.line_num // self.LEGEND_CAPACITY + one
-        if ncols > 2:
+        if ncols > 2 and legend_visible:
             cbg_list = []
             self.fb.legend.visible = False
             ncol = len(self.line_check_box_list) // self.CHECKBOXGROUP_CAPACITY
             remain = len(self.line_check_box_list) % self.CHECKBOXGROUP_CAPACITY
-            def get_js_callback(line_list:list, active_list:list):
-                callback = CustomJS(args=dict(lines=line_list, act_init=active_list), code="""
+            cbg_active_list = []
+            def get_js_checkboxgroup_callback(cbg_id:int, line_list:list, active_list:list):
+                callback = CustomJS(args=dict(cbg_id=cbg_id,lines=line_list, act_init=active_list), code="""
 const active_init = act_init;
 const active = new Set(this.active);
 let diff = active_init.filter(x => !active.has(x));
@@ -68,19 +69,23 @@ var line_list = lines
 for (const i of diff) {
     lines[i].visible = false;
 }
-if(window.old_diff) {
+let key = "old"+cbg_id;
+if(typeof window.old_diff === "undefined") {
+    window.old_diff = {};
+} else if (typeof window.old_diff[key] === "undefined") {
+
+} else {
     let diff_set = new Set(diff);
-    let diff_t = window.old_diff.filter(x => !diff_set.has(x));
+    let diff_t = window.old_diff[key].filter(x => !diff_set.has(x));
     for(const i of diff_t) {
         lines[i].visible = true;
     }
 }
-window.old_diff = diff;
-window.line0 = lines[0];
+window.old_diff[key] = diff;
 """)
                 return callback
             
-            def get_checkboxgroup_loop(loops:int, start:int,line_check_box_list:list):
+            def get_checkboxgroup_loop(cbg_id:int, loops:int, start:int,line_check_box_list:list):
                 label_list = []
                 active_list = []
                 line_list = []
@@ -89,16 +94,17 @@ window.line0 = lines[0];
                     label_list.append(line_check_box_list[start + i]["label"])
                     line_list.append(line_check_box_list[start + i]["line"])            
 
-                    callback = get_js_callback(line_list, active_list)
+                callback = get_js_checkboxgroup_callback(cbg_id, line_list, active_list)
                 cbg = CheckboxGroup(labels=label_list,active=active_list)
                 cbg.js_on_change("active",callback)
                 return cbg                
-
+            
             for n in range(0, ncol):
                 start = n * self.CHECKBOXGROUP_CAPACITY
                 # end = (n + 1) * self.CHECKBOXGROUP_CAPACITY
-                cbg = get_checkboxgroup_loop(self.CHECKBOXGROUP_CAPACITY, start, self.line_check_box_list)
+                cbg = get_checkboxgroup_loop(n, self.CHECKBOXGROUP_CAPACITY, start, self.line_check_box_list)
                 cbg_list.append(cbg)
+                cbg_active_list.append(cbg.active)
                 self.fb.add_layout(cbg,"right")
                 # label_list = []
                 # active_list = []
@@ -114,31 +120,47 @@ window.line0 = lines[0];
                 # self.fb.add_layout(cbg,"right")
             if remain > 0:
                 start = ncol * self.CHECKBOXGROUP_CAPACITY
-                cbg = get_checkboxgroup_loop(remain, start, self.line_check_box_list)
+                cbg = get_checkboxgroup_loop(ncol, remain, start, self.line_check_box_list)
                 cbg_list.append(cbg)
+                cbg_active_list.append(cbg.active)
                 self.fb.add_layout(cbg,"right")
 
-            swich_callback = CustomJS(args=dict(cbgs=cbg_list), code="""
+            swich_cbg_callback = CustomJS(args=dict(cbgs=cbg_list), code="""
 for(let cbg of cbgs){
     cbg.visible = this.active;
 }
 
+""") 
+            swich_cbg_active_callback = CustomJS(args=dict(cbgs=cbg_list, cbg_actives=cbg_active_list), code="""
+let b = this.active;
+if(b) {
+    for(let i in cbgs) {
+        cbgs[i].active = cbg_actives[i];
+    }
+}
+else {
+    for(let cbg of cbgs) {
+        cbg.active = [];
+    }
+}
+
 """)
-            swich = Switch(active=True)
-            swich.js_on_change("active",swich_callback)
-            self.fb.add_layout(swich,'below')
-
-
+            swich_cbg = Switch(active=True)
+            swich_cbg.js_on_change("active",swich_cbg_callback)
+            self.fb.add_layout(swich_cbg,'below')
+            swich_cbg_active = Switch(active=True)
+            swich_cbg_active.js_on_change("active", swich_cbg_active_callback)
+            self.fb.add_layout(swich_cbg_active, "below")
 
         else:
             self.fb.legend.ncols = ncols
             self.fb.legend.visible = legend_visible
 
-
         if self.output_path:
             output_file(self.output_path+title+'.html', title=title)
         show(self.fb)
-        
+
+
     @contextmanager
     def candlestick_show(self, k_data_df, title, index_type='date'):
         k_data_df[index_type] = pd.to_datetime(k_data_df[index_type])

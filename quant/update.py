@@ -3,16 +3,19 @@
 date: 2022/12/1
 author: Berserker
 """
-from quant.models import Shareholder, FloatShareholder, Stock, KDataDaily, KDataWeekly, KDataMonthly, KDataHourly
+from quant.models import Shareholder, FloatShareholder, Stock, KDataDaily, KDataWeekly, KDataMonthly, KDataHourly, Product, Exchange
+from quant.models import Product, Exchange, QuoteDaily, QuoteHourly, QuoteMonthly, QuoteWeekly
 from quant.libs.enums import StockTypeEnum
 from quant.spider.baostock.query_stock_info import QueryStockInfo
 from quant.spider.east_money.shareholder_info import ShareholderInfo
-from quant.spider.spider_task_factory import ShareholderSpiderTaskFactory, KDataSpiderTaskFactory, StockInfoSpiderTaskFactory
+from quant.spider.east_money import QuotePeriodEnum, ProductQuery
+from quant.spider.spider_task_factory import ShareholderSpiderTaskFactory, KDataSpiderTaskFactory, StockInfoSpiderTaskFactory, ProductQuoteSpiderTaskFactory
 from quant.tool.database.database_task_factoty import BulkUpdateTaskFactory, CoerUpdateTaskFactory, CacheFileWriterTaskFactory
 from quant.tool.database.updater import Updater, MultiProcessUpdater
 from quant.tool.database.base import SQLAlchemy
 import numpy as np
 from quant.models import StockInfo
+
 
 
 def main_update_shareholder():
@@ -115,3 +118,71 @@ def main_get_stock_info_cache(start_id=None, end_id=None, year=2022, quarter=3):
 
     updater.start()
     updater.join()
+
+
+
+def update_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, start_date:str='20060101', end_date:str="20500101", symbol:str=None, limit=10000):
+    cls_type = QuoteDaily
+    if period_type == QuotePeriodEnum.MONTHLY:
+        cls_type = QuoteMonthly
+    elif period_type == QuotePeriodEnum.HOURLY:
+        cls_type = QuoteHourly
+    elif period_type == QuotePeriodEnum.WEEKLY:
+        cls_type = QuoteWeekly
+    query_list = []
+    with SQLAlchemy.session_context() as session:
+        exg_list = session.query(Exchange).all()
+        if symbol:
+            is_done = True
+            str_list = symbol.split(".")
+            for exg in exg_list:
+                prod_list = exg.products
+                if is_done:
+                    if exg.east_money_code != str_list[0]:
+                        continue
+                    for num in range(0, len(prod_list)):
+                        if prod_list[num].code == str_list[1]:
+                            is_done = False
+                            prod_list = prod_list[num+1:]
+                            break
+                if is_done == False:
+                    query_list.append({
+                        "exhange": exg,
+                        "products": prod_list
+                    })
+        else:    
+            for exg in exg_list:
+                prod_list = exg.products
+                query_list.append({
+                    "exhange": exg,
+                    "products": prod_list
+                })
+
+
+    file_path = '/home/xquant/cache'
+    file_base_name = '' + period_type.name + '.json'
+    flush_count = 10
+    slice_capacity = 1000
+    for query in query_list:
+        exg = query["exhange"]
+        data_list = query["products"]
+        preflex = "[%d]-" % (exg.east_money_code)
+        update_task_factory = CacheFileWriterTaskFactory(file_path, file_base_name, data_list, flush_count, slice_capacity, file_prefix_base_name=preflex)
+        spider_factory = ProductQuoteSpiderTaskFactory(period_type, start_date, end_date, limit)
+        param_list = spider_factory.task_param_list_generator(exg, data_list)
+        updater = Updater(param_list, update_task_factory, spider_factory)
+        Updater.spider_thread_pool_capacity = 1
+        Updater.update_thread_pool_capacity = 1
+        updater.start()
+        updater.join()
+
+
+
+if __name__ == "__main__":
+    ProductQuery.Cookie = "qgqp_b_id=62e88c2810b2f67ce5ad3d27f8d50180; st_nvi=eqhQa5wNEhFs5Vt8-7XVo7cc1; nid=0079606ee4b07ac33ed6c7ca3ed27448; nid_create_time=1763303835067; gvi=H83Ghdne9iRb51_cVy5uzc7a8; gvi_create_time=1763303835067; st_si=81163084864091; fullscreengg=1; fullscreengg2=1; st_asi=delete; JSESSIONID=2B0985A89414DEE881519C459F1939E4; st_pvi=53849561874186; st_sp=2025-11-12%2000%3A51%3A05; st_inirUrl=https%3A%2F%2Fquote.eastmoney.com%2Fcenter%2F; st_sn=107; st_psi=20251119001006237-0-8139763183"
+    
+    Updater.interval_sleep = 5
+    update_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20060101", end_date="20251115", limit=10000)
+    # update_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20060101", end_date="20251115", limit=10000)
+    # update_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20060101", end_date="20251115", limit=10000)
+    # update_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20060101", end_date="20251115", limit=10000)

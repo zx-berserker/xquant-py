@@ -47,7 +47,7 @@ class FileWriterHandle(object):
                 os.makedirs(self.path, 0o755)
 
         self.type = handle_type
-        self.full_name = str(PureWindowsPath(self.path, self.name))
+        self.full_name = str(Path(self.path, self.name))
         self.cache_data = ''
         self.writer = open(self.full_name, self.type.value, encoding='utf-8')
         self.temp_data = None

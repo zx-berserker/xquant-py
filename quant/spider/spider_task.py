@@ -9,6 +9,7 @@ from quant.libs.multi_thread.xtask import XTask, XTaskFactory
 from quant.spider.baostock.query_stock_info import QueryStockInfo
 from quant.tool.function_tool import check_df_value
 from quant.spider.east_money.shareholder_info import ShareholderInfo
+from .east_money import QuotePeriodEnum, ProductQuery
 
 
 class KDataSpiderTask(XTask):
@@ -61,6 +62,55 @@ class KDataSpiderTask(XTask):
 
     def __repr__(self):
         return "<KDataSpiderTask id:%d stock:%s>" % (id(self), self.stock)
+
+
+class ProductQuoteSpiderTask(XTask):
+    def __init__(self, product, symbol:str, period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, start_date='20060101', end_date="20500101", limit:int=10000):
+        super(ProductQuoteSpiderTask, self).__init__()
+        self.product = product
+        self.symbol = symbol
+        self.period_type = period_type
+
+        str_list = start_date.split("-")
+        self.start_date = ""
+        for item in str_list:
+            self.start_date += item
+
+        str_list = end_date.split("-")
+        self.end_date = ""
+        for item in str_list:
+            self.end_date += item
+
+        self.limit = limit
+        if self.product is None:
+            raise XException(ErrorCodeEnum.CODE_PARAMETER_INVALID, "product is None!!!")
+        self.ret_data = None
+
+    def get_stock(self):
+        return self.product
+    
+    def task_main(self):
+        data_df = ProductQuery.get_product_quote(self.symbol, self.period_type, self.start_date, self.end_date, self.limit)
+        data_list = []
+        for index, row in  data_df.iterrows():
+            data_list.append({
+                "product_id": self.product.id,
+                "time": row["time"],
+                "open": row["open"],
+                "close": row["close"],
+                "high": row["high"],
+                "low": row["low"],
+                "volume": row["volume"],
+                "amount": row["amount"],
+                "pct_chg": row["pct_chg"],
+                "turn": row["turn"],
+                "hold": row["hold"],                
+            })
+        self.ret_data = data_list
+        return data_list
+    
+    def __repr__(self):
+        return "<KDataSpiderTask id:%d product:%s>" % (id(self), self.product)
 
 
 class ShareholderSpiderTask(XTask):

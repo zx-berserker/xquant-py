@@ -7,9 +7,48 @@ from quant.libs.error import XException
 from quant.libs.enums import ErrorCodeEnum
 from quant.libs.multi_thread.xtask import XTaskFactory
 from quant.spider.baostock.query_stock_info import QueryStockInfo
-from quant.spider.spider_task import KDataSpiderTask, ShareholderSpiderTask, StockInfoSpiderTask
+from quant.spider.spider_task import KDataSpiderTask, ShareholderSpiderTask, StockInfoSpiderTask, ProductQuoteSpiderTask, QuotePeriodEnum
 from quant.spider.east_money.shareholder_info import ShareholderInfo
 from quant.tool.baostock import BaoStock
+from quant.models.exchange import Exchange
+
+
+class  ProductQuoteSpiderTaskFactory(XTaskFactory):
+    class TaskParam: 
+        def __init__(self, product, symbol:str):
+            self.product = product
+            self.symbol = symbol
+            pass
+
+    def __init__(self, period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, start_date='20060101', end_date='20500101', limit:int=10000):
+        super(ProductQuoteSpiderTaskFactory, self).__init__(ProductQuoteSpiderTask)
+        self._period_type = period_type
+        self._start_date = start_date
+        self._end_date = end_date
+        self._limit = limit
+
+    def task_param_list_generator(self, exchange:Exchange, product_list):
+        class ParamIter():
+            def __init__(self,exchange:Exchange, product_list):                    
+                self.exg = exchange
+                self.data_list = product_list
+                self.current = 0
+            def __iter__(self):
+                return self
+            def __next__(self):
+                if self.current < len(self.data_list):
+                    symbol = "%d.%s" % (self.exg.east_money_code, self.data_list[self.current].code)
+                    param = ProductQuoteSpiderTaskFactory.TaskParam(self.data_list[self.current], symbol)
+                    self.current += 1
+                    return param
+                else:
+                    raise StopIteration
+        return ParamIter(exchange, product_list)
+
+
+    def get_task(self, param:TaskParam):
+        return self.task_cls(param.product, param.symbol, self._period_type, self._start_date, self._end_date, self._limit)
+
 
 
 class KDataSpiderTaskFactory(XTaskFactory):

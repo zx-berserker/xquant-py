@@ -82,23 +82,14 @@ def test_list():
     #     print(i)
 
 
-if __name__ == '__main__':
-    print(np.__version__)
+def str_test():
+    temp_str = "20250101"
+    str_list = temp_str.split("-")
+    print(len(str_list))
+    date = ""
+    for item in str_list:
+        date+=item
+    print(date)
     
-    test()
-    test = {}
-    # test["test"] = 1
-    # if "test" in test:
-    #     print("ok")
-    # if type(test).__name__ == "dict":
-    #     print("is")
-    # if isinstance(test,dict):
-    #     print("is")
-    if "a" not in test:
-        print("Not")
-
-for i in range(1,10):
-    if i == 5:
-        print("continue")
-        continue
-    print(i)
+if __name__ == '__main__':
+    str_test()

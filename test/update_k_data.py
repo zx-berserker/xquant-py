@@ -38,7 +38,7 @@ def main_update_k_data(start_id=1, end_id=None, freq_type=QueryStockInfo.FreqTyp
     elif freq_type == QueryStockInfo.FreqTypeEnum.FREQ_HOURLY:
         cls_type = KDataHourly
     elif freq_type == QueryStockInfo.FreqTypeEnum.FREQ_WEEKLY:
-        cls_type == KDataWeekly
+        cls_type = KDataWeekly
     begin = None if start_id is None else start_id - 1
     end = None if end_id is None else end_id - 1
     with SQLAlchemy.session_context() as session:
@@ -62,12 +62,13 @@ def main_update_k_data(start_id=1, end_id=None, freq_type=QueryStockInfo.FreqTyp
 
 def main_get_k_data_cache(start_id=None, end_id=None,
                           freq_type=QueryStockInfo.FreqTypeEnum.FREQ_DAILY, start_date='2022-11-5', end_date=None):
+    cls_type = KDataDaily
     if freq_type == QueryStockInfo.FreqTypeEnum.FREQ_MONTHLY:
         cls_type = KDataMonthly
     elif freq_type == QueryStockInfo.FreqTypeEnum.FREQ_HOURLY:
         cls_type = KDataHourly
     elif freq_type == QueryStockInfo.FreqTypeEnum.FREQ_WEEKLY:
-        cls_type == KDataWeekly
+        cls_type = KDataWeekly
     
     with SQLAlchemy.session_context() as session:
         data_list = session.query(Stock).all()

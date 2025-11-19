@@ -57,5 +57,6 @@ def query_yearly_net_profit():
 
 
 if __name__ == '__main__':
-    block_list = query_test()
-    print(block_list)
+    SQLAlchemy.create_all()
+    # block_list = query_test()
+    # print(block_list)

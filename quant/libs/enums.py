@@ -43,3 +43,12 @@ class ErrorCodeEnum(Enum):
     CODE_PARAMETER_INVALID = 6
     CODE_FORBIDDEN = 7
     CODE_SYSTEM_ERROR = 8
+
+
+class ProductTypeEnum(Enum):
+    PRODUCT_STOCK = 1
+    PRODUCT_INDEX = 2
+    PRODUCT_FUND = 3
+    PRODUCT_FUTURE = 4
+    
+    PRODUCT_OTHER = 9

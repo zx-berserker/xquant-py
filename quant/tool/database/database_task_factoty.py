@@ -34,10 +34,11 @@ class CoerUpdateTaskFactory(XTaskFactory):
 
 class CacheFileWriterTaskFactory(XTaskFactory):
     def __init__(self, file_path, file_base_name='temp', stock_list=None, flush_count=10, slice_capacity=100, 
-                 writer_handle_type=FileWriterHandleEnum.WRITER):
+                 writer_handle_type=FileWriterHandleEnum.WRITER, file_prefix_base_name:str=""):
         super(CacheFileWriterTaskFactory, self).__init__(FileWriterTask)
         self.flush_count = flush_count
         self.stock_list = stock_list
+        self.file_prefix_base_name = file_prefix_base_name
         self.writer_factory = FileWriterTaskFactory(file_path, file_base_name, writer_handle_type)
         self.writer_factory.set_callback(self.data_to_string_callback, self.flush_condition_callback,
                                          self.finish_condition_callback, self.auto_prefix_name_callback)
@@ -53,8 +54,9 @@ class CacheFileWriterTaskFactory(XTaskFactory):
     def data_to_string_callback(self, handle=None):
         count = handle.get_count() % self.slice_capacity
         str_data = str(handle.get_data()).replace("'", "\"")
-        name_list = handle.get_name().split('-', 2)
-        num = int(name_list[0]) - int(name_list[1])
+        # name_list = handle.get_name().split('-', 2)
+        # num = int(name_list[0]) - int(name_list[1])
+        num = len(self.temp_stock_list) - 1
         if num != 0:          
             if self.first_empty == True:
                 temp_str = str_data[1:]
@@ -86,9 +88,11 @@ class CacheFileWriterTaskFactory(XTaskFactory):
     
     def finish_condition_callback(self, handle=None):
         count = handle.get_count()
-        name_list = handle.get_name().split('-', 2)
-        num = int(name_list[0]) - int(name_list[1])
-        if num + 1 < self.slice_capacity and count == num + 1:
+        # name_list = handle.get_name().split('-', 2)
+        # num = int(name_list[0]) - int(name_list[1])
+        # if num + 1 < self.slice_capacity and count == num + 1:
+        num = len(self.temp_stock_list)
+        if num < self.slice_capacity and count == num:
             print('finish:' + handle.get_name())
             return True
         if count % self.slice_capacity == 0:
@@ -104,8 +108,8 @@ class CacheFileWriterTaskFactory(XTaskFactory):
             if end > len(self.stock_list):
                 end = None
             self.temp_stock_list = self.stock_list[begin:end]
-        prefix_name = '%d-%d-' % (self.temp_stock_list[-1].id, self.temp_stock_list[0].id)
-        print('%s : %d' % (prefix_name, stock.id))
+        prefix_name = '%s%s(%d)_%s(%d)-' % (self.file_prefix_base_name, self.temp_stock_list[-1].code, self.temp_stock_list[-1].id, self.temp_stock_list[0].code, self.temp_stock_list[0].id)
+        print('%s : %s(%d)' % (prefix_name, stock.code,stock.id))
         return prefix_name
         
     def get_task(self, data, stock, *args, **kwargs):
