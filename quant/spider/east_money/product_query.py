@@ -54,6 +54,21 @@ class ProductQuery(object):
 
     Cookie = "qgqp_b_id=62e88c2810b2f67ce5ad3d27f8d50180; st_nvi=eqhQa5wNEhFs5Vt8-7XVo7cc1; st_si=74782850947529; st_asi=delete; nid=0079606ee4b07ac33ed6c7ca3ed27448; nid_create_time=1763303835067; gvi=H83Ghdne9iRb51_cVy5uzc7a8; gvi_create_time=1763303835067; fullscreengg=1; fullscreengg2=1; wsc_checkuser_ok=1; st_pvi=53849561874186; st_sp=2025-11-12%2000%3A51%3A05; st_inirUrl=https%3A%2F%2Fquote.eastmoney.com%2Fcenter%2F; st_sn=24; st_psi=20251116233737782-113200301321-8630809259"
 
+    headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+            "Connection": "close",
+            "Cookie": Cookie,
+            "Accept-Language": "en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7",
+            "Accept-Encoding": "gzip, deflate, br, zstd",
+            "Sec-Ch-Ua":  '"Chromium";v="142", "Google Chrome";v="142", "Not_A Brand";v="99"'
+    }
+
+    access_points_list = [
+        {"http": "http://access1.examole.com:8080", "https": "http://access1.examole.com:8080"},
+        {"http": "http://access2.examole.com:8080", "https": "http://access2.examole.com:8080"},
+        {"http": "http://access3.examole.com:8080", "https": "http://access3.examole.com:8080"},
+    ]
+
     sleep_time = 3
     @classmethod
     def get_future_product(cls) -> pd.DataFrame:
@@ -106,12 +121,9 @@ class ProductQuery(object):
         """
         cls.stock_url_params["pz"] = size
         cls.stock_url_params["fs"] = fs.value
-        headers = {
-                "User-Agent": random.choice(cls.user_agent_list),
-                "Connection": "close",
-                "Cookie": cls.Cookie,
-        }
-        r = requests.get(cls.product_url_base, headers=headers, timeout=10, params=cls.stock_url_params)
+        cls.headers["User-Agent"]=random.choice(cls.user_agent_list),
+        current_access = random.choice(cls.access_points_list)
+        r = requests.get(cls.product_url_base, headers=cls.headers, timeout=10, params=cls.stock_url_params, proxies=current_access)
         data_json = r.json()
         total = data_json["data"]["total"]
         loop = - int(-total // size)
@@ -119,7 +131,7 @@ class ProductQuery(object):
             if(num <= index):
                 continue
             cls.stock_url_params["pn"] = num
-            r = requests.get(cls.product_url_base, headers=headers, timeout=10, params=cls.stock_url_params)
+            r = requests.get(cls.product_url_base, headers=cls.headers, timeout=10, params=cls.stock_url_params, proxies=current_access)
             data_json = r.json()
             if data_json["data"]["diff"]:
                 temp_df = pd.DataFrame(data_json["data"]["diff"])
@@ -246,6 +258,7 @@ class ProductQuery(object):
             "klt": period.value,
             "fqt": "1",
             "lmt": str(limit),
+            "beg": start_date,
             "end": end_date,
             "iscca": "1",
             "fields1": "f1,f2,f3,f4,f5,f6,f7,f8",
@@ -253,12 +266,9 @@ class ProductQuery(object):
             "ut": "7eea3edcaed734bea9cbfc24409ed989",
             "forcect": "1",
         }
-        headers = {
-                "User-Agent": random.choice(cls.user_agent_list),
-                "Connection": "close",
-                "Cookie": cls.Cookie,
-        }
-        r = requests.get(cls.quote_url_base, headers=headers, timeout=15, params=params)
+        cls.headers["User-Agent"]=random.choice(cls.user_agent_list),
+        current_access = random.choice(cls.access_points_list)
+        r = requests.get(cls.quote_url_base, headers=cls.headers, timeout=15, params=params, proxies=current_access)
         data_json = r.json()
         temp_df = pd.DataFrame([item.split(",") for item in data_json["data"]["klines"]])
         if temp_df.empty: return temp_df
@@ -292,9 +302,6 @@ class ProductQuery(object):
                 "hold",
             ]
         ]
-        temp_df.index = pd.to_datetime(temp_df["time"])
-        temp_df = temp_df[start_date:end_date]
-        temp_df.reset_index(drop=True, inplace=True)
         temp_df["open"] = pd.to_numeric(temp_df["open"], errors="coerce")
         temp_df["close"] = pd.to_numeric(temp_df["close"], errors="coerce")
         temp_df["high"] = pd.to_numeric(temp_df["high"], errors="coerce")
