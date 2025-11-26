@@ -11,6 +11,7 @@ from quant.spider.spider_task import KDataSpiderTask, ShareholderSpiderTask, Sto
 from quant.spider.east_money.shareholder_info import ShareholderInfo
 from quant.tool.baostock import BaoStock
 from quant.models.exchange import Exchange
+from quant.spider.east_money import ProductQuery
 
 
 class  ProductQuoteSpiderTaskFactory(XTaskFactory):
@@ -20,12 +21,13 @@ class  ProductQuoteSpiderTaskFactory(XTaskFactory):
             self.symbol = symbol
             pass
 
-    def __init__(self, period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, start_date='20060101', end_date='20500101', limit:int=10000):
+    def __init__(self, period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, start_date='20060101', end_date='20500101', limit:int=10000, prepare_type:ProductQuery.PrepareTypeEnum=ProductQuery.PrepareTypeEnum.SESSION):
         super(ProductQuoteSpiderTaskFactory, self).__init__(ProductQuoteSpiderTask)
         self._period_type = period_type
         self._start_date = start_date
         self._end_date = end_date
         self._limit = limit
+        self._prepare_type = prepare_type
 
     def task_param_list_generator(self, exchange:Exchange, product_list):
         class ParamIter():
@@ -44,8 +46,10 @@ class  ProductQuoteSpiderTaskFactory(XTaskFactory):
                 else:
                     raise StopIteration
         return ParamIter(exchange, product_list)
-
-
+    
+    def env_prepare(self):
+        ProductQuery.prepare(self._prepare_type)
+        
     def get_task(self, param:TaskParam):
         return self.task_cls(param.product, param.symbol, self._period_type, self._start_date, self._end_date, self._limit)
 

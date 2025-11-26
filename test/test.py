@@ -90,6 +90,9 @@ def str_test():
     for item in str_list:
         date+=item
     print(date)
+
+def json_test():
+    js = ""
     
 if __name__ == '__main__':
     str_test()

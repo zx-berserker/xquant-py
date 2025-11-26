@@ -161,7 +161,7 @@ def update_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, star
 
     file_path = '/home/xquant/cache'
     file_base_name = '' + period_type.name + '.json'
-    flush_count = 10
+    flush_count = 1
     slice_capacity = 1000
     for query in query_list:
         exg = query["exhange"]
@@ -173,16 +173,15 @@ def update_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, star
         updater = Updater(param_list, update_task_factory, spider_factory)
         Updater.spider_thread_pool_capacity = 1
         Updater.update_thread_pool_capacity = 1
+        Updater.sleep_uniform_max = 6
+        Updater.sleep_uniform_min = 4
         updater.start()
         updater.join()
         print(preflex + "finish")
 
 
 if __name__ == "__main__":
-    ProductQuery.Cookie = "qgqp_b_id=62e88c2810b2f67ce5ad3d27f8d50180; st_nvi=eqhQa5wNEhFs5Vt8-7XVo7cc1; nid=0079606ee4b07ac33ed6c7ca3ed27448; nid_create_time=1763303835067; gvi=H83Ghdne9iRb51_cVy5uzc7a8; gvi_create_time=1763303835067; st_si=39118404420744; fullscreengg=1; fullscreengg2=1; st_asi=delete; st_pvi=53849561874186; st_sp=2025-11-12%2000%3A51%3A05; st_inirUrl=https%3A%2F%2Fquote.eastmoney.com%2Fcenter%2F; st_sn=5; st_psi=20251120031028771-113200301201-8308038204"
-    
-    Updater.interval_sleep = 5
-    update_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20060101", end_date="20251115", limit=10000, symbol="115.TAS")
-    # update_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20060101", end_date="20251115", limit=10000)
+    # update_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20060101", end_date="20251115", limit=10000, symbol="124.HSTECH")
+    update_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20060101", end_date="20251115", limit=10000)
     # update_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20060101", end_date="20251115", limit=10000)
     # update_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20060101", end_date="20251115", limit=10000)

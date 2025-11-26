@@ -43,6 +43,7 @@ class ErrorCodeEnum(Enum):
     CODE_PARAMETER_INVALID = 6
     CODE_FORBIDDEN = 7
     CODE_SYSTEM_ERROR = 8
+    CODE_WEB_REQUEST_ERROR = 400
 
 
 class ProductTypeEnum(Enum):
