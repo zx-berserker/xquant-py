@@ -173,8 +173,8 @@ def update_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, star
         updater = Updater(param_list, update_task_factory, spider_factory)
         Updater.spider_thread_pool_capacity = 1
         Updater.update_thread_pool_capacity = 1
-        Updater.sleep_uniform_max = 6
-        Updater.sleep_uniform_min = 4
+        Updater.sleep_uniform_max = 7
+        Updater.sleep_uniform_min = 3
         updater.start()
         updater.join()
         print(preflex + "finish")
@@ -182,6 +182,6 @@ def update_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, star
 
 if __name__ == "__main__":
     # update_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20060101", end_date="20251115", limit=10000, symbol="124.HSTECH")
-    update_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20060101", end_date="20251115", limit=10000)
+    update_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20060101", end_date="20251115", limit=10000, symbol="1.688795")
     # update_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20060101", end_date="20251115", limit=10000)
     # update_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20060101", end_date="20251115", limit=10000)

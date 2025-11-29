@@ -305,7 +305,7 @@ class ProductQuery(object):
 
     @classmethod
     def _session_prepare(cls):
-        cls.session_request_count_max = random.randint(80,101)
+        cls.session_request_count_max = random.randint(70,101)
         cls.request_count = 0
         cls.prepare_type = ProductQuery.PrepareTypeEnum.SESSION
         time_zone = pytz.timezone("Asia/Shanghai")
@@ -331,16 +331,23 @@ class ProductQuery(object):
         chrom_options.add_argument('blink-settings=imagesEnabled=false')
         driver = Chrome(options=chrom_options)
         driver.delete_all_cookies()
-        driver.get("https://www.eastmoney.com/")
-        driver.get("https://data.eastmoney.com/center/")
-        driver.get("https://quote.eastmoney.com/center/gridlist.html#sh_a_board")
-        driver.get("https://quote.eastmoney.com/sh600635.html")
-        driver.get("https://quote.eastmoney.com/sh600635.html#fullScreenChart")
+        try:
+            driver.get("https://www.eastmoney.com/")
+            driver.get("https://data.eastmoney.com/center/")
+            driver.get("https://quote.eastmoney.com/center/gridlist.html#sh_a_board")
+            driver.get("https://quote.eastmoney.com/sh600636.html")
+            driver.get("https://quote.eastmoney.com/sh600636.html#fullScreenChart")
+        except:
+            pass
         cookie_list = driver.get_cookies()
         cookies_dic = {}
         for item in cookie_list:
             cookies_dic[item["name"]] = item["value"]
-        driver.quit()
+        try:
+            driver.close()
+            driver.quit()
+        except:
+            pass 
 
         # print(cookies_dic)
 
@@ -456,22 +463,27 @@ class ProductQuery(object):
                     cls.headers["User-Agent"] = random.choice(cls.user_agent_list)
                     cls.headers["Cookie"] = random.choice(cls.cookie_list)
                     r = requests.get(cls.quote_url_base, headers=cls.headers, timeout=200, params=params)
-                data_json = r.json()
-                klines = data_json["data"]["klines"]
+                data_json = r.json()               
             except Exception as e:
                 wh_count += 1
                 print("%s requests.get while(%d) except:" % (symbol, wh_count))
                 print(e)
-                if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION:
-                    sleep_time = random.uniform(sleep_time_base*wh_count, sleep_time_base*(wh_count+1))
-                    time.sleep(sleep_time)
-                    sleep_time_base += sleep_time
-                    cls._session_prepare()
-                    
-                if wh_count > cls.while_max_count:
+                sleep_time = random.uniform(sleep_time_base*wh_count, sleep_time_base*(wh_count+1))
+                if wh_count > cls.while_max_count or sleep_time > 120:
                     raise XException(ErrorCodeEnum.CODE_WEB_REQUEST_ERROR, str(e))
+                
+                time.sleep(sleep_time)
+                sleep_time_base += sleep_time
+                
+                if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION:                   
+                    cls._session_prepare()
+         
                 continue
             break
+        try: 
+            klines = data_json["data"]["klines"]
+        except:
+            klines = []
         
         temp_df = pd.DataFrame([item.split(",") for item in klines])
         if temp_df.empty: return temp_df
