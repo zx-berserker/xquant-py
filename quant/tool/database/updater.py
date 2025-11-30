@@ -55,8 +55,10 @@ class Updater(XThread):
                 else:
                     sleep(self.interval_sleep)
         except XException as e:
+            self.is_error_except = True
             print(e)
         except Exception as e:
+            self.is_error_except = True
             print(e)
         self.spider_thread_pool.release()
         self.update_thread_pool.release()

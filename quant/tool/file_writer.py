@@ -89,6 +89,13 @@ class FileWriterHandle(object):
                 self.writer.close()
             if self.before_release_callback:
                 self.before_release_callback(self)
+    
+    def release(self):
+        if self.cache_data != '':
+                self.writer.write(self.cache_data)
+                self.writer.close()
+        if self.before_release_callback:
+                self.before_release_callback(self)
 
 
 class FileWriterTask(XTask):
@@ -117,12 +124,12 @@ class FileWriterTaskFactory(XTaskFactory):
         self.handle_type = writer_handle_type
         self.handle_dic = {}
         self.data_to_string_callback = DefaultCallback.data_to_string_callback
-        self.flush_condition_callback = DefaultCallback.finish_condition_callback
+        self.flush_condition_callback = DefaultCallback.flush_condition_callback
         self.finish_condition_callback = DefaultCallback.finish_condition_callback
         self.auto_prefix_name_callback = DefaultCallback.auto_prefix_name_callback
         
     def set_callback(self, data_to_string_callback=DefaultCallback.data_to_string_callback,
-                     flush_condition_callback=DefaultCallback.finish_condition_callback,
+                     flush_condition_callback=DefaultCallback.flush_condition_callback,
                      finish_condition_callback=DefaultCallback.finish_condition_callback,
                      auto_prefix_name_callback=DefaultCallback.auto_prefix_name_callback):
         self.data_to_string_callback = data_to_string_callback
@@ -131,7 +138,7 @@ class FileWriterTaskFactory(XTaskFactory):
         self.auto_prefix_name_callback = auto_prefix_name_callback
          
     def before_handle_release_callback(self, handle):
-        del self.handle_dic[handle.get_name()]
+        self.handle_dic.pop(handle.get_name(), "")
 
     def get_task(self, data, *args, **kwargs):
         file_name = '' + self.auto_prefix_name_callback(*args, **kwargs) + self.file_name
@@ -143,4 +150,10 @@ class FileWriterTaskFactory(XTaskFactory):
                                           self.before_handle_release_callback)
             self.handle_dic[file_name] = handle
         return self.task_cls(self.handle_dic[file_name], data)
+    
+
+    def env_release(self):
+        for key in self.handle_dic:
+            self.handle_dic[key].release()
+            self.handle_dic.pop(key,"")
     

@@ -146,10 +146,11 @@ def update_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, star
                             prod_list = prod_list[num+1:]
                             break
                 if is_done == False:
-                    query_list.append({
-                        "exhange": exg,
-                        "products": prod_list
-                    })
+                    if len(prod_list) > 0:
+                        query_list.append({
+                            "exhange": exg,
+                            "products": prod_list
+                        })
         else:    
             for exg in exg_list:
                 prod_list = exg.products
@@ -176,12 +177,15 @@ def update_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, star
         Updater.sleep_uniform_max = 7
         Updater.sleep_uniform_min = 3
         updater.start()
-        updater.join()
+        error = updater.join()
+        if error:
+            print(preflex + " error break!")
+            return
         print(preflex + "finish")
 
 
 if __name__ == "__main__":
     # update_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20060101", end_date="20251115", limit=10000, symbol="124.HSTECH")
-    update_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20060101", end_date="20251115", limit=10000, symbol="1.688795")
-    # update_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20060101", end_date="20251115", limit=10000)
+    # update_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20060101", end_date="20251115", limit=10000, symbol="1.688795")
+    update_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20060101", end_date="20251115", limit=10000, symbol="1.600506")
     # update_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20060101", end_date="20251115", limit=10000)

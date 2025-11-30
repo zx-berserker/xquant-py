@@ -5,6 +5,8 @@ author: Berserker
 """
 import numpy as np
 import pandas as pd
+import string
+import random
 
 def test():
     data_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -95,4 +97,5 @@ def json_test():
     js = ""
     
 if __name__ == '__main__':
-    str_test()
+    test = "".join(random.sample(string.ascii_letters + string.digits + "-_", 25))
+    print(test)

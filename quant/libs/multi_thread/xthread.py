@@ -29,9 +29,11 @@ class XThread(XThreadBase):
 
     def __init__(self):
         self._thread = Thread(target=self.thread_main)
+        self.is_error_except = False
 
     def join(self, timeout=None):
         self._thread.join(timeout)
+        return  self.is_error_except
 
     def start(self):
         try:

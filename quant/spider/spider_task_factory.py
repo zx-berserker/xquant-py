@@ -21,7 +21,7 @@ class  ProductQuoteSpiderTaskFactory(XTaskFactory):
             self.symbol = symbol
             pass
 
-    def __init__(self, period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, start_date='20060101', end_date='20500101', limit:int=10000, prepare_type:ProductQuery.PrepareTypeEnum=ProductQuery.PrepareTypeEnum.SESSION):
+    def __init__(self, period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, start_date='20060101', end_date='20500101', limit:int=10000, prepare_type:ProductQuery.PrepareTypeEnum=ProductQuery.PrepareTypeEnum.SESSION_PROXY):
         super(ProductQuoteSpiderTaskFactory, self).__init__(ProductQuoteSpiderTask)
         self._period_type = period_type
         self._start_date = start_date

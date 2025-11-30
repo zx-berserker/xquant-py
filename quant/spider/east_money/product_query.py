@@ -20,11 +20,16 @@ import time
 import random
 from enum import Enum
 from selenium.webdriver import Chrome, ChromeOptions
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as Expect
+from selenium.webdriver.common.by import By
 from uuid import uuid4
 from datetime import datetime
 import pytz
 import json
+import string
 requests.packages.urllib3.disable_warnings()
+
 
 class ProductQuery(object):
     quote_url_base = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
@@ -77,12 +82,12 @@ class ProductQuery(object):
 
     session_cookie_dic = {
         "qgqp_b_id":  "",
-        "nid":  "",
-        "nid_create_time":  "0",
-        "gvi":  "",
-        "gvi_create_time":  "0",
+        # "nid":  "",
+        # "nid_create_time":  "0",
+        # "gvi":  "",
+        # "gvi_create_time":  "0",
         "fullscreengg":  "1",
-        "st_nvi":  "OYr0Yw962KjbKJtoHW84jbe69",
+        # "st_nvi":  "OYr0Yw962KjbKJtoHW84jbe69",
         "st_psi":  "20251124211800282-111000300841-7232565488",
         "st_asi":  "delete",
         "st_pvi":  "10082738244952",
@@ -105,10 +110,11 @@ class ProductQuery(object):
         DEFAULT = 1
         SESSION = 2
         PROXY = 3
+        SESSION_PROXY = 4
 
     sleep_time = 3
 
-    proxies_list = None 
+    request_proxies_list = None 
 
     while_max_count = 20
 
@@ -119,6 +125,10 @@ class ProductQuery(object):
     request_count = 0
 
     session_request_count_max = 100
+
+    session_proxy_list = None
+
+    session_proxy = None
 
     @classmethod
     def get_future_product(cls) -> pd.DataFrame:
@@ -300,14 +310,25 @@ class ProductQuery(object):
     
     @classmethod
     def _proxy_prepare(cls):
-        cls.prepare_type = ProductQuery.PrepareTypeEnum.PROXY
-        cls.proxies_list = Proxy.get_requests_proxies_list()
+        cls.request_proxies_list = Proxy.get_requests_proxies_list()
+
+    @classmethod
+    def _sesion_proxy_prepare(cls):
+        if cls.session_proxy_list is None or len(cls.session_proxy_list) == 0:
+            cls.session_proxy_list = Proxy.get_proxy()
+
+        if cls.session_proxy:
+            cls.session_proxy_list.remove(cls.session_proxy)
+        
+        cls.session_proxy = random.choice(cls.session_proxy_list)
+        print("session_proxy: ", cls.session_proxy)
+
 
     @classmethod
     def _session_prepare(cls):
         cls.session_request_count_max = random.randint(70,101)
         cls.request_count = 0
-        cls.prepare_type = ProductQuery.PrepareTypeEnum.SESSION
+       
         time_zone = pytz.timezone("Asia/Shanghai")
         is_first = True
         user_agent_list = cls.user_agent_list.copy()
@@ -317,28 +338,56 @@ class ProductQuery(object):
             cls.session.close()
             user_agent_list.remove(old_user_agent)
         
-        cls.session = requests.Session()   
+        cls.session = requests.Session()
+        if cls.prepare_type == cls.PrepareTypeEnum.SESSION_PROXY:
+            if cls.session_proxy is None: 
+                cls._sesion_proxy_prepare()
+            cls.session.proxies = {
+                "http": cls.session_proxy,
+                "https": cls.session_proxy
+            }
+
+
         random.shuffle(user_agent_list)
         user_agent = random.choice(user_agent_list)
 
-        chrom_options = ChromeOptions()       
+        chrom_options = ChromeOptions()
+
+        if cls.prepare_type == cls.PrepareTypeEnum.SESSION_PROXY:
+            chrom_options.add_argument(f"--proxy-server={cls.session_proxy}")
         chrom_options.add_argument(f'--user-agent={user_agent}')
         chrom_options.add_argument('--headless')
         chrom_options.add_argument('--no-sandbox')
         chrom_options.add_argument('--disable-dev-shm-usage')
-        chrom_options.add_argument('--start-maxmized')
         chrom_options.add_argument('--disable-gpu')
         chrom_options.add_argument('blink-settings=imagesEnabled=false')
+        chrom_options.add_argument("--disable-blink-features=AutomationControlled")
         driver = Chrome(options=chrom_options)
         driver.delete_all_cookies()
+        tz_params = {"timezoneId": "Asia/Shanghai"}
+        driver.execute_cdp_cmd("Emulation.setTimezoneOverride", tz_params)
+        driver.set_window_size(1280,1024)
         try:
             driver.get("https://www.eastmoney.com/")
             driver.get("https://data.eastmoney.com/center/")
-            driver.get("https://quote.eastmoney.com/center/gridlist.html#sh_a_board")
-            driver.get("https://quote.eastmoney.com/sh600636.html")
-            driver.get("https://quote.eastmoney.com/sh600636.html#fullScreenChart")
-        except:
+            driver.get("https://js1.eastmoney.com/tg.aspx?ID=666")
+            while_count = 0
+            while True:
+                while_count += 1
+                try:
+                    WebDriverWait(driver, 10, 0.5).until(Expect.presence_of_all_elements_located((By.CLASS_NAME, "quotetable")))
+                except Exception as e:
+                    if while_count > 3:
+                        break
+                    driver.refresh()
+                    print("session prepare while: diver.refresh().")
+                    continue
+
+                break
+            driver.get("https://quote.eastmoney.com/unify/r/220.IFM0")
+        except Exception as e:
             pass
+
         cookie_list = driver.get_cookies()
         cookies_dic = {}
         for item in cookie_list:
@@ -346,15 +395,28 @@ class ProductQuery(object):
         try:
             driver.close()
             driver.quit()
-        except:
+        except Exception as e:
             pass 
 
-        # print(cookies_dic)
 
-        
 
-        if True:
+        cls.session_cookie_dic["qgqp_b_id"] = uuid4().hex
+        cls.session_cookie_dic["st_si"] = cookies_dic["st_si"]
+        cls.session_cookie_dic["st_pvi"] = cookies_dic["st_pvi"]
+        cls.session_cookie_dic["st_sp"] = cookies_dic["st_sp"]
+        cls.session_cookie_dic["st_sn"] = cookies_dic["st_sn"]
+        cls.session_cookie_dic["st_psi"] = cookies_dic["st_psi"]
+
+
+        is_webreport = True
+
+        try:
             cookies_str = f'st_nvi={cookies_dic["st_nvi"]}; st_si={cookies_dic["st_si"]}; st_pvi={cookies_dic["st_pvi"]}; st_sp={cookies_dic["st_sp"]}; st_inirUrl=https%3A%2F%2Fwww.eastmoney.com%2F; st_sn={cookies_dic["st_sn"]}; st_psi={cookies_dic["st_psi"]}; st_asi=delete'
+        except:
+            is_webreport = False
+
+        if is_webreport:
+            
             cls.session.cookies = cookiejar_from_dict(cookies_dic)
             post_data = {
                 "language": "en-US",
@@ -379,7 +441,7 @@ class ProductQuery(object):
             headers["Cookie"] = cookies_str #"st_nvi=FRj1JN9GJ9pppk8KsLrVrb4aa; st_si=00488073912412; st_pvi=99466061288518; st_sp=2025-11-25%2000%3A43%3A13; st_inirUrl=https%3A%2F%2Fwww.eastmoney.com%2F; st_sn=51; st_psi=20251125004313487-111000300841-0269590838; st_asi=delete"
 
             json_data = json.dumps(post_data)
-            post_res = cls.session.post("https://anonflow2.eastmoney.com/backend/api/webreport", headers=headers, data=json_data)
+            post_res = cls.session.post("https://anonflow2.eastmoney.com/backend/api/webreport", headers=headers, data=json_data, verify=False)
             if  post_res.status_code != 200:
                 raise XException(ErrorCodeEnum.CODE_WEB_REQUEST_ERROR, "prepare session post error.")
             
@@ -387,18 +449,12 @@ class ProductQuery(object):
             if (not res_dic["data"]) or (not res_dic["data"]["gvi"]) or (not res_dic["data"]["nid"]):
                 raise XException(ErrorCodeEnum.CODE_WEB_REQUEST_ERROR, "prepare session post error.")
 
-            cls.session_cookie_dic["gvi"] = res_dic["data"]["gvi"]
             cls.session_cookie_dic["gvi_create_time"] = str(int(datetime.now().astimezone(time_zone).timestamp() * 1000))
+            cls.session_cookie_dic["nid_create_time"] = str(int(datetime.now().astimezone(time_zone).timestamp() * 1000))
+            cls.session_cookie_dic["gvi"] = res_dic["data"]["gvi"]
             cls.session_cookie_dic["nid"] = res_dic["data"]["nid"]
-            cls.session_cookie_dic["nid_create_time"] = str(int(datetime.now().astimezone(time_zone).timestamp() * 1000))         
-            cls.session_cookie_dic["qgqp_b_id"] = uuid4().hex
             cls.session_cookie_dic["st_nvi"] = cookies_dic["st_nvi"]
-            cls.session_cookie_dic["st_si"] = cookies_dic["st_si"]
-            cls.session_cookie_dic["st_pvi"] = cookies_dic["st_pvi"]
-            cls.session_cookie_dic["st_sp"] = cookies_dic["st_sp"]
-            cls.session_cookie_dic["st_sn"] = cookies_dic["st_sn"]
-            cls.session_cookie_dic["st_psi"] = cookies_dic["st_psi"]
-
+            
 
         cls.session.cookies = cookiejar_from_dict(cls.session_cookie_dic)
         cls.headers["User-Agent"] = user_agent
@@ -412,10 +468,27 @@ class ProductQuery(object):
     
     @classmethod   
     def prepare(cls, type:PrepareTypeEnum=PrepareTypeEnum.DEFAULT):
-        if type == ProductQuery.PrepareTypeEnum.PROXY:
-            cls._proxy_prepare()
-        elif type == ProductQuery.PrepareTypeEnum.SESSION:
-            cls._session_prepare()
+        cls.prepare_type = type
+        while_count = 0
+        if type == ProductQuery.PrepareTypeEnum.DEFAULT:
+            raise XException(ErrorCodeEnum.CODE_PARAMETER_INVALID, "param type invalid.")
+        while True:
+            while_count += 1
+            try:
+                if type == ProductQuery.PrepareTypeEnum.PROXY:
+                    cls._proxy_prepare()
+                elif type == ProductQuery.PrepareTypeEnum.SESSION:
+                    cls._session_prepare()
+                elif type == ProductQuery.PrepareTypeEnum.SESSION_PROXY:
+                    cls._sesion_proxy_prepare()
+                    cls._session_prepare()
+            except Exception as e:
+                print(e)
+                if while_count > 3:
+                    raise e
+                continue
+            
+            break
 
 
 
@@ -452,13 +525,13 @@ class ProductQuery(object):
         sleep_time_base = 20
         while(True):
             try: 
-                if cls.proxies_list and len(cls.proxies_list) > 0 and cls.prepare_type == ProductQuery.PrepareTypeEnum.PROXY:
+                if cls.prepare_type == ProductQuery.PrepareTypeEnum.PROXY and cls.request_proxies_list and len(cls.request_proxies_list) > 0:
                     cls.headers["User-Agent"] = random.choice(cls.user_agent_list)
                     cls.headers["Cookie"] = ""
-                    current_access = random.choice(cls.proxies_list)
+                    current_access = random.choice(cls.request_proxies_list)
                     r = requests.get(cls.quote_url_base, headers=cls.headers, timeout=200, params=params, proxies=current_access, verify=False)
-                elif cls.session and cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION:
-                    r = cls.session.get(cls.quote_url_base, timeout=200, params=params)
+                elif cls.session and (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION or cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY):
+                    r = cls.session.get(cls.quote_url_base, timeout=200, params=params, verify=False)
                 else: 
                     cls.headers["User-Agent"] = random.choice(cls.user_agent_list)
                     cls.headers["Cookie"] = random.choice(cls.cookie_list)
@@ -474,8 +547,11 @@ class ProductQuery(object):
                 
                 time.sleep(sleep_time)
                 sleep_time_base += sleep_time
+
+                if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY and wh_count % 2 == 0:
+                    cls._sesion_proxy_prepare()
                 
-                if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION:                   
+                if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION or cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY:                   
                     cls._session_prepare()
          
                 continue

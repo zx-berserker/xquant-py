@@ -115,4 +115,7 @@ class CacheFileWriterTaskFactory(XTaskFactory):
     def get_task(self, data, stock, *args, **kwargs):
         return self.writer_factory.get_task(data, stock)
     
+
+    def env_release(self):
+        self.writer_factory.env_release()
     

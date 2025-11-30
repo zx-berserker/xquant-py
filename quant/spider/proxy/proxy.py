@@ -9,7 +9,9 @@ from enum import Enum
 import certifi
 from config import root_dir
 import os
-# requests.packages.urllib3.disable_warnings()
+import time
+import json
+requests.packages.urllib3.disable_warnings()
 
 
 class Proxy(object):
@@ -20,60 +22,104 @@ class Proxy(object):
         SOCKS5 = "socks5"
         ALL = "all"
 
-    base_ulr = "https://proxy.scdn.io/api/get_proxy.php"
+
+    # https://api.proxyscrape.com/v4/free-proxy-list/get?request=display_proxies&country=cn&protocol=socks4&proxy_format=ipport&format=json&timeout=20000
+    base_ulr = "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/countries/CN/data.json"
     params = {
+        "request": "display_proxies",
         "protocol": "http",
-        "count": 20,
-        # "country_code": "CN",
+        "format": "json",
+        "country": "cn",
+        "proxy_format": "ipport"
     }
 
     headers = {                       
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
-        'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+        'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
         "Connection": "keep-alive",
-        "Cookie": "",
         "Accept-Language": "en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7",
         "Sec-Ch-Ua":  '"Chromium";v="142", "Google Chrome";v="142", "Not_A Brand";v="99"',
         # 'Referer': 'https://quote.eastmoney.com/center/gridlist.html',
     }
 
+    east_url_list = [
+        "https://push2.eastmoney.com/api/qt/ulist/get",
+        "https://push2.eastmoney.com/api/qt/stock/get",
+        "https://np-weblist.eastmoney.com/comm/web/getFastNews",
+        "https://push2delay.eastmoney.com/api/qt/kamt/get",
+        "https://push2delay.eastmoney.com/api/qt/ulist/get",
+        "https://push2delay.eastmoney.com/api/qt/clist/get",
+        "https://push2.eastmoney.com/api/qt/ulist/get",
+    ]
+
     @classmethod
-    def get_proxy(cls,type:Type, count:int=20) -> list:
-        cls.params["count"] = count
-        cls.params["protocol"] = type.value
-        res = requests.get(cls.base_ulr, params=cls.params)
-        data = res.json()
+    def get_proxy(cls,type:Type=Type.ALL, use_file=False) -> list:
         proxy_list = []
-        # url_east = "https://push2.eastmoney.com/api/qt/stock/get"
+        json_file_path = os.path.join(root_dir, "config", "proxy_list.json")
+        with open(json_file_path,"r") as file:
+            data = json.load(file)
+            proxy_list.extend(data)
+        
+        if use_file:
+            res_list = []
+            for item in proxy_list:
+                res_list.append(item["proxy"])
+            return res_list
+
+
+        # cls.params["protocol"] = type.value       
+        res = requests.get(cls.base_ulr)#, params=cls.params)
+        res_data = res.json()
+        proxy_list.extend(res_data)
+        request_proxy_list = []
+        res_proxy_json_list = []
 
         
-        if data["code"] and data["code"] == 200 and data["data"]:
-            if data["data"]["proxies"]:
-                res_pro_list = data["data"]["proxies"]
-                for item in res_pro_list:
-                    proxy_str = "%s://%s" % (type.value, item)
-                    proxy = {
-                        "http": proxy_str,
-                        "https": proxy_str,
-                    }
-                    
-                    try:
-                        # url = "https://httpbin.org/ip"
-                        # url = "https://jsonplaceholder.typicode.com/posts"
-                        url = "https://httpbin.org/get"
-                        check_res = requests.get(url,headers=cls.headers, proxies=proxy, timeout=5, verify=False)
-                    except Exception as e:
-                        print("Proxy except:", e)
-                        continue
-                    if check_res.status_code == 200:
-                        proxy_list.append(proxy_str)
-        return proxy_list
+
+        index = 0
+        for item in proxy_list:
+            # proxy_str = "%s://%s" % (type.value, item["proxy"])
+            index += 1
+            proxy_str = item["proxy"]
+            proxy_type = item["protocol"]
+            if type != Proxy.Type.ALL:
+                if type.value != proxy_type:
+                    continue
+
+            proxy = {
+                "http": proxy_str,
+                "https": proxy_str,
+            }
+            
+            try:
+                # url = "https://httpbin.org/ip"
+                # url = "https://jsonplaceholder.typicode.com/posts"
+                # url = "https://httpbin.org/get"
+                check_data = None
+                check_res = None
+                url = cls.east_url_list[index % len(cls.east_url_list)]
+                check_res = requests.get(url,headers=cls.headers, proxies=proxy, timeout=10, verify=False)
+                check_data = check_res.json()
+            except Exception as e:
+                # print("Proxy except:", e)
+                time.sleep(1)
+                continue
+            if check_res.status_code == 200 and "data" in check_data.keys():
+                request_proxy_list.append(proxy_str)
+                res_proxy_json_list.append(item)
+                print("proxy: ", proxy_str)
+            time.sleep(1)
+
+        with open(json_file_path,"w") as file:
+            json.dump(res_proxy_json_list, file)
+
+        return request_proxy_list
 
     @classmethod
-    def get_requests_proxies_list(cls, num:int=20) -> list:
+    def get_requests_proxies_list(cls, num:int=1) -> list:
         proxy_list = []
         while(True):
-            proxy_list.extend(cls.get_proxy(Proxy.Type.SOCKS4))
+            proxy_list.extend(cls.get_proxy())
             list_len = len(proxy_list)
             if list_len > num:
                 break
@@ -82,7 +128,7 @@ class Proxy(object):
         return res_list
 
 if __name__ == "__main__":
-    data_list = Proxy.get_proxy(Proxy.Type.SOCKS5)
+    data_list = Proxy.get_proxy()
     print(data_list)
     # path = certifi.where()
     # print(path)
