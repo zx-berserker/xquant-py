@@ -2,3 +2,5 @@
 *.pyc
 .venv/
 .vscode/
+config/secure.py
+.DS_Store

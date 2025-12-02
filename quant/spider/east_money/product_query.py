@@ -316,6 +316,8 @@ class ProductQuery(object):
     def _sesion_proxy_prepare(cls):
         if cls.session_proxy_list is None or len(cls.session_proxy_list) == 0:
             cls.session_proxy_list = Proxy.get_proxy()
+            if len(cls.session_proxy_list) == 0:
+                raise XException(ErrorCodeEnum.CODE_INVALID, "cls.session_proxy_list len 0!")
 
         if cls.session_proxy:
             cls.session_proxy_list.remove(cls.session_proxy)
@@ -384,7 +386,7 @@ class ProductQuery(object):
                     continue
 
                 break
-            driver.get("https://quote.eastmoney.com/unify/r/220.IFM0")
+            # driver.get("https://quote.eastmoney.com/unify/r/220.IFM0")
         except Exception as e:
             pass
 
@@ -401,10 +403,10 @@ class ProductQuery(object):
 
 
         cls.session_cookie_dic["qgqp_b_id"] = uuid4().hex
-        cls.session_cookie_dic["st_si"] = cookies_dic["st_si"]
-        cls.session_cookie_dic["st_pvi"] = cookies_dic["st_pvi"]
+        cls.session_cookie_dic["st_si"] = cookies_dic["st_si"] if cookies_dic["st_si"] else "".join(random.sample(string.digits, 14))
+        cls.session_cookie_dic["st_pvi"] = cookies_dic["st_pvi"] if cookies_dic["st_pvi"] else "".join(random.sample(string.digits, 14))
         cls.session_cookie_dic["st_sp"] = cookies_dic["st_sp"]
-        cls.session_cookie_dic["st_sn"] = cookies_dic["st_sn"]
+        cls.session_cookie_dic["st_sn"] = cookies_dic["st_sn"] if cookies_dic["st_sn"] else "4"
         cls.session_cookie_dic["st_psi"] = cookies_dic["st_psi"]
 
 
@@ -412,7 +414,8 @@ class ProductQuery(object):
 
         try:
             cookies_str = f'st_nvi={cookies_dic["st_nvi"]}; st_si={cookies_dic["st_si"]}; st_pvi={cookies_dic["st_pvi"]}; st_sp={cookies_dic["st_sp"]}; st_inirUrl=https%3A%2F%2Fwww.eastmoney.com%2F; st_sn={cookies_dic["st_sn"]}; st_psi={cookies_dic["st_psi"]}; st_asi=delete'
-        except:
+        except Exception as e:
+            print("webreport False: ", e)
             is_webreport = False
 
         if is_webreport:
@@ -436,9 +439,8 @@ class ProductQuery(object):
             headers = cls.headers.copy()
             headers["User-Agent"] = user_agent
             headers["Content-Type"] = "application/json;charset=UTF-8"
-            # headers["Content-Length"] = "475"
             # headers["Cookie"] = "qgqp_b_id=b6ccb39d04cdd2d405676c56f1c00556; st_nvi=FRj1JN9GJ9pppk8KsLrVrb4aa; st_si=00488073912412; st_pvi=99466061288518; st_sp=2025-11-25%2000%3A43%3A13; st_inirUrl=https%3A%2F%2Fwww.eastmoney.com%2F; st_sn=51; st_psi=20251125004313487-111000300841-0269590838; st_asi=delete"
-            headers["Cookie"] = cookies_str #"st_nvi=FRj1JN9GJ9pppk8KsLrVrb4aa; st_si=00488073912412; st_pvi=99466061288518; st_sp=2025-11-25%2000%3A43%3A13; st_inirUrl=https%3A%2F%2Fwww.eastmoney.com%2F; st_sn=51; st_psi=20251125004313487-111000300841-0269590838; st_asi=delete"
+            headers["Cookie"] = cookies_str 
 
             json_data = json.dumps(post_data)
             post_res = cls.session.post("https://anonflow2.eastmoney.com/backend/api/webreport", headers=headers, data=json_data, verify=False)
@@ -482,7 +484,7 @@ class ProductQuery(object):
                 elif type == ProductQuery.PrepareTypeEnum.SESSION_PROXY:
                     cls._sesion_proxy_prepare()
                     cls._session_prepare()
-            except Exception as e:
+            except (Exception, XException) as e:
                 print(e)
                 if while_count > 3:
                     raise e

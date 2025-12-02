@@ -16,10 +16,11 @@ from quant.tool.database.data_models.block import BlockData
 from quant.tool.file_writer import FileWriterTaskFactory
 from quant.models.stock import Stock
 from quant.models.stock_info import StockInfo
+from quant.models import Exchange
 
 def query_test():
     with SQLAlchemy.session_context() as session:
-        block_list = session.query(Block).all()
+        block_list = session.query(Exchange).all()
         # for block in block_list:
         #     # query_block_avg(block, session)
         #     data_list = BlockData.query_block_data(session, block)
@@ -57,6 +58,6 @@ def query_yearly_net_profit():
 
 
 if __name__ == '__main__':
-    SQLAlchemy.create_all()
-    # block_list = query_test()
-    # print(block_list)
+    # SQLAlchemy.create_all()
+    block_list = query_test()
+    print(block_list)

@@ -6,8 +6,8 @@ author: Berserker
 """
 
 
-SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:zx123456@127.0.0.1:3306/xquant'
-# SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:zx123456@127.0.0.1:13306/xquant'
+# SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:zx123456@127.0.0.1:3306/xquant'
+SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:zx123456@65.49.207.215:13306/xquant'
 
 SECRET_KEY = '\x88D\xf09\x91\x01\x98\x89\x87\x93\xa0A\xc68\xf9\xecJ:U\x17\xc5V\xbe\x8b\xef\xd7\xd8\xd3\xe6\x98*4'
 
