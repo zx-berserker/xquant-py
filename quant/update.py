@@ -160,8 +160,8 @@ def update_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, star
                 })
 
 
-    # file_path = '/home/xquant/cache'
-    file_path = "/Users/berserker//Downloads/cache"
+    file_path = '/home/xquant/cache'
+    # file_path = "/Users/berserker//Downloads/cache"
     file_base_name = '' + period_type.name + '.json'
     flush_count = 1
     slice_capacity = 1000
@@ -183,6 +183,8 @@ def update_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, star
             print(preflex + " error break!")
             return
         print(preflex + "finish")
+    
+    print("end.")
 
 
 if __name__ == "__main__":
