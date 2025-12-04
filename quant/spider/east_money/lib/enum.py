@@ -9,5 +9,5 @@ from enum import Enum
 class QuotePeriodEnum(Enum):
     DAILY = "101"
     WEEKLY = "102"
-    MONTHLY = "102"
+    MONTHLY = "103"
     HOURLY = "60"

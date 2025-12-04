@@ -163,20 +163,20 @@ def update_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, star
     file_path = '/home/xquant/cache'
     # file_path = "/Users/berserker//Downloads/cache"
     file_base_name = '' + period_type.name + '.json'
-    flush_count = 1
-    slice_capacity = 1000
+    flush_count = 1000
+    slice_capacity = 3
     for query in query_list:
         exg = query["exhange"]
         data_list = query["products"]
         preflex = "[%s]-" % (exg.east_money_code)
         update_task_factory = CacheFileWriterTaskFactory(file_path, file_base_name, data_list, flush_count, slice_capacity, file_prefix_base_name=preflex)
-        spider_factory = ProductQuoteSpiderTaskFactory(period_type, start_date, end_date, limit)
+        spider_factory = ProductQuoteSpiderTaskFactory(period_type, start_date, end_date, limit, prepare_type=ProductQuery.PrepareTypeEnum.SESSION_PROXY)
         param_list = spider_factory.task_param_list_generator(exg, data_list)
         updater = Updater(param_list, update_task_factory, spider_factory)
         Updater.spider_thread_pool_capacity = 1
         Updater.update_thread_pool_capacity = 1
         Updater.sleep_uniform_max = 7
-        Updater.sleep_uniform_min = 3
+        Updater.sleep_uniform_min = 2
         updater.start()
         error = updater.join()
         if error:
@@ -188,7 +188,7 @@ def update_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, star
 
 
 if __name__ == "__main__":
-    # update_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20060101", end_date="20251115", limit=10000, symbol="124.HSTECH")
-    # update_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20060101", end_date="20251115", limit=10000, symbol="1.688795")
-    update_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20060101", end_date="20251115", limit=10000, symbol="0.001316")
+    update_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20060101", end_date="20251115", limit=10000)
+    # update_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20060101", end_date="20251115", limit=10000)
+    # update_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20060101", end_date="20251115", limit=10000)
     # update_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20060101", end_date="20251115", limit=10000)

@@ -19,8 +19,8 @@ class FileWriterHandleEnum(Enum):
 
 class DefaultCallback(object):
     @staticmethod
-    def data_to_string_callback(Handle=None):
-        return Handle.get_data()
+    def data_to_string_callback(Handle=None, data=None):
+        return str(data)
 
     @staticmethod
     def flush_condition_callback(Handle=None):
@@ -50,21 +50,20 @@ class FileWriterHandle(object):
         self.full_name = str(Path(self.path, self.name))
         self.cache_data = ''
         self.writer = open(self.full_name, self.type.value, encoding='utf-8')
-        self.temp_data = None
+        # self.temp_data = None
         self.count = 0
         
-    def set_condition_callback(self, data_to_string_callback=DefaultCallback.data_to_string_callback,
-                               flush_condition_callback=DefaultCallback.flush_condition_callback,
+    def set_condition_callback(self,flush_condition_callback=DefaultCallback.flush_condition_callback,
                                finish_condition_callback=DefaultCallback.finish_condition_callback,
                                before_release_callback=None):
-        self.data_to_string_callback = data_to_string_callback
         self.flush_condition_callback = flush_condition_callback
         self.finish_condition_callback = finish_condition_callback
         self.before_release_callback = before_release_callback
     
-    def write(self, data):
-        self.temp_data = data
-        self.cache_data += self.data_to_string_callback(self)
+    def write(self, data:str):
+        # self.temp_data = data
+        # self.cache_data += self.data_to_string_callback(self)
+        self.cache_data += data
         self.count += 1
     
     def get_count(self):
@@ -73,8 +72,8 @@ class FileWriterHandle(object):
     def get_name(self):
         return self.name
         
-    def get_data(self):
-        return self.temp_data
+    # def get_data(self):
+    #     return self.temp_data
         
     def __enter__(self):
         return self
@@ -99,14 +98,16 @@ class FileWriterHandle(object):
 
 
 class FileWriterTask(XTask):
-    def __init__(self, writer_handle, data):
+    def __init__(self, writer_handle:FileWriterHandle, data, data_to_string_callback=DefaultCallback.data_to_string_callback):
         super(FileWriterTask, self).__init__()
         self.handle = writer_handle
         self.data = data
+        self.data_to_string_callback = data_to_string_callback
 
     def task_main(self):
-        with self.handle as handle:
-            handle.write(self.data)
+        str_data = self.data_to_string_callback(self.handle, self.data)
+        with self.handle as handle:            
+            handle.write(str_data)
 
 
 class FileWriterTaskFactory(XTaskFactory):
@@ -144,12 +145,11 @@ class FileWriterTaskFactory(XTaskFactory):
         file_name = '' + self.auto_prefix_name_callback(*args, **kwargs) + self.file_name
         if file_name not in self.handle_dic:
             handle = FileWriterHandle(self.file_path, file_name, self.handle_type)
-            handle.set_condition_callback(self.data_to_string_callback,
-                                          self.flush_condition_callback,
+            handle.set_condition_callback(self.flush_condition_callback,
                                           self.finish_condition_callback,
                                           self.before_handle_release_callback)
             self.handle_dic[file_name] = handle
-        return self.task_cls(self.handle_dic[file_name], data)
+        return self.task_cls(self.handle_dic[file_name], data, self.data_to_string_callback)
     
 
     def env_release(self):

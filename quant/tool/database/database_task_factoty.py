@@ -6,6 +6,8 @@ author: Berserker
 from .database_task import BulkUpdateTask, CoreUpdateTask
 from quant.libs.multi_thread.xtask import XTaskFactory
 from quant.tool.file_writer import FileWriterTaskFactory, FileWriterHandleEnum, FileWriterTask
+from quant.libs.error import XException
+from quant.libs.enums import ErrorCodeEnum
 
 
 class BulkUpdateTaskFactory(XTaskFactory):
@@ -51,9 +53,11 @@ class CacheFileWriterTaskFactory(XTaskFactory):
         self.slice_count = 0
         self.first_empty = False
         
-    def data_to_string_callback(self, handle=None):
+    def data_to_string_callback(self, handle=None, data=None):
+        if handle==None or data == None:
+            raise XException(ErrorCodeEnum.CODE_PARAMETER_INVALID,"param is None!")
         count = handle.get_count() % self.slice_capacity
-        str_data = str(handle.get_data()).replace("'", "\"")
+        str_data = str(data).replace("'", "\"")
         # name_list = handle.get_name().split('-', 2)
         # num = int(name_list[0]) - int(name_list[1])
         num = len(self.temp_stock_list) - 1

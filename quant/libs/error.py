@@ -3,10 +3,11 @@
 date: 2020/8/11
 author: Berserker
 """
+from .enums import ErrorCodeEnum
 
 class XException(Exception):
 
-    def __init__(self, error_code=None, description=None, name="SystemException"):
+    def __init__(self, error_code:ErrorCodeEnum=None, description=None, name="SystemException"):
         if error_code:
             self.error_code = error_code.value
         if description:

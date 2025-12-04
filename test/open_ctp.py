@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     # futures_hist_em_df = ak.futures_hist_em(symbol="热卷", period="daily")
     """
-    https://push2his.eastmoney.com/api/qt/stock/kline/get?klt=101&fqt=1&secid=159.cufi&ut=7eea3edcaed734bea9cbfc24409ed989&iscca=1&end=20250101&lmt=1000&forcect=1&fields2=f51,f52,f53,f54,f55,f56,f57,f59,f63&fields1=f1,f2,f3,f4,f5,f6,f7,f8
+    https://push2his.eastmoney.com/api/qt/stock/kline/get?klt=102&fqt=0&secid=0.003020&ut=7eea3edcaed734bea9cbfc24409ed989&iscca=1&end=20250101&lmt=1000&forcect=1&fields2=f51,f52,f53,f54,f55,f56,f57,f59,f63&fields1=f1,f2,f3,f4,f5,f6,f7,f8
 
     "https://push2.eastmoney.com/api/qt/clist/get"
     "https://push2.eastmoney.com/api/qt/clist/get"

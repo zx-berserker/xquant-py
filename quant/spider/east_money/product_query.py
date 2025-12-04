@@ -511,7 +511,7 @@ class ProductQuery(object):
         params = {
             "secid": symbol,
             "klt": period.value,
-            "fqt": "1",
+            "fqt": "0",
             "lmt": str(limit),
             "beg": start_date,
             "end": end_date,
@@ -531,13 +531,13 @@ class ProductQuery(object):
                     cls.headers["User-Agent"] = random.choice(cls.user_agent_list)
                     cls.headers["Cookie"] = ""
                     current_access = random.choice(cls.request_proxies_list)
-                    r = requests.get(cls.quote_url_base, headers=cls.headers, timeout=200, params=params, proxies=current_access, verify=False)
+                    r = requests.get(cls.quote_url_base, headers=cls.headers, timeout=20, params=params, proxies=current_access, verify=False)
                 elif cls.session and (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION or cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY):
-                    r = cls.session.get(cls.quote_url_base, timeout=200, params=params, verify=False)
+                    r = cls.session.get(cls.quote_url_base, timeout=20, params=params, verify=False)
                 else: 
                     cls.headers["User-Agent"] = random.choice(cls.user_agent_list)
                     cls.headers["Cookie"] = random.choice(cls.cookie_list)
-                    r = requests.get(cls.quote_url_base, headers=cls.headers, timeout=200, params=params)
+                    r = requests.get(cls.quote_url_base, headers=cls.headers, timeout=20, params=params)
                 data_json = r.json()               
             except Exception as e:
                 wh_count += 1
