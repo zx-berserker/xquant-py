@@ -33,6 +33,12 @@ class Proxy(object):
         "proxy_format": "ipport"
     }
 
+    proxy_url_list = [
+        "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/countries/CN/data.json",
+        "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/countries/HK/data.json",
+        "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/countries/US/data.json",
+    ]
+
     headers = {                       
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
         'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -67,15 +73,15 @@ class Proxy(object):
             return res_list
 
 
-        # cls.params["protocol"] = type.value       
-        res = requests.get(cls.base_ulr)#, params=cls.params)
-        res_data = res.json()
-        proxy_list.extend(res_data)
+        # cls.params["protocol"] = type.value
+        for url in cls.proxy_url_list:       
+            res = requests.get(url)#, params=cls.params)
+            res_data = res.json()
+            proxy_list.extend(res_data)
         request_proxy_list = []
         res_proxy_json_list = []
 
-        
-
+    
         index = 0
         for item in proxy_list:
             # proxy_str = "%s://%s" % (type.value, item["proxy"])
