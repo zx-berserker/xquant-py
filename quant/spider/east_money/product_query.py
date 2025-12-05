@@ -543,12 +543,13 @@ class ProductQuery(object):
                 wh_count += 1
                 print("%s requests.get while(%d) except:" % (symbol, wh_count))
                 print(e)
-                sleep_time = random.uniform(sleep_time_base*wh_count, sleep_time_base*(wh_count+1))
-                if wh_count > cls.while_max_count or sleep_time > 120:
-                    raise XException(ErrorCodeEnum.CODE_WEB_REQUEST_ERROR, "get_product_quote: web request error!")
+                if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION:
+                    sleep_time = random.uniform(sleep_time_base*wh_count, sleep_time_base*(wh_count+1))
+                    if wh_count > cls.while_max_count or sleep_time > 120:
+                        raise XException(ErrorCodeEnum.CODE_WEB_REQUEST_ERROR, "get_product_quote: web request error!")
                 
-                time.sleep(sleep_time)
-                sleep_time_base += sleep_time
+                    time.sleep(sleep_time)
+                    sleep_time_base += sleep_time
 
                 if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY and wh_count % 2 == 0:
                     cls._sesion_proxy_prepare()
