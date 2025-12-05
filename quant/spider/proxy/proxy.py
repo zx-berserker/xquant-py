@@ -34,9 +34,9 @@ class Proxy(object):
     }
 
     proxy_url_list = [
-        "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/countries/CN/data.json",
+        # "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/countries/CN/data.json",
         "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/countries/HK/data.json",
-        "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/countries/US/data.json",
+        # "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/countries/US/data.json",
     ]
 
     headers = {                       
@@ -62,9 +62,12 @@ class Proxy(object):
     def get_proxy(cls,type:Type=Type.ALL, use_file=False) -> list:
         proxy_list = []
         json_file_path = os.path.join(root_dir, "config", "proxy_list.json")
-        with open(json_file_path,"r") as file:
-            data = json.load(file)
-            proxy_list.extend(data)
+        try:
+            with open(json_file_path,"r") as file:
+                data = json.load(file)
+                proxy_list.extend(data)
+        except:
+            pass
         
         if use_file:
             res_list = []
