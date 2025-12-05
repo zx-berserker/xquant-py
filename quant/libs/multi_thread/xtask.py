@@ -41,6 +41,11 @@ class XTaskBase(ABC):
     @abstractmethod
     def running(self):
         raise XException(ErrorCodeEnum.CODE_INVALID, "Abstract function is invalid !")
+    
+    @abstractmethod
+    def add_except_callback(self, fn):
+        raise XException(ErrorCodeEnum.CODE_INVALID, "Abstract function is invalid !")
+
 
 
 class XTaskFactory(ABC):
@@ -68,6 +73,7 @@ class XTask(XTaskBase):
         self._exception = None
         self._is_running = False
         self._done_callback = None
+        self._except_callback = None
         self._exe_event = Event()
         self._exe_lock = RLock()
 
@@ -85,7 +91,9 @@ class XTask(XTaskBase):
             self._exe_event.set()
         except XException as e:
             self._exception = e
-            return
+            if self._except_callback:
+                self._except_callback(e)
+            return e
         except Exception as e:
             raise e
         else:
@@ -126,3 +134,7 @@ class XTask(XTaskBase):
             with self._exe_lock:
                 self._is_done = True
 
+    def add_except_callback(self, fn):
+        if not self._is_running:
+            with self._exe_lock:
+                self._except_callback = fn

@@ -19,6 +19,7 @@ from quant.tool.database.update_job import UpdateJobFactory
 from quant.libs.multi_process.xprocess_pool import XProcessPool
 from quant.libs.multi_process.xjob import XJobManager, XProcessPoolParam
 from quant.libs.multi_thread.xtask import XTaskFactory
+from threading import Event
 from time import sleep
 import random
 
@@ -39,10 +40,13 @@ class Updater(XThread):
         self.spider_thread_pool = XThreadPool(self.spider_thread_pool_capacity)
         self._is_exit = False
 
+
     def thread_main(self):
         try:
+
             self.update_task_factory.env_prepare()
             self.spider_task_factory.env_prepare()
+            
             for param in self.param_list:
                 spider_task = self.spider_task_factory.get_task(param)
                 if not spider_task:
@@ -60,10 +64,13 @@ class Updater(XThread):
         except Exception as e:
             self.is_error_except = True
             print(e)
+        
         self.spider_thread_pool.release()
         self.update_thread_pool.release()
         self.spider_task_factory.env_release()
         self.update_task_factory.env_release()
+
+
 
     def spider_task_done_callback(self, task):
         if not task:
@@ -73,6 +80,9 @@ class Updater(XThread):
         update_task = self.update_task_factory.get_task(ret, stock)
         thread = self.update_thread_pool.borrow_thread()
         thread.run(update_task)
+
+
+
 
 
 class MultiProcessUpdater(XThread):

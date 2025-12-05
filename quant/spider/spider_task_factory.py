@@ -28,6 +28,7 @@ class  ProductQuoteSpiderTaskFactory(XTaskFactory):
         self._end_date = end_date
         self._limit = limit
         self._prepare_type = prepare_type
+        self._exception = None
 
     def task_param_list_generator(self, exchange:Exchange, product_list):
         class ParamIter():
@@ -51,7 +52,18 @@ class  ProductQuoteSpiderTaskFactory(XTaskFactory):
         ProductQuery.prepare(self._prepare_type)
         
     def get_task(self, param:TaskParam):
-        return self.task_cls(param.product, param.symbol, self._period_type, self._start_date, self._end_date, self._limit)
+        self.except_watch()
+        task = self.task_cls(param.product, param.symbol, self._period_type, self._start_date, self._end_date, self._limit)
+        task.add_except_callback(self.task_except_callback)
+        return task
+    
+    def task_except_callback(self, exception):
+        self._exception = exception
+
+    def except_watch(self):
+        if self._exception:
+            raise self._exception
+
 
 
 

@@ -170,7 +170,7 @@ def update_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, star
         data_list = query["products"]
         preflex = "[%s]-" % (exg.east_money_code)
         update_task_factory = CacheFileWriterTaskFactory(file_path, file_base_name, data_list, flush_count, slice_capacity, file_prefix_base_name=preflex)
-        spider_factory = ProductQuoteSpiderTaskFactory(period_type, start_date, end_date, limit, prepare_type=ProductQuery.PrepareTypeEnum.SESSION_PROXY)
+        spider_factory = ProductQuoteSpiderTaskFactory(period_type, start_date, end_date, limit, prepare_type=ProductQuery.PrepareTypeEnum.SESSION)
         param_list = spider_factory.task_param_list_generator(exg, data_list)
         updater = Updater(param_list, update_task_factory, spider_factory)
         Updater.spider_thread_pool_capacity = 1

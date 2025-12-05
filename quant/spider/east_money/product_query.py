@@ -545,7 +545,7 @@ class ProductQuery(object):
                 print(e)
                 sleep_time = random.uniform(sleep_time_base*wh_count, sleep_time_base*(wh_count+1))
                 if wh_count > cls.while_max_count or sleep_time > 120:
-                    raise XException(ErrorCodeEnum.CODE_WEB_REQUEST_ERROR, str(e))
+                    raise XException(ErrorCodeEnum.CODE_WEB_REQUEST_ERROR, "get_product_quote: web request error!")
                 
                 time.sleep(sleep_time)
                 sleep_time_base += sleep_time
