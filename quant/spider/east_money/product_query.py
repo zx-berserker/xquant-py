@@ -401,12 +401,11 @@ class ProductQuery(object):
             pass 
 
 
-
         cls.session_cookie_dic["qgqp_b_id"] = uuid4().hex
-        cls.session_cookie_dic["st_si"] = cookies_dic["st_si"] if cookies_dic["st_si"] else "".join(random.sample(string.digits, 14))
-        cls.session_cookie_dic["st_pvi"] = cookies_dic["st_pvi"] if cookies_dic["st_pvi"] else "".join(random.sample(string.digits, 14))
+        cls.session_cookie_dic["st_si"] = cookies_dic["st_si"] if "st_si" in cookies_dic.keys() else "".join(random.sample(string.digits, 14))
+        cls.session_cookie_dic["st_pvi"] = cookies_dic["st_pvi"] if "st_pvi" in cookies_dic.keys() else "".join(random.sample(string.digits, 14))
         cls.session_cookie_dic["st_sp"] = cookies_dic["st_sp"]
-        cls.session_cookie_dic["st_sn"] = cookies_dic["st_sn"] if cookies_dic["st_sn"] else "4"
+        cls.session_cookie_dic["st_sn"] = cookies_dic["st_sn"] if "st_sn" in cookies_dic.keys() else "4"
         cls.session_cookie_dic["st_psi"] = cookies_dic["st_psi"]
 
 
