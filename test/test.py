@@ -97,7 +97,8 @@ def json_test():
     js = ""
     
 if __name__ == '__main__':
+    test = "".join(random.choices(string.digits, k=14))
     # test = "".join(random.sample(string.ascii_letters + string.digits + "-_", 25))
-    # print(test)
-    a = [0,1,2,3,4,5]
-    print(a[:1])
+    print(test)
+    # a = [0,1,2,3,4,5]
+    # print(a[:1])
