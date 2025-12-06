@@ -13,6 +13,7 @@ from quant.spider.spider_task_factory import ShareholderSpiderTaskFactory, KData
 from quant.tool.database.database_task_factoty import BulkUpdateTaskFactory, CoerUpdateTaskFactory, CacheFileWriterTaskFactory
 from quant.tool.database.updater import Updater, MultiProcessUpdater
 from quant.tool.database.base import SQLAlchemy
+from config.secure import CACHE_FILE_PATH
 import numpy as np
 from quant.models import StockInfo
 
@@ -160,8 +161,7 @@ def update_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, star
                 })
 
 
-    # file_path = '/home/xquant/cache'
-    file_path = "/Users/berserker//Downloads/cache"
+    file_path = CACHE_FILE_PATH
     file_base_name = '' + period_type.name + '.json'
     flush_count = 1
     slice_capacity = 1000
