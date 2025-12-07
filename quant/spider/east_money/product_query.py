@@ -125,10 +125,13 @@ class ProductQuery(object):
     request_count = 0
 
     session_request_count_max = 100
+   
+    # session_proxy_list = None
+    proxy_list = None
 
-    session_proxy_list = None
+    proxy = None
 
-    session_proxy = None
+    # session_proxy = None
 
     @classmethod
     def get_future_product(cls) -> pd.DataFrame:
@@ -306,24 +309,19 @@ class ProductQuery(object):
         ])
         temp_df = pd.DataFrame(exchg_list)
         return temp_df
-    
-    
+
     @classmethod
     def _proxy_prepare(cls):
-        cls.request_proxies_list = Proxy.get_requests_proxies_list()
-
-    @classmethod
-    def _sesion_proxy_prepare(cls):
-        if cls.session_proxy_list is None or len(cls.session_proxy_list) == 0:
-            cls.session_proxy_list = Proxy.get_proxy()
-            if len(cls.session_proxy_list) == 0:
+        if cls.proxy_list is None or len(cls.proxy_list) == 0:
+            cls.proxy_list = Proxy.get_proxy()
+            if len(cls.proxy_list) == 0:
                 raise XException(ErrorCodeEnum.CODE_INVALID, "cls.session_proxy_list len 0!")
 
-        if cls.session_proxy:
-            cls.session_proxy_list.remove(cls.session_proxy)
+        if cls.proxy:
+            cls.proxy_list.remove(cls.proxy)
         
-        cls.session_proxy = random.choice(cls.session_proxy_list)
-        print("session_proxy: ", cls.session_proxy)
+        cls.proxy = random.choice(cls.proxy_list)
+        print("session_proxy: ", cls.proxy)
 
 
     @classmethod
@@ -342,11 +340,11 @@ class ProductQuery(object):
         
         cls.session = requests.Session()
         if cls.prepare_type == cls.PrepareTypeEnum.SESSION_PROXY:
-            if cls.session_proxy is None: 
-                cls._sesion_proxy_prepare()
+            if cls.proxy is None: 
+                cls._proxy_prepare()
             cls.session.proxies = {
-                "http": cls.session_proxy,
-                "https": cls.session_proxy
+                "http": cls.proxy,
+                "https": cls.proxy
             }
 
 
@@ -356,7 +354,7 @@ class ProductQuery(object):
         chrom_options = ChromeOptions()
 
         if cls.prepare_type == cls.PrepareTypeEnum.SESSION_PROXY:
-            chrom_options.add_argument(f"--proxy-server={cls.session_proxy}")
+            chrom_options.add_argument(f"--proxy-server={cls.proxy}")
         chrom_options.add_argument(f'--user-agent={user_agent}')
         chrom_options.add_argument('--headless')
         chrom_options.add_argument('--no-sandbox')
@@ -481,7 +479,7 @@ class ProductQuery(object):
                 elif type == ProductQuery.PrepareTypeEnum.SESSION:
                     cls._session_prepare()
                 elif type == ProductQuery.PrepareTypeEnum.SESSION_PROXY:
-                    cls._sesion_proxy_prepare()
+                    cls._proxy_prepare()
                     cls._session_prepare()
             except (Exception, XException) as e:
                 print(e)
@@ -526,10 +524,13 @@ class ProductQuery(object):
         sleep_time_base = 20
         while(True):
             try: 
-                if cls.prepare_type == ProductQuery.PrepareTypeEnum.PROXY and cls.request_proxies_list and len(cls.request_proxies_list) > 0:
+                if cls.prepare_type == ProductQuery.PrepareTypeEnum.PROXY and cls.proxy:
                     cls.headers["User-Agent"] = random.choice(cls.user_agent_list)
                     cls.headers["Cookie"] = ""
-                    current_access = random.choice(cls.request_proxies_list)
+                    current_access = {
+                        "http": cls.proxy,
+                        "https": cls.proxy
+                    }
                     r = requests.get(cls.quote_url_base, headers=cls.headers, timeout=20, params=params, proxies=current_access, verify=False)
                 elif cls.session and (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION or cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY):
                     r = cls.session.get(cls.quote_url_base, timeout=20, params=params, verify=False)
@@ -550,8 +551,9 @@ class ProductQuery(object):
                     time.sleep(sleep_time)
                     sleep_time_base += sleep_time
 
-                if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY and wh_count % 2 == 0:
-                    cls._sesion_proxy_prepare()
+                if (cls.prepare_type == ProductQuery.PrepareTypeEnum.PROXY
+                    or (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY and wh_count % 2 == 0)):
+                    cls._proxy_prepare()
                 
                 if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION or cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY:                   
                     cls._session_prepare()
