@@ -59,7 +59,7 @@ class Proxy(object):
     ]
 
     @classmethod
-    def get_proxy(cls,type:Type=Type.ALL, use_file=False) -> list:
+    def get_proxy(cls,type:Type=Type.ALL, use_request=True) -> list:
         proxy_list = []
         json_file_path = os.path.join(root_dir, "config", "proxy_list.json")
         try:
@@ -69,18 +69,19 @@ class Proxy(object):
         except:
             pass
         
-        if use_file:
+        if not use_request:
             res_list = []
             for item in proxy_list:
                 res_list.append(item["proxy"])
             return res_list
 
 
-        # cls.params["protocol"] = type.value
-        for url in cls.proxy_url_list:       
-            res = requests.get(url)#, params=cls.params)
-            res_data = res.json()
-            proxy_list.extend(res_data)
+        if len(proxy_list) < 20:
+            for url in cls.proxy_url_list:       
+                res = requests.get(url)#, params=cls.params)
+                res_data = res.json()
+                proxy_list.extend(res_data)
+        
         request_proxy_list = []
         res_proxy_json_list = []
 
@@ -107,7 +108,7 @@ class Proxy(object):
                 check_data = None
                 check_res = None
                 url = cls.east_url_list[index % len(cls.east_url_list)]
-                check_res = requests.get(url,headers=cls.headers, proxies=proxy, timeout=10, verify=False)
+                check_res = requests.get(url,headers=cls.headers, proxies=proxy, timeout=5, verify=False)
                 check_data = check_res.json()
             except Exception as e:
                 # print("Proxy except:", e)

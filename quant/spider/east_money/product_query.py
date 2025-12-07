@@ -312,7 +312,7 @@ class ProductQuery(object):
 
     @classmethod
     def _proxy_prepare(cls):
-        if cls.proxy_list is None or len(cls.proxy_list) == 0:
+        if cls.proxy_list is None or len(cls.proxy_list) <= 1:
             cls.proxy_list = Proxy.get_proxy()
             if len(cls.proxy_list) == 0:
                 raise XException(ErrorCodeEnum.CODE_INVALID, "cls.session_proxy_list len 0!")
