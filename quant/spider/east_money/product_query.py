@@ -318,7 +318,10 @@ class ProductQuery(object):
                 raise XException(ErrorCodeEnum.CODE_INVALID, "cls.session_proxy_list len 0!")
 
         if cls.proxy:
-            cls.proxy_list.remove(cls.proxy)
+            try:
+                cls.proxy_list.remove(cls.proxy)
+            except Exception as e:
+                pass
         
         cls.proxy = random.choice(cls.proxy_list)
         print("session_proxy: ", cls.proxy)
