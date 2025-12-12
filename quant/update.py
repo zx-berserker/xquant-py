@@ -168,7 +168,7 @@ def update_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, star
     for query in query_list:
         exg = query["exhange"]
         data_list = query["products"]
-        preflex = "[%s]-" % (exg.east_money_code)
+        preflex = "%s_%s-%s(%s)-" % (start_date, end_date, exg.code, exg.east_money_code)
         update_task_factory = CacheFileWriterTaskFactory(file_path, file_base_name, data_list, flush_count, slice_capacity, file_prefix_base_name=preflex)
         spider_factory = ProductQuoteSpiderTaskFactory(period_type, start_date, end_date, limit, prepare_type=ProductQuery.PrepareTypeEnum.PROXY)
         param_list = spider_factory.task_param_list_generator(exg, data_list)
@@ -188,7 +188,7 @@ def update_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, star
 
 
 if __name__ == "__main__":
-    update_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20060101", end_date="20251130", limit=10000, symbol="0.300364")
-    # update_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20060101", end_date="20251130", limit=10000)
-    # update_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20060101", end_date="20251130", limit=10000)
-    # update_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20060101", end_date="20251130", limit=10000)
+    update_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20251130", end_date="20251213", limit=10000)
+    # update_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20251130", end_date="20251213", limit=10000)
+    # update_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20251130", end_date="20251213", limit=10000)
+    # update_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20251130", end_date="20251213", limit=10000)
