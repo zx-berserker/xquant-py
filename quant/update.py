@@ -188,7 +188,8 @@ def update_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, star
 
 
 if __name__ == "__main__":
-    update_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20251130", end_date="20251213", limit=10000)
-    # update_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20251130", end_date="20251213", limit=10000)
-    # update_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20251130", end_date="20251213", limit=10000)
-    # update_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20251130", end_date="20251213", limit=10000)
+    update_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20251220", end_date="20251223", limit=10000)
+    update_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20251220", end_date="20251223", limit=10000)
+    update_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20251220", end_date="20251223", limit=10000)
+    update_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20251130", end_date="20251223", limit=10000)
+    
