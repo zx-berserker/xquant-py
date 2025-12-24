@@ -26,7 +26,8 @@ class SQLAlchemy(object):
         connect_args={
             'auth_plugin': "mysql_native_password",
             'charset': 'utf8'
-        }
+        },
+        pool_recycle=SQLALCHEMY_POOL_RECYCLE,
     )
     _session_factory = sessionmaker(bind=_engine, query_cls=XQuery)
     # Session = scoped_session(_session_factory)
