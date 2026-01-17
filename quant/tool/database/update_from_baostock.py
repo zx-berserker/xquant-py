@@ -13,6 +13,7 @@ from quant.models.industry import Industry
 from quant.models.stock import Stock
 from quant.tool.ini_file_reader import IniFileReader
 from quant.tool.database.base import SQLAlchemy
+from quant.libs.log import XLog
 
 
 def find_stock_industry_id(session=None, stock_code=None):
@@ -55,7 +56,7 @@ def check_df_value(value, default):
 
 def update_stock_k_data(session=None, stock=None, start_date='2006-01-01', freq_type='d'):
     if stock is None:
-        print("stock is None!!!")
+        XLog.error("stock is None!!!")
         return
     cls_type = KDataDaily
     if freq_type == 'w':

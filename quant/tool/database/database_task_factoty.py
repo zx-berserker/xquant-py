@@ -10,7 +10,7 @@ from quant.libs.error import XException
 from quant.libs.enums import ErrorCodeEnum
 import json
 import os
-
+from quant.libs.log import XLog
 
 
 class CacheFileReaderTaskFactory(XTaskFactory):
@@ -49,7 +49,7 @@ class BulkUpdateTaskFactory(XTaskFactory):
             raise XException(ErrorCodeEnum.CODE_PARAMETER_INVALID,"param data is invalid!")
         task:BulkUpdateTask = self.task_cls(self._model_cls, data)
         task.add_except_callback(self.task_except_callback)
-        task.add_done_callback(lambda:print(*args, **kwargs))
+        task.add_done_callback(lambda:XLog.info(*args, **kwargs))
         return task
     
     def task_except_callback(self, exception):
@@ -124,7 +124,7 @@ class CacheFileWriterTaskFactory(XTaskFactory):
     def flush_condition_callback(self, handle=None):
         count = handle.get_count()
         if count % self.flush_count == 0:
-            print('flush:' + handle.get_name())
+            XLog.info('flush:' + handle.get_name())
             return True
         return False
     
@@ -135,10 +135,10 @@ class CacheFileWriterTaskFactory(XTaskFactory):
         # if num + 1 < self.slice_capacity and count == num + 1:
         num = len(self.temp_stock_list)
         if num < self.slice_capacity and count == num:
-            print('finish:' + handle.get_name())
+            XLog.info('finish:' + handle.get_name())
             return True
         if count % self.slice_capacity == 0:
-            print('finish:' + handle.get_name())
+            XLog.info('finish:' + handle.get_name())
             return True
         return False
 
@@ -151,7 +151,7 @@ class CacheFileWriterTaskFactory(XTaskFactory):
                 end = None
             self.temp_stock_list = self.stock_list[begin:end]
         prefix_name = '%s%s(%d)_%s(%d)-' % (self.file_prefix_base_name, self.temp_stock_list[-1].code, self.temp_stock_list[-1].id, self.temp_stock_list[0].code, self.temp_stock_list[0].id)
-        print('%s : %s(%d)' % (prefix_name, stock.code,stock.id))
+        XLog.info('%s : %s(%d)' % (prefix_name, stock.code,stock.id))
         return prefix_name
         
     def get_task(self, data, stock, *args, **kwargs):

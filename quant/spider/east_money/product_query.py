@@ -28,6 +28,7 @@ from datetime import datetime
 import pytz
 import json
 import string
+from quant.libs.log import XLog
 requests.packages.urllib3.disable_warnings()
 
 
@@ -202,7 +203,7 @@ class ProductQuery(object):
                 temp_df = temp_df[["f12", "f14"]]
                 temp_df.columns = ["code", "name"]
                 yield temp_df
-            print("get_stock_next: num:%d" % (num))
+            XLog.info("get_stock_next: num:%d" % (num))
             time.sleep(random.uniform(1,cls.sleep_time))
         
 
@@ -269,7 +270,7 @@ class ProductQuery(object):
         data_json = r.json()
         exchg_list = []
         for item in data_json:
-            print(type(item["mktid"]))
+            XLog.info(type(item["mktid"]))
             exchg_list.append({
                 "name": item["mktname"],
                 "code": item["mktshort"],
@@ -324,7 +325,7 @@ class ProductQuery(object):
                 pass
         
         cls.proxy = random.choice(cls.proxy_list)
-        print("session_proxy: ", cls.proxy)
+        XLog.info("session_proxy: ", cls.proxy)
 
 
     @classmethod
@@ -383,7 +384,7 @@ class ProductQuery(object):
                     if while_count > 3:
                         break
                     driver.refresh()
-                    print("session prepare while: diver.refresh().")
+                    XLog.info("session prepare while: diver.refresh().")
                     continue
 
                 break
@@ -415,7 +416,7 @@ class ProductQuery(object):
         try:
             cookies_str = f'st_nvi={cookies_dic["st_nvi"]}; st_si={cookies_dic["st_si"]}; st_pvi={cookies_dic["st_pvi"]}; st_sp={cookies_dic["st_sp"]}; st_inirUrl=https%3A%2F%2Fwww.eastmoney.com%2F; st_sn={cookies_dic["st_sn"]}; st_psi={cookies_dic["st_psi"]}; st_asi=delete'
         except Exception as e:
-            print("webreport False: ", e)
+            XLog.error("webreport False: ", e)
             is_webreport = False
 
         if is_webreport:
@@ -465,8 +466,8 @@ class ProductQuery(object):
         except:
             pass
         cls.session.headers = cls.headers
-        print("user-agent:", user_agent)
-        print("cookies:", cls.session_cookie_dic)
+        XLog.info("user-agent:", user_agent)
+        XLog.info("cookies:", cls.session_cookie_dic)
     
     @classmethod   
     def prepare(cls, type:PrepareTypeEnum=PrepareTypeEnum.DEFAULT):
@@ -485,7 +486,7 @@ class ProductQuery(object):
                     cls._proxy_prepare()
                     cls._session_prepare()
             except (Exception, XException) as e:
-                print(e)
+                XLog.error(e)
                 if while_count > 3:
                     raise e
                 continue
@@ -544,8 +545,8 @@ class ProductQuery(object):
                 data_json = r.json()               
             except Exception as e:
                 wh_count += 1
-                print("%s requests.get while(%d) except:" % (symbol, wh_count))
-                print(e)
+                XLog.error("%s requests.get while(%d) except:" % (symbol, wh_count))
+                XLog.error(e)
                 if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION:
                     sleep_time = random.uniform(sleep_time_base*wh_count, sleep_time_base*(wh_count+1))
                     if wh_count > cls.while_max_count or sleep_time > 120:

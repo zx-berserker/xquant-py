@@ -10,6 +10,7 @@ from enum import Enum
 from quant.tool.database.update_from_baostock import update_stock_k_data
 from quant.models.stock import Stock
 from quant.tool.database.base import SQLAlchemy
+from quant.libs.log import XLog
 
 
 class KDataFreqTypeEnum(Enum):
@@ -43,12 +44,12 @@ class KDataTableUpdater(object):
                     else:
                         continue
                 except Exception as e:
-                    print(e.args)
+                    XLog.error(e.args)
                     continue
-                print(stock)
+                XLog.info(stock)
                 update_stock_k_data(session=session, stock=stock, start_date=self.start_date,
                                     freq_type=self.freq_type_enum.value)
-                print("stock:%d finished." % stock.id)
+                XLog.info("stock:%d finished." % stock.id)
 
     def start(self, start_from=0, end=None):
         self.is_exit = False

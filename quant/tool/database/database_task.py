@@ -7,6 +7,8 @@ from .base import SQLAlchemy
 from quant.libs.multi_thread.xtask import XTask
 import json
 import os
+from quant.libs.log import XLog
+
 
 class CacheFileReaderTask(XTask):
      
@@ -48,7 +50,7 @@ class CoreUpdateTask(XTask):
         self.data_list = data_list
         
     def task_main(self):
-        print(self.data_list[0])
+        XLog.info(self.data_list[0])
         with SQLAlchemy.engine_begin() as conn:
             conn.execute(self.model_cls.__table__.insert(), self.data_list)
             

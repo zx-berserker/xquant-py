@@ -8,6 +8,7 @@ from quant.libs.multi_process.xprocess import XProcess
 from time import sleep
 from quant.tool.function_tool import get_fn_arg_count
 from multiprocessing import cpu_count, Queue
+from quant.libs.log import XLog
 
 
 class XPoolProcess(XProcess):
@@ -56,7 +57,7 @@ class XProcessPool:
 
     @staticmethod
     def error_callback(job, e):
-        print("Error!!! job:%s exception:%s" % (job, str(e)))
+        XLog.error("Error!!! job:%s exception:%s" % (job, str(e)))
 
     def put_param(self, param):
         self.param_queue.put(param)

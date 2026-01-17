@@ -16,7 +16,7 @@ from contextlib import contextmanager
 from bokeh.models import HoverTool
 import pandas as pd
 import random
-
+from quant.libs.log import XLog
 
 class FigureBokeh(object):
     TOOLS = 'crosshair,pan,wheel_zoom,xwheel_zoom,ywheel_zoom,box_zoom,reset,box_select,lasso_select,save,hover'
@@ -212,9 +212,9 @@ else {
     
     def add_a_line(self, data_df, col_name, **kwargs):
         if self.df_len:
-            print(len(data_df[col_name]))
+            XLog.info(len(data_df[col_name]))
             if self.df_len != len(data_df[col_name]):
-                print("%s is %d not %d" % (col_name, len(data_df[col_name]), self.df_len))
+                XLog.info("%s is %d not %d" % (col_name, len(data_df[col_name]), self.df_len))
                 return        
         if self.fb is None:
             raise
@@ -228,7 +228,7 @@ else {
         data_df.loc[:, 'timestamp'] = self.df_base_data.index
         # data_df = data_df.set_index(data_df['timestamp'])
         
-        print(data_df)
+        XLog.info(data_df)
         source = ColumnDataSource(data_df)
         line = self.fb.line(x='timestamp', y=col_name, source=source, **kwargs)
 

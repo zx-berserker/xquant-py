@@ -22,7 +22,7 @@ from quant.libs.multi_thread.xtask import XTaskFactory, XTask
 from threading import Event
 from time import sleep
 import random
-
+from quant.libs.log import XLog
 
 class Updater(XThread):
     update_thread_pool_capacity = 5
@@ -60,10 +60,10 @@ class Updater(XThread):
                     sleep(self.interval_sleep)
         except XException as e:
             self.is_error_except = True
-            print(e)
+            XLog.error(e)
         except Exception as e:
             self.is_error_except = True
-            print(e)
+            XLog.error(e)
         
         self.spider_thread_pool.release()
         self.update_thread_pool.release()

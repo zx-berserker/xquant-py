@@ -9,7 +9,7 @@ from sqlalchemy.orm import scoped_session
 from config.secure import *
 from contextlib import contextmanager
 from quant.models.base import Base
-
+from quant.libs.log import XLog
 
 class XQuery(Query):
     def filter_by(self, **kwargs):
@@ -57,7 +57,7 @@ class SQLAlchemy(object):
             if is_throw:
                 raise e
             else:
-                print(str(e))
+                XLog.error(e)
 
     @classmethod
     @contextmanager
@@ -86,7 +86,7 @@ class SQLAlchemy(object):
             if is_throw:
                 raise e
             else:
-                print(str(e))
+                XLog.error(e)
         conn.close()
     
 

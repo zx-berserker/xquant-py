@@ -10,6 +10,7 @@ from quant.spider.east_money import QuotePeriodEnum
 import time
 
 class UpdateWorkerTask(XTask):
+    update_state = 'Update State'
 
     def __init__(self, period:QuotePeriodEnum, start_time=None, end_time=None, limit=1000):
         super(UpdateWorkerTask, self).__init__()
@@ -19,7 +20,9 @@ class UpdateWorkerTask(XTask):
         self.limit = limit
 
     def task_main(self):
-        update_product_quote(self.period, self.start_time, self.end_time, self.limit)
+        UpdateWorkerTask.update_state = "Update State: running."
+        update_product_quote(self.period, self.start_time, self.end_time, limit=self.limit)
+        UpdateWorkerTask.update_state = "Update State: finished."
     
 
 

@@ -16,6 +16,7 @@ from quant.tool.database.base import SQLAlchemy
 from config.secure import CACHE_FILE_PATH
 import numpy as np
 from quant.models import StockInfo
+from quant.libs.log import XLog
 
 
 
@@ -180,11 +181,11 @@ def update_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, star
         updater.start()
         error = updater.join()
         if error:
-            print(preflex + " error break!")
+            XLog.error(preflex + " error break!")
             return
-        print(preflex + "finish")
+        XLog.info(preflex + "finish")
     
-    print("end.")
+    XLog.info("end.")
 
 
 if __name__ == "__main__":

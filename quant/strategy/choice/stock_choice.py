@@ -11,6 +11,7 @@ from quant.libs.enums import StockTypeEnum
 from quant.tool.sel_stock_file_builder import SelStockFileBuilder
 from quant.tool.database.data_models.block import BlockData
 from quant.models.block import Block
+from quant.libs.log import XLog
 
 
 def found_lively_stock(except_code_list=None):
@@ -87,7 +88,7 @@ def found_oversold_stock(except_code_list=None):
 
         block_temp_list.sort(key=lambda elem: elem[0])
         for pct_chg, block in block_temp_list:
-            print(block, pct_chg)
+            XLog.info(block, pct_chg)
             stock_list = block.stocks
             for stock in stock_list:
                 if stock.is_st() or stock.is_delisted():

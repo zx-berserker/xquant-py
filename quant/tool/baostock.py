@@ -6,14 +6,14 @@ author: Berserker
 
 import baostock as bs
 import threading
-
+from quant.libs.log import XLog
 
 def baostock_login(fn):
     def login(*args, **kwargs):
         lg = bs.login()
         if lg.error_code != '0':
-            print('error_code:' + lg.error_code)
-            print('error_msg:' + lg.error_msg)
+            XLog.error('error_code:' + lg.error_code)
+            XLog.error('error_msg:' + lg.error_msg)
             raise
         ret = fn(*args, **kwargs)
         bs.logout()
@@ -33,8 +33,8 @@ class BaoStock(object):
                 if not cls.is_login and cls.is_decorator:
                     lg = bs.login()
                     if lg.error_code != '0':
-                        print('error_code:' + lg.error_code)
-                        print('error_msg:' + lg.error_msg)
+                        XLog.error('error_code:' + lg.error_code)
+                        XLog.error('error_msg:' + lg.error_msg)
                         raise
                     cls.is_login = True
                 ret = fn(*args, **kwargs)
@@ -50,8 +50,8 @@ class BaoStock(object):
             if not cls.is_login:
                 lg = bs.login()
                 if lg.error_code != '0':
-                    print('error_code:' + lg.error_code)
-                    print('error_msg:' + lg.error_msg)
+                    XLog.error('error_code:' + lg.error_code)
+                    XLog.error('error_msg:' + lg.error_msg)
                     raise
                 cls.is_login = True
                 cls.is_decorator = False

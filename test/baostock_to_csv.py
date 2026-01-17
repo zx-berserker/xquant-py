@@ -8,6 +8,7 @@ author: Berserker
 from quant.spider.baostock.query_stock_info import QueryStockInfo
 import pandas as pd
 from quant.tool.baostock import BaoStock
+from quant.libs.log import XLog
 
 def stocks_to_csv(date="2025-06-23"):
     data_pd = QueryStockInfo.query_all_stock_code(date)
@@ -25,7 +26,7 @@ def stock_liqa_value_to_csv():
     code_error_list = []
     BaoStock.login()
     for index,stock in stock_pd.iterrows():
-        print(stock["code"])
+        XLog.info(stock["code"])
         profit_pd = QueryStockInfo.query_stock_profit_data(stock["code"], year=2025, quarter=1)        
         k_data_pa = QueryStockInfo.query_k_data(stock["code"],start_date="2025-05-23",freq_type=QueryStockInfo.FreqTypeEnum.FREQ_MONTHLY)
         if (profit_pd.empty or k_data_pa.empty or profit_pd["liqaShare"][0]=='' or k_data_pa["close"][0]==''):
@@ -41,7 +42,7 @@ def stock_liqa_value_to_csv():
         "代码":code_list,
         "流通市值":liqa_list
     })
-    print(code_error_list)
+    XLog.info(code_error_list)
     temp_pd.to_csv("./test/cache/liqa_value.csv",index=None)
 
 

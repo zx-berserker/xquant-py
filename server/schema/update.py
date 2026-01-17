@@ -3,7 +3,7 @@ from typing import List
 from quant.spider.east_money import QuotePeriodEnum
 
 
-class QuoteUpdateItem(BaseModel):
+class QuoteUpdate(BaseModel):
     startTime: str
     endTime: str
     period: str
@@ -18,10 +18,6 @@ class QuoteUpdateItem(BaseModel):
             'limit': self.limit,
         }
 
-
-
-class QuoteUpdate(BaseModel):
-    items: List[QuoteUpdateItem]
 
 
 

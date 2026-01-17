@@ -3,17 +3,18 @@ from server.schema import QuoteUpdate, Fail, Success
 from sse_starlette.sse import EventSourceResponse
 from fastapi import FastAPI, Request
 import time
-from server.lib.worker import UpdateWorkerTask, ServerWorker
+from server.lib.worker import UpdateWorkerTask, ServerWorker, UpdateWorkerTask
 from quant.libs.log import XLog
+from typing import List
 
 __all__ = ["router"]
 
 router = APIRouter()
 
 @router.post("/quote")
-async def update_quote(data:QuoteUpdate):
+async def update_quote(data_list:List[QuoteUpdate]):
+    UpdateWorkerTask.update_state = "Update State: Start."
     try:
-        data_list = data.items
         for item in data_list:
             task = UpdateWorkerTask(**item.to_dic())
             ServerWorker.worker_task_queue.put(task)
@@ -23,22 +24,28 @@ async def update_quote(data:QuoteUpdate):
 
 
 @router.get("/sse")
-async def sse_cron_task_root(request: Request):
-    async def cron_task_event_generator(request: Request):
+async def sse_update_quote_root(request: Request):
+    async def update_quote_task_event_generator(request: Request):
+        is_first = True
         while True:
             if await request.is_disconnected():
-                print("Client disconnected from SSE.")
-            message = XLog.fastapi_get(),
-            id = str(time.time())
-            data = {
-                "event": "UpdateEvent", 
-                "id": id,
-                "data": message,
-                "retry": 3000,
-            }
-            yield data
+                break
+            if is_first:
+                message = UpdateWorkerTask.update_state
+                is_first = False
+            else:
+                message = XLog.fastapi_get()
+            if message:
+                id = str(time.time())
+                data = {
+                    "event": "QuoteUpdateEvent", 
+                    "id": id,
+                    "data": message,
+                    "retry": 3000,
+                }
+                yield data
     
-    f = cron_task_event_generator(request)
+    f = update_quote_task_event_generator(request)
     return EventSourceResponse(f)
 
 

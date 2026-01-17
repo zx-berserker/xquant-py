@@ -10,6 +10,7 @@ from quant.spider.baostock.query_stock_info import QueryStockInfo
 from quant.tool.function_tool import check_df_value
 from quant.spider.east_money.shareholder_info import ShareholderInfo
 from .east_money import QuotePeriodEnum, ProductQuery
+from quant.libs.log import XLog
 
 
 class KDataSpiderTask(XTask):
@@ -168,7 +169,7 @@ class StockInfoSpiderTask(XTask):
                 'liqa_share': int(float(check_df_value(stock_info.loc[index].values[10], 0))),
             }
             data_list.append(data_dict)
-        print(data_list)
+        XLog.info(data_list)
         return data_list
 
     def __repr__(self):

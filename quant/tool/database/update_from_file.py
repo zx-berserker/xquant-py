@@ -18,6 +18,7 @@ from quant.models.quote_daily import QuoteDaily
 from quant.models.quote_hourly import QuoteHourly
 from quant.models.quote_monthly import QuoteMonthly
 from quant.models.quote_weekly import QuoteWeekly
+from quant.libs.log import XLog
 
 def update_industry_table():
     reader = IniFileReader('./file/industry.ini')
@@ -104,7 +105,7 @@ def update_quote_from_cache_file(dir_path:str='/home/xquant/cache'):
             updateFactory = BulkUpdateTaskFactory(QuoteWeekly)
         elif key == QuotePeriodEnum.MONTHLY.name:
             updateFactory = BulkUpdateTaskFactory(QuoteMonthly)
-        print(key)
+        XLog.info(key)
         dataFactory = CacheFileReaderTaskFactory(dir_path)
         
         Updater.spider_thread_pool_capacity = 1
@@ -114,11 +115,11 @@ def update_quote_from_cache_file(dir_path:str='/home/xquant/cache'):
         updater.start()
         error = updater.join()
         if error:
-            print(key + " error break!")
+            XLog.error(key + " error break!")
             return
-        print(key + "finish")
+        XLog.info(key + "finish")
     
-    print("end.")
+    XLog.info("end.")
 
 
 

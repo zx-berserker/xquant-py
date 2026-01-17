@@ -11,6 +11,7 @@ from config import root_dir
 import os
 import time
 import json
+from quant.libs.log import XLog
 requests.packages.urllib3.disable_warnings()
 
 
@@ -117,7 +118,7 @@ class Proxy(object):
             if check_res.status_code == 200 and "data" in check_data.keys():
                 request_proxy_list.append(proxy_str)
                 res_proxy_json_list.append(item)
-                print("proxy: ", proxy_str)
+                XLog.info("proxy: ", proxy_str)
             time.sleep(1)
 
         with open(json_file_path,"w") as file:
@@ -134,7 +135,7 @@ class Proxy(object):
             if list_len > num:
                 break
         res_list = [{"http": item,"https": item} for item in proxy_list]
-        print("proxy_list:",len(proxy_list))
+        XLog.info("proxy_list:",len(proxy_list))
         return res_list
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ import json
 import re
 from quant.tool.database.base import SQLAlchemy
 from quant.models.stock import Stock
-
+from quant.libs.log import XLog
 
 class ShareholderInfo(object):
     base_url = "http://data.eastmoney.com/DataCenter_V3/gdfx/data.ashx?"
@@ -34,7 +34,7 @@ class ShareholderInfo(object):
         try:
             response = cls.http.request("POST", url)
         except exceptions.HTTPError as e:
-            print(e)
+            XLog.error(e)
             raise e
         http_data = response.data.decode('gb18030')
         data_list = json_re.findall(http_data)
@@ -62,7 +62,7 @@ class ShareholderInfo(object):
             try:
                 response = self.http.request("POST", url)
             except exceptions.HTTPError as e:
-                print(e)
+                XLog.error(e)
                 raise XException(ErrorCodeEnum.CODE_FAILED, str(e))
             http_data = response.data.decode('gb18030')
             data_list = self._json_re.findall(http_data)
@@ -72,13 +72,13 @@ class ShareholderInfo(object):
             json_data = json.loads(json_str)
             data = json_data['data']
             if not json_data:
-                print("page:%d http_data:%s" % (self.page_index, http_data))
+                XLog.error("page:%d http_data:%s" % (self.page_index, http_data))
                 raise XException(ErrorCodeEnum.CODE_FAILED, "json_data is none !")
             self.page_index += 1
             return data
         else:
             self.page_index = 1
-            raise StopIteration
+            raise StopIteration 
 
     @classmethod
     def query(cls, query_type, page_index):
@@ -88,7 +88,7 @@ class ShareholderInfo(object):
         try:
             response = cls.http.request("POST", url)
         except exceptions.HTTPError as e:
-            print(e)
+            XLog.error(e)
             raise e
         http_data = response.data.decode('gb18030')
         data_list = json_re.findall(http_data)
@@ -97,7 +97,7 @@ class ShareholderInfo(object):
         json_str = data_list[0].replace('pages', '"pages"', 1).replace('data', '"data"', 1)
         json_data = json.loads(json_str)
         if not json_data:
-            print("page:%d http_data:%s" % (page_index, http_data))
+            XLog.error("page:%d http_data:%s" % (page_index, http_data))
             raise XException(ErrorCodeEnum.CODE_FAILED, "json_data is none !")
         return json_data['data']
 

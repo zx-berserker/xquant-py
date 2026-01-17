@@ -13,6 +13,7 @@ import threading
 
 class XLog:
     logger = logging.getLogger("xquant_logger")
+    logger.setLevel(logging.INFO)
     _file_handler = TimedRotatingFileHandler(os.path.join(LOG_FILE_PATH, "xquant.log"), when="midnight", backupCount=7)
     _file_handler.suffix = "%Y-%m-%d.log"
     _file_handler.encoding = "utf-8"
@@ -24,29 +25,41 @@ class XLog:
     _fastapi_queue_mutex = threading.Lock()
 
     @classmethod
-    def info(cls, message):
+    def info(cls, *objects):
+        message = ''
+        for obj in objects:
+            message += '%s' % (obj)
         if GlobeConfig.is_log_file:
             cls.logger.info(message)
+            cls._file_handler.flush()
         else:
             print(message)
         if GlobeConfig.is_fastapi_server:
             with cls._fastapi_queue_mutex:
                 if cls._fastapi_queue.full():
                     cls._fastapi_queue.get_nowait()
-                cls._fastapi_queue.put_nowait(message)
+                cls._fastapi_queue.put_nowait('%s' % message)
 
     @classmethod
-    def error(cls, message):
+    def error(cls, *objects):
+        message = ''
+        for obj in objects:
+            message += '%s' % (obj)        
         if GlobeConfig.is_log_file:
             cls.logger.error(message)
+            cls._file_handler.flush()
         else:
             print(message)
         if GlobeConfig.is_fastapi_server:
             with cls._fastapi_queue_mutex:
                 if cls._fastapi_queue.full():
                     cls._fastapi_queue.get_nowait()
-                cls._fastapi_queue.put_nowait(message)
+                cls._fastapi_queue.put_nowait('%s' % message)
 
     @classmethod
     def fastapi_get(cls,timeout=3):
-        return cls._fastapi_queue.get(timeout=timeout)
+        try:
+            data = cls._fastapi_queue.get(timeout=timeout)
+        except:
+            return None
+        return data
