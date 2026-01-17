@@ -24,7 +24,7 @@ class KDataSpiderTask(XTask):
             raise XException(ErrorCodeEnum.CODE_PARAMETER_INVALID, "stock is None!!!")
         self.ret_data = None
 
-    def get_stock(self):
+    def get_meta_data(self):
         return self.stock
 
     def task_main(self):
@@ -86,7 +86,7 @@ class ProductQuoteSpiderTask(XTask):
             raise XException(ErrorCodeEnum.CODE_PARAMETER_INVALID, "product is None!!!")
         self.ret_data = None
 
-    def get_stock(self):
+    def get_meta_data(self):
         return self.product
     
     def task_main(self):
@@ -147,7 +147,7 @@ class StockInfoSpiderTask(XTask):
         if self.stock is None:
             raise XException(ErrorCodeEnum.CODE_PARAMETER_INVALID, "stock is None!!!")
 
-    def get_stock(self):
+    def get_meta_data(self):
         return self.stock
     
     def task_main(self):

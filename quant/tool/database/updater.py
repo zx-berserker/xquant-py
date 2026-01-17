@@ -18,7 +18,7 @@ from quant.libs.multi_thread.xthread_pool import XThreadPool
 from quant.tool.database.update_job import UpdateJobFactory
 from quant.libs.multi_process.xprocess_pool import XProcessPool
 from quant.libs.multi_process.xjob import XJobManager, XProcessPoolParam
-from quant.libs.multi_thread.xtask import XTaskFactory
+from quant.libs.multi_thread.xtask import XTaskFactory, XTask
 from threading import Event
 from time import sleep
 import random
@@ -72,12 +72,15 @@ class Updater(XThread):
 
 
 
-    def spider_task_done_callback(self, task):
+    def spider_task_done_callback(self, task:XTask):
         if not task:
             return
         ret = task.result()
-        stock = task.get_stock()
-        update_task = self.update_task_factory.get_task(ret, stock)
+        meta_data = task.get_meta_data()
+        if meta_data is None:
+            update_task = self.update_task_factory.get_task(ret)
+        else:
+            update_task = self.update_task_factory.get_task(ret, meta_data)
         thread = self.update_thread_pool.borrow_thread()
         thread.run(update_task)
 

@@ -48,23 +48,6 @@ class XTaskBase(ABC):
 
 
 
-class XTaskFactory(ABC):
-
-    def __init__(self, task_cls):
-        self.task_cls = task_cls
-        self._is_exit = False
-
-    @abstractmethod
-    def get_task(self, *args, **kwargs):
-        raise XException(ErrorCodeEnum.CODE_INVALID, "Abstract function is invalid !")
-
-    def env_prepare(self):
-        pass
-
-    def env_release(self):
-        pass
-
-
 class XTask(XTaskBase):
 
     def __init__(self):
@@ -80,6 +63,9 @@ class XTask(XTaskBase):
     @abstractmethod
     def task_main(self):
         raise XException(ErrorCodeEnum.CODE_INVALID, "Abstract function is invalid !")
+    
+    def get_meta_data(self):
+        pass
 
     def executive(self):
         if self._is_done:
@@ -138,3 +124,28 @@ class XTask(XTaskBase):
         if not self._is_running:
             with self._exe_lock:
                 self._except_callback = fn
+
+
+
+class XTaskFactory(ABC):
+
+    def __init__(self, task_cls):
+        self.task_cls = task_cls
+        self._is_exit = False
+        self._exception = None
+
+    @abstractmethod
+    def get_task(self, *args, **kwargs) -> XTask:
+        raise XException(ErrorCodeEnum.CODE_INVALID, "Abstract function is invalid !")
+
+    def env_prepare(self):
+        pass
+
+    def env_release(self):
+        pass
+    
+    def task_except_callback(self, exception):
+        pass
+
+    def except_watch(self):
+        pass

@@ -6,13 +6,11 @@ author: Berserker
 
 from quant.spider.baostock.query_stock_info import QueryStockInfo
 from quant.models.block import Block
-from quant.models.strategy import Strategy
 from quant.models.k_data_daily import KDataDaily
 from quant.models.k_data_monthly import KDataMonthly
 from quant.models.k_data_weekly import KDataWeekly
 from quant.models.industry import Industry
 from quant.models.stock import Stock
-from quant.models.trade import Trade
 from quant.tool.ini_file_reader import IniFileReader
 from quant.tool.database.base import SQLAlchemy
 

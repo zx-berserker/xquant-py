@@ -27,9 +27,10 @@ class XThreadBase(ABC):
 
 class XThread(XThreadBase):
 
-    def __init__(self):
+    def __init__(self, id="XThread"):
         self._thread = Thread(target=self.thread_main)
         self.is_error_except = False
+        self.id = id
 
     def join(self, timeout=None):
         self._thread.join(timeout)

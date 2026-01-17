@@ -28,7 +28,6 @@ class  ProductQuoteSpiderTaskFactory(XTaskFactory):
         self._end_date = end_date
         self._limit = limit
         self._prepare_type = prepare_type
-        self._exception = None
 
     def task_param_list_generator(self, exchange:Exchange, product_list):
         class ParamIter():

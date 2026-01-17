@@ -5,6 +5,26 @@ author: Berserker
 """
 from .base import SQLAlchemy
 from quant.libs.multi_thread.xtask import XTask
+import json
+import os
+
+class CacheFileReaderTask(XTask):
+     
+    def __init__(self, file_name:str):
+        super(CacheFileReaderTask, self).__init__()
+        self.file_name = file_name
+
+    def task_main(self):
+        with open(self.file_name,"r", encoding="utf-8") as file:
+            data = json.load(file)
+            self.ret_data = data
+            return data
+        
+    def get_meta_data(self):
+        return self.file_name
+ 
+    def __repr__(self):
+        return "<CacheFileReaderTask id:%d file_name:%s>" % (id(self), self.file_name)
 
 
 class BulkUpdateTask(XTask):
@@ -15,10 +35,9 @@ class BulkUpdateTask(XTask):
         self.data_list = data_list
 
     def task_main(self):
-        print(self.data_list[0])
         with SQLAlchemy.session_context() as session:
-            with SQLAlchemy.auto_commit(session):
-                session.bulk_insert_mappings(self.model_cls, self.data_list)
+            session.bulk_insert_mappings(self.model_cls, self.data_list)
+            session.commit()
                 # session.execute(self.model_cls.__table__.insert(), self.data_list)
                 
 

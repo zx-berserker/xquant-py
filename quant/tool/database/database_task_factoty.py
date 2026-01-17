@@ -3,11 +3,38 @@
 date: 2022/11/20
 author: Berserker
 """
-from .database_task import BulkUpdateTask, CoreUpdateTask
+from .database_task import BulkUpdateTask, CoreUpdateTask, CacheFileReaderTask
 from quant.libs.multi_thread.xtask import XTaskFactory
 from quant.tool.file_writer import FileWriterTaskFactory, FileWriterHandleEnum, FileWriterTask
 from quant.libs.error import XException
 from quant.libs.enums import ErrorCodeEnum
+import json
+import os
+
+
+
+class CacheFileReaderTaskFactory(XTaskFactory):
+    def __init__(self, dir_path:str):
+        super(CacheFileReaderTaskFactory, self).__init__(CacheFileReaderTask)
+        self.dir_path = dir_path
+        self._exception = None
+
+    def get_task(self, file_name):
+        self.except_watch()
+        file_name = os.path.join(self.dir_path, file_name)
+        task:CacheFileReaderTask = self.task_cls(file_name)
+        task.add_except_callback(self.task_except_callback)
+        return task
+
+    def env_prepare(self):
+        pass
+
+    def task_except_callback(self, exception):
+        self._exception = exception
+
+    def except_watch(self):
+        if self._exception:
+            raise self._exception
 
 
 class BulkUpdateTaskFactory(XTaskFactory):
@@ -16,10 +43,21 @@ class BulkUpdateTaskFactory(XTaskFactory):
         super(BulkUpdateTaskFactory, self).__init__(BulkUpdateTask)
         self._model_cls = model_cls
 
-    def get_task(self, data):
-        if not data:
-            return None
-        return self.task_cls(self._model_cls, data)
+    def get_task(self, data, *args, **kwargs):
+        self.except_watch()
+        if data is None:
+            raise XException(ErrorCodeEnum.CODE_PARAMETER_INVALID,"param data is invalid!")
+        task:BulkUpdateTask = self.task_cls(self._model_cls, data)
+        task.add_except_callback(self.task_except_callback)
+        task.add_done_callback(lambda:print(*args, **kwargs))
+        return task
+    
+    def task_except_callback(self, exception):
+        self._exception = exception
+
+    def except_watch(self):
+        if self._exception:
+            raise self._exception
 
   
 class CoerUpdateTaskFactory(XTaskFactory):
