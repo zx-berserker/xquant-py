@@ -517,9 +517,9 @@ class ProductQuery(object):
                     r = requests.get(url, headers=cls.headers, timeout=10, params=params)
                 data_json = r.json()
             except (ProxyError, ConnectionError) as e:
+                XLog.error("%s requests.get while() except:" % (symbol))
                 XLog.error(e)
-                cls.prepare(cls.prepare_type)
-                continue                           
+                cls.prepare(cls.prepare_type)                 
             except Exception as e:
                 wh_count += 1
                 XLog.error("%s requests.get while(%d) except:" % (symbol, wh_count))
@@ -528,21 +528,21 @@ class ProductQuery(object):
                     sleep_time = random.uniform(sleep_time_base*wh_count, sleep_time_base*(wh_count+1))
                     if wh_count > cls.while_max_count or sleep_time > 120:
                         raise XException(ErrorCodeEnum.CODE_WEB_REQUEST_ERROR, "get_product_quote: web request error!")
-                
                     time.sleep(sleep_time)
                     sleep_time_base += sleep_time
-
-                if (cls.prepare_type == ProductQuery.PrepareTypeEnum.PROXY
-                    or (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY and wh_count % 2 == 0)):
                     cls.prepare(cls.prepare_type)
                     continue
-                if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION or cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY:
+                if (cls.prepare_type == ProductQuery.PrepareTypeEnum.PROXY
+                    or (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY and wh_count > 1)):
+                    cls.prepare(cls.prepare_type)
+                    continue
+                if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY:
                     try:                   
                         cls._session_prepare()
                     except:
                         cls.prepare(cls.prepare_type)
-         
                 continue
+
             break
         return data_json
 
@@ -581,56 +581,57 @@ class ProductQuery(object):
         }
         
 
-        wh_count = 0
-        sleep_time_base = 5
-        while(True):
-            try: 
-                if cls.prepare_type == ProductQuery.PrepareTypeEnum.PROXY and cls.proxy:
-                    cls.headers["User-Agent"] = random.choice(cls.user_agent_list)
-                    cls.headers["Cookie"] = ""
-                    current_access = {
-                        "http": cls.proxy,
-                        "https": cls.proxy
-                    }
-                    r = requests.get(cls.quote_url_base, headers=cls.headers, timeout=10, params=params, proxies=current_access, verify=False)
-                elif cls.session and (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION or cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY):
-                    r = cls.session.get(cls.quote_url_base, timeout=10, params=params, verify=False)
-                else: 
-                    cls.headers["User-Agent"] = random.choice(cls.user_agent_list)
-                    cls.headers["Cookie"] = random.choice(cls.cookie_list)
-                    r = requests.get(cls.quote_url_base, headers=cls.headers, timeout=10, params=params)
-                data_json = r.json()
-            except (ProxyError, ConnectionError) as e:
-                XLog.error("%s requests.get while() except:" % (symbol, wh_count))
-                XLog.error(e)
-                cls.prepare(cls.prepare_type)
-                continue
-            except Exception as e:
-                wh_count += 1
-                XLog.error("%s requests.get while(%d) except:" % (symbol, wh_count))
-                XLog.error(e)
-                if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION:
-                    sleep_time = random.uniform(sleep_time_base*wh_count, sleep_time_base*(wh_count+1))
-                    if wh_count > cls.while_max_count or sleep_time > 120:
-                        raise XException(ErrorCodeEnum.CODE_WEB_REQUEST_ERROR, "get_product_quote: web request error!")
+        # wh_count = 0
+        # sleep_time_base = 5
+        # while(True):
+        #     try: 
+        #         if cls.prepare_type == ProductQuery.PrepareTypeEnum.PROXY and cls.proxy:
+        #             cls.headers["User-Agent"] = random.choice(cls.user_agent_list)
+        #             cls.headers["Cookie"] = ""
+        #             current_access = {
+        #                 "http": cls.proxy,
+        #                 "https": cls.proxy
+        #             }
+        #             r = requests.get(cls.quote_url_base, headers=cls.headers, timeout=10, params=params, proxies=current_access, verify=False)
+        #         elif cls.session and (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION or cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY):
+        #             r = cls.session.get(cls.quote_url_base, timeout=10, params=params, verify=False)
+        #         else: 
+        #             cls.headers["User-Agent"] = random.choice(cls.user_agent_list)
+        #             cls.headers["Cookie"] = random.choice(cls.cookie_list)
+        #             r = requests.get(cls.quote_url_base, headers=cls.headers, timeout=10, params=params)
+        #         data_json = r.json()
+        #     except (ProxyError, ConnectionError) as e:
+        #         XLog.error("%s requests.get while() except:" % (symbol))
+        #         XLog.error(e)
+        #         cls.prepare(cls.prepare_type)
+        #         continue
+        #     except Exception as e:
+        #         wh_count += 1
+        #         XLog.error("%s requests.get while(%d) except:" % (symbol, wh_count))
+        #         XLog.error(e)
+        #         if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION:
+        #             sleep_time = random.uniform(sleep_time_base*wh_count, sleep_time_base*(wh_count+1))
+        #             if wh_count > cls.while_max_count or sleep_time > 120:
+        #                 raise XException(ErrorCodeEnum.CODE_WEB_REQUEST_ERROR, "get_product_quote: web request error!")
                 
-                    time.sleep(sleep_time)
-                    sleep_time_base += sleep_time
-                    cls.prepare(cls.prepare_type)
-                    continue
+        #             time.sleep(sleep_time)
+        #             sleep_time_base += sleep_time
+        #             cls.prepare(cls.prepare_type)
+        #             continue
 
-                if (cls.prepare_type == ProductQuery.PrepareTypeEnum.PROXY
-                    or (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY and wh_count > 1)):
-                    cls.prepare(cls.prepare_type)
-                    continue
-                if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY:
-                    try:                   
-                        cls._session_prepare()
-                    except:
-                        cls.prepare(cls.prepare_type)
-                continue
+        #         if (cls.prepare_type == ProductQuery.PrepareTypeEnum.PROXY
+        #             or (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY and wh_count > 1)):
+        #             cls.prepare(cls.prepare_type)
+        #             continue
+        #         if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY:
+        #             try:                   
+        #                 cls._session_prepare()
+        #             except:
+        #                 cls.prepare(cls.prepare_type)
+        #         continue
 
-            break
+        #     break
+        data_json = cls._request_loop(cls.quote_url_base, symbol, params)
         
         try: 
             klines = data_json["data"]["klines"]
