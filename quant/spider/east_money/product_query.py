@@ -516,6 +516,7 @@ class ProductQuery(object):
                     cls.headers["Cookie"] = random.choice(cls.cookie_list)
                     r = requests.get(url, headers=cls.headers, timeout=10, params=params)
                 data_json = r.json()
+                return data_json
             except (ProxyError, ConnectionError) as e:
                 XLog.error("%s requests.get while() except:" % (symbol))
                 XLog.error(e)
@@ -542,9 +543,7 @@ class ProductQuery(object):
                     except:
                         cls.prepare(cls.prepare_type)
                 continue
-
-            break
-        return data_json
+        
 
 
     @classmethod

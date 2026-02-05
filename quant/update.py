@@ -182,7 +182,7 @@ def update_stock_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY
         data_list = query["products"]
         preflex = "%s_%s-%s(%s)-" % (start_date, end_date, exg.code, exg.east_money_code)
         update_task_factory = CacheFileWriterTaskFactory(file_path, file_base_name, data_list, flush_count, slice_capacity, file_prefix_base_name=preflex)
-        spider_factory = ProductQuoteSpiderTaskFactory(east_period_type, start_date, end_date, limit, prepare_type=ProductQuery.PrepareTypeEnum.PROXY)
+        spider_factory = ProductQuoteSpiderTaskFactory(east_period_type, start_date, end_date, limit, prepare_type=ProductQuery.PrepareTypeEnum.SESSION_PROXY)
         param_list = spider_factory.task_param_list_generator(exg, data_list)
         Updater.spider_thread_pool_capacity = 1
         Updater.update_thread_pool_capacity = 1
@@ -299,13 +299,13 @@ def update_hk_stock_financial_info():
 
 if __name__ == "__main__":
     update_stock_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20260129", end_date="20260203", limit=10000)
-    # update_stock_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20260129", end_date="20260203", limit=10000)
-    # update_stock_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20260124", end_date="20260131", limit=10000)
-    # update_stock_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20260101", end_date="20260201", limit=10000)
+    update_stock_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20260129", end_date="20260203", limit=10000)
+    update_stock_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20260124", end_date="20260131", limit=10000)
+    update_stock_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20260101", end_date="20260201", limit=10000)
     # update_hk_stock_financial_info()
-    # update_future_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20170101", end_date="20260201")
-    # update_future_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20170101", end_date="20260201")
-    # update_future_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20170101", end_date="20260201")
-    # update_future_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20170101", end_date="20260201")
+    update_future_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20170101", end_date="20260201")
+    update_future_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20170101", end_date="20260201")
+    update_future_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20170101", end_date="20260201")
+    update_future_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20170101", end_date="20260201")
     
     
