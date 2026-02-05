@@ -99,7 +99,7 @@ class Proxy(object):
             proxy_str = item["proxy"]
             proxy_type = item["protocol"]
             if type != Proxy.Type.ALL:
-                if (type == Proxy.Type.DEFAULT and proxy_type not in Proxy.default_proxy_type_list) or type.value != proxy_type:
+                if (type == Proxy.Type.DEFAULT and proxy_type not in Proxy.default_proxy_type_list) or (type != Proxy.Type.DEFAULT and type.value != proxy_type):
                     continue
 
             proxy = {

@@ -298,14 +298,14 @@ def update_hk_stock_financial_info():
     
 
 if __name__ == "__main__":
-    # update_stock_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20260129", end_date="20260203", limit=10000)
-    update_stock_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20260129", end_date="20260203", limit=10000)
-    update_stock_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20260124", end_date="20260131", limit=10000)
-    update_stock_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20260101", end_date="20260201", limit=10000)
+    update_stock_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20260129", end_date="20260203", limit=10000)
+    # update_stock_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20260129", end_date="20260203", limit=10000)
+    # update_stock_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20260124", end_date="20260131", limit=10000)
+    # update_stock_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20260101", end_date="20260201", limit=10000)
     # update_hk_stock_financial_info()
-    update_future_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20170101", end_date="20260201")
-    update_future_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20170101", end_date="20260201")
-    update_future_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20170101", end_date="20260201")
-    update_future_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20170101", end_date="20260201")
+    # update_future_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20170101", end_date="20260201")
+    # update_future_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20170101", end_date="20260201")
+    # update_future_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20170101", end_date="20260201")
+    # update_future_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20170101", end_date="20260201")
     
     
