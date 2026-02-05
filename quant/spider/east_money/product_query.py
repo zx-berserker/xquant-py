@@ -382,7 +382,7 @@ class ProductQuery(object):
                 try:
                     WebDriverWait(driver, 10, 0.5).until(Expect.presence_of_all_elements_located((By.CLASS_NAME, "quotetable")))
                 except Exception as e:
-                    if while_count > 3:
+                    if while_count > 2:
                         break
                     driver.refresh()
                     XLog.info("session prepare while: diver.refresh().")
