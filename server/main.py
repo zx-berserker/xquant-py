@@ -28,6 +28,3 @@ app.include_router(router, prefix="/api/v1")
 
 server_worker = ServerWorker()
 server_worker.start()
-
-
-# uvicorn main:app --host 0.0.0.0 --port 8080 --reload

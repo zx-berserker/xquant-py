@@ -5,3 +5,5 @@
 config/secure.py
 .DS_Store
 config/proxy_list.json
+migrations/*
+alembic.ini

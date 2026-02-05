@@ -15,3 +15,4 @@ from quant.models.quote_daily import QuoteDaily
 from quant.models.quote_hourly import QuoteHourly
 from quant.models.quote_monthly import QuoteMonthly
 from quant.models.quote_weekly import QuoteWeekly
+from quant.models.tdx_market import TdxMarket

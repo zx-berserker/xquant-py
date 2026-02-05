@@ -95,10 +95,24 @@ def str_test():
 
 def json_test():
     js = ""
-    
+
+
+def pandas_test():
+    df = pd.DataFrame(
+        {
+            "name": ["小红", "小明"],
+            "age": [13, 15],
+            "gender": ["男", "女"],
+        }
+    )
+    df.loc[0, "name"] = 'qq'
+    # df["name"][0] = 'qq'
+    print(df["name"][0])
+    print(df[0:1]["name"][0])
 if __name__ == '__main__':
-    test = "".join(random.choices(string.digits, k=14))
-    # test = "".join(random.sample(string.ascii_letters + string.digits + "-_", 25))
-    print(test)
-    # a = [0,1,2,3,4,5]
-    # print(a[:1])
+    # test = "".join(random.choices(string.digits, k=14))
+    # # test = "".join(random.sample(string.ascii_letters + string.digits + "-_", 25))
+    # print(test)
+    # # a = [0,1,2,3,4,5]
+    # # print(a[:1])
+    pandas_test()

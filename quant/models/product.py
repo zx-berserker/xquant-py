@@ -17,10 +17,13 @@ class Product(Base):
 
     id:int = Column(Integer, primary_key=True, autoincrement=True)
     code:str = Column(String(20), unique=False, nullable=False)
+    tdx_code:str = Column(String(20), unique=False, nullable=False)
     name:str = Column(String(50), nullable=False)
     _type = Column('type', Integer, nullable=False)
     exchange_id = Column(Integer, ForeignKey('exchange.id'), nullable=True)
     exchange = relationship("Exchange",  order_by='Exchange.id',  back_populates='products')
+    tdx_market_id = Column(Integer, ForeignKey('tdx_market.id'), nullable=True)
+    tdx_market = relationship("TdxMarket",  order_by='TdxMarket.id',  back_populates='products')
     quote_hourly = relationship('QuoteHourly', back_populates='product', order_by='QuoteHourly.time')
     quote_daily = relationship('QuoteDaily', back_populates='product', order_by='QuoteDaily.time')
     quote_weekly = relationship('QuoteWeekly', back_populates='product', order_by='QuoteWeekly.time')
@@ -30,6 +33,13 @@ class Product(Base):
     @property
     def type(self):
         return ProductTypeEnum(self._type)
+    
+    @property
+    def scode(self):
+        if self.type == ProductTypeEnum.PRODUCT_FUTURE:
+            return self.tdx_code
+        else:
+            return self.code
 
     @type.setter
     def type(self, type_enum:ProductTypeEnum):

@@ -13,8 +13,14 @@ def test_enmus(ntype:ProductTypeEnum):
     print(ntype.value)
 
 
+def test():
+    data = ak.stock_hk_financial_indicator_em("03067")
+    print(data)
+
+
 if __name__ == "__main__":
-    test_enmus(ProductTypeEnum.PRODUCT_STOCK)
+    # test_enmus(ProductTypeEnum.PRODUCT_STOCK)
+    test()
 
 
     # futures_hist_em_df = ak.futures_hist_em(symbol="热卷", period="daily")
@@ -24,7 +30,7 @@ if __name__ == "__main__":
     "https://push2.eastmoney.com/api/qt/clist/get"
     "https://push2.eastmoney.com/api/qt/clist/get"
 
-    https://push2his.eastmoney.com/api/qt/stock/kline/get?klt=60&fqt=1&secid=220.ifm&ut=7eea3edcaed734bea9cbfc24409ed989&iscca=1&end=20260101&lmt=1000&forcect=1&fields2=f51,f52,f53,f54,f55,f56,f57,f59,f63&fields1=f1,f2,f3,f4,f5,f6,f7,f8
+    https://push2his.eastmoney.com/api/qt/stock/kline/get?klt=60&fqt=1&secid=113.pbm&ut=7eea3edcaed734bea9cbfc24409ed989&iscca=1&end=20260101&lmt=1000&forcect=1&fields2=f51,f52,f53,f54,f55,f56,f57,f59,f63&fields1=f1,f2,f3,f4,f5,f6,f7,f8
 
     stock: 1上海，0深证 （secid=1.600000 浦发银行 ）
     """
@@ -62,6 +68,18 @@ if __name__ == "__main__":
     港股通: b:MK0146,b:MK0144
     新股：m:0+f:8,m:1+f:8
     """
+
+    '''
+            "f12": "代码",
+            "f14": "名称",
+
+
+
+    "f38": "最新份额",
+
+
+    '''
+
 
 
     """

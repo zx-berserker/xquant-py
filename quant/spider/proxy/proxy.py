@@ -22,7 +22,9 @@ class Proxy(object):
         SOCKS4 = "socks4"
         SOCKS5 = "socks5"
         ALL = "all"
+        DEFAULT = "default"
 
+    default_proxy_type_list= ["http", "https", "socks4"]
 
     # https://api.proxyscrape.com/v4/free-proxy-list/get?request=display_proxies&country=cn&protocol=socks4&proxy_format=ipport&format=json&timeout=20000
     base_ulr = "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/countries/CN/data.json"
@@ -37,7 +39,10 @@ class Proxy(object):
     proxy_url_list = [
         "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/countries/CN/data.json",
         "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/countries/HK/data.json",
+        "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/countries/SG/data.json",
         "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/countries/US/data.json",
+        # "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/countries/MO/data.json",
+        # "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/countries/MY/data.json",
     ]
 
     headers = {                       
@@ -60,7 +65,7 @@ class Proxy(object):
     ]
 
     @classmethod
-    def get_proxy(cls,type:Type=Type.ALL, use_request=True) -> list:
+    def get_proxy(cls,type:Type=Type.DEFAULT, use_request=True) -> list:
         proxy_list = []
         json_file_path = os.path.join(root_dir, "config", "proxy_list.json")
         try:
@@ -94,7 +99,7 @@ class Proxy(object):
             proxy_str = item["proxy"]
             proxy_type = item["protocol"]
             if type != Proxy.Type.ALL:
-                if type.value != proxy_type:
+                if (type == Proxy.Type.DEFAULT and proxy_type not in Proxy.default_proxy_type_list) or type.value != proxy_type:
                     continue
 
             proxy = {

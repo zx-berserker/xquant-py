@@ -29,6 +29,7 @@ import pytz
 import json
 import string
 from quant.libs.log import XLog
+from requests.exceptions import ProxyError, ConnectionError
 requests.packages.urllib3.disable_warnings()
 
 
@@ -406,9 +407,9 @@ class ProductQuery(object):
         cls.session_cookie_dic["qgqp_b_id"] = uuid4().hex
         cls.session_cookie_dic["st_si"] = cookies_dic["st_si"] if "st_si" in cookies_dic.keys() else "".join(random.choices(string.digits, k=14))
         cls.session_cookie_dic["st_pvi"] = cookies_dic["st_pvi"] if "st_pvi" in cookies_dic.keys() else "".join(random.choices(string.digits, k=14))
-        cls.session_cookie_dic["st_sp"] = cookies_dic["st_sp"]
+        cls.session_cookie_dic["st_sp"] = cookies_dic["st_sp"] if "st_sp" in cookies_dic.keys() else "2025-11-30%2011%3A18%3A04"
         cls.session_cookie_dic["st_sn"] = cookies_dic["st_sn"] if "st_sn" in cookies_dic.keys() else "4"
-        cls.session_cookie_dic["st_psi"] = cookies_dic["st_psi"]
+        cls.session_cookie_dic["st_psi"] = cookies_dic["st_psi"] if "st_psi" in cookies_dic.keys() else "20260204092538939-111000300841-7573842112"
 
 
         is_webreport = True
@@ -486,13 +487,64 @@ class ProductQuery(object):
                     cls._proxy_prepare()
                     cls._session_prepare()
             except (Exception, XException) as e:
-                XLog.error(e)
-                if while_count > 3:
-                    raise e
+                XLog.error("error prepare: %s count:%d" % (type.name, while_count))
+                # if while_count > 3:
+                #     raise e
                 continue
             
             break
 
+    
+    @classmethod
+    def _request_loop(cls, url:str, symbol:str, params:dict):
+        wh_count = 0
+        sleep_time_base = 5
+        while(True):
+            try: 
+                if cls.prepare_type == ProductQuery.PrepareTypeEnum.PROXY and cls.proxy:
+                    cls.headers["User-Agent"] = random.choice(cls.user_agent_list)
+                    cls.headers["Cookie"] = ""
+                    current_access = {
+                        "http": cls.proxy,
+                        "https": cls.proxy
+                    }
+                    r = requests.get(url, headers=cls.headers, timeout=10, params=params, proxies=current_access, verify=False)
+                elif cls.session and (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION or cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY):
+                    r = cls.session.get(url, timeout=10, params=params, verify=False)
+                else: 
+                    cls.headers["User-Agent"] = random.choice(cls.user_agent_list)
+                    cls.headers["Cookie"] = random.choice(cls.cookie_list)
+                    r = requests.get(url, headers=cls.headers, timeout=10, params=params)
+                data_json = r.json()
+            except (ProxyError, ConnectionError) as e:
+                XLog.error(e)
+                cls.prepare(cls.prepare_type)
+                continue                           
+            except Exception as e:
+                wh_count += 1
+                XLog.error("%s requests.get while(%d) except:" % (symbol, wh_count))
+                XLog.error(e)
+                if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION:
+                    sleep_time = random.uniform(sleep_time_base*wh_count, sleep_time_base*(wh_count+1))
+                    if wh_count > cls.while_max_count or sleep_time > 120:
+                        raise XException(ErrorCodeEnum.CODE_WEB_REQUEST_ERROR, "get_product_quote: web request error!")
+                
+                    time.sleep(sleep_time)
+                    sleep_time_base += sleep_time
+
+                if (cls.prepare_type == ProductQuery.PrepareTypeEnum.PROXY
+                    or (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY and wh_count % 2 == 0)):
+                    cls.prepare(cls.prepare_type)
+                    continue
+                if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION or cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY:
+                    try:                   
+                        cls._session_prepare()
+                    except:
+                        cls.prepare(cls.prepare_type)
+         
+                continue
+            break
+        return data_json
 
 
     @classmethod
@@ -504,8 +556,13 @@ class ProductQuery(object):
         limit:int = 10000
     ) -> pd.DataFrame:
         
-        if cls.prepare_type == cls.PrepareTypeEnum.SESSION and cls.request_count > cls.session_request_count_max:
-            cls._session_prepare()
+        if (cls.prepare_type == cls.PrepareTypeEnum.SESSION or  cls.prepare_type == cls.PrepareTypeEnum.SESSION_PROXY) and cls.request_count > cls.session_request_count_max:
+            while True:
+                try:
+                    cls._session_prepare()
+                except:
+                    continue
+                break
 
 
             
@@ -525,7 +582,7 @@ class ProductQuery(object):
         
 
         wh_count = 0
-        sleep_time_base = 20
+        sleep_time_base = 5
         while(True):
             try: 
                 if cls.prepare_type == ProductQuery.PrepareTypeEnum.PROXY and cls.proxy:
@@ -535,14 +592,19 @@ class ProductQuery(object):
                         "http": cls.proxy,
                         "https": cls.proxy
                     }
-                    r = requests.get(cls.quote_url_base, headers=cls.headers, timeout=20, params=params, proxies=current_access, verify=False)
+                    r = requests.get(cls.quote_url_base, headers=cls.headers, timeout=10, params=params, proxies=current_access, verify=False)
                 elif cls.session and (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION or cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY):
-                    r = cls.session.get(cls.quote_url_base, timeout=20, params=params, verify=False)
+                    r = cls.session.get(cls.quote_url_base, timeout=10, params=params, verify=False)
                 else: 
                     cls.headers["User-Agent"] = random.choice(cls.user_agent_list)
                     cls.headers["Cookie"] = random.choice(cls.cookie_list)
-                    r = requests.get(cls.quote_url_base, headers=cls.headers, timeout=20, params=params)
-                data_json = r.json()               
+                    r = requests.get(cls.quote_url_base, headers=cls.headers, timeout=10, params=params)
+                data_json = r.json()
+            except (ProxyError, ConnectionError) as e:
+                XLog.error("%s requests.get while() except:" % (symbol, wh_count))
+                XLog.error(e)
+                cls.prepare(cls.prepare_type)
+                continue
             except Exception as e:
                 wh_count += 1
                 XLog.error("%s requests.get while(%d) except:" % (symbol, wh_count))
@@ -554,16 +616,22 @@ class ProductQuery(object):
                 
                     time.sleep(sleep_time)
                     sleep_time_base += sleep_time
+                    cls.prepare(cls.prepare_type)
+                    continue
 
                 if (cls.prepare_type == ProductQuery.PrepareTypeEnum.PROXY
-                    or (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY and wh_count % 2 == 0)):
-                    cls._proxy_prepare()
-                
-                if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION or cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY:                   
-                    cls._session_prepare()
-         
+                    or (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY and wh_count > 1)):
+                    cls.prepare(cls.prepare_type)
+                    continue
+                if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY:
+                    try:                   
+                        cls._session_prepare()
+                    except:
+                        cls.prepare(cls.prepare_type)
                 continue
+
             break
+        
         try: 
             klines = data_json["data"]["klines"]
         except:
@@ -614,7 +682,99 @@ class ProductQuery(object):
         cls.request_count += 1
         return temp_df
     
+    @classmethod
+    def get_hk_stock_financial_info(cls, symbol:str, use_mapping=False) -> pd.DataFrame:
+        if cls.prepare_type == cls.PrepareTypeEnum.SESSION and cls.request_count > cls.session_request_count_max:
+            cls._session_prepare()
+
+        url = 'https://datacenter.eastmoney.com/securities/api/data/v1/get'
+        params = {
+            'reportName': 'RPT_CUSTOM_HKF10_FN_MAININDICATORMAX',
+            'columns': 'ORG_CODE,SECUCODE,SECURITY_CODE,SECURITY_NAME_ABBR,SECURITY_INNER_CODE,REPORT_DATE,BASIC_EPS,'
+                       'PER_NETCASH_OPERATE,BPS,BPS_NEDILUTED,COMMON_ACS,PER_SHARES,ISSUED_COMMON_SHARES,HK_COMMON_SHARES,'
+                       'TOTAL_MARKET_CAP,HKSK_MARKET_CAP,OPERATE_INCOME,OPERATE_INCOME_SQ,OPERATE_INCOME_QOQ,'
+                       'OPERATE_INCOME_QOQ_SQ,HOLDER_PROFIT,HOLDER_PROFIT_SQ,HOLDER_PROFIT_QOQ,HOLDER_PROFIT_QOQ_SQ,PE_TTM,'
+                       'PE_TTM_SQ,PB_TTM,PB_TTM_SQ,NET_PROFIT_RATIO,NET_PROFIT_RATIO_SQ,ROE_AVG,ROE_AVG_SQ,ROA,'
+                       'ROA_SQ,DIVIDEND_TTM,DIVIDEND_LFY,DIVI_RATIO,DIVIDEND_RATE,IS_CNY_CODE',
+            'quoteColumns': '',
+            'filter': f'(SECUCODE="{symbol}.HK")',
+            'pageNumber': '1',
+            'pageSize': '200',
+            'sortTypes': '-1',
+            'sortColumns': 'REPORT_DATE',
+            'source': 'F10',
+            'client': 'PC',
+            'v': '07945646099062258'
+        }
+        # cls.headers["User-Agent"] = random.choice(cls.user_agent_list)
+        # cls.headers["Cookie"] = random.choice(cls.cookie_list)
+        # r = requests.get(url, headers=cls.headers, timeout=10, params=params)
+        # data_json = r.json()
+        data_json = cls._request_loop(url, symbol, params)
+        cls.request_count += 1
+        try:
+            temp_df = pd.DataFrame(data_json['result']['data'])
+        except Exception:
+            return pd.DataFrame()
+        
+        if use_mapping:
+            field_mapping = {
+                'SECURITY_CODE': '股票代码',
+                'BASIC_EPS': '基本每股收益(元)',
+                'BPS': '每股净资产(元)',
+                'COMMON_ACS': '法定股本(股)',
+                'PER_SHARES': '每手股',
+                'DIVIDEND_TTM': '每股股息TTM(港元)',
+                'DIVI_RATIO': '派息比率(%)',
+                'ISSUED_COMMON_SHARES': '已发行股本(股)',
+                'HK_COMMON_SHARES': '已发行股本-H股(股)',
+                'PER_NETCASH_OPERATE': '每股经营现金流(元)',
+                'DIVIDEND_RATE': '股息率TTM(%)',
+                'TOTAL_MARKET_CAP': '总市值(港元)',
+                'HKSK_MARKET_CAP': '港股市值(港元)',
+                'OPERATE_INCOME': '营业总收入',
+                'OPERATE_INCOME_QOQ': '营业总收入滚动环比增长(%)',
+                'NET_PROFIT_RATIO': '销售净利率(%)',
+                'HOLDER_PROFIT': '净利润',
+                'HOLDER_PROFIT_QOQ': '净利润滚动环比增长(%)',
+                'ROE_AVG': '股东权益回报率(%)',
+                'PE_TTM': '市盈率',
+                'PB_TTM': '市净率',
+                'ROA': '总资产回报率(%)'
+            }
+            temp_df.rename(columns=field_mapping, inplace=True)
+            temp_df = temp_df[[
+                "基本每股收益(元)",
+                "每股净资产(元)",
+                "法定股本(股)",
+                "每手股",
+                "每股股息TTM(港元)",
+                "派息比率(%)",
+                "已发行股本(股)",
+                "已发行股本-H股(股)",
+                "每股经营现金流(元)",
+                "股息率TTM(%)",
+                "总市值(港元)",
+                "港股市值(港元)",
+                "营业总收入",
+                "营业总收入滚动环比增长(%)",
+                "销售净利率(%)",
+                "净利润",
+                "净利润滚动环比增长(%)",
+                "股东权益回报率(%)",
+                "市盈率",
+                "市净率",
+                "总资产回报率(%)"
+
+            ]]
+        return temp_df
+    
 
 
 if __name__ == "__main__":
-    data = ProductQuery._session_prepare()
+    # ProductQuery._session_prepare()
+    data = ProductQuery.get_future_product()
+    data.to_csv('./future.csv')
+
+
+

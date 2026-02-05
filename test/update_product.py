@@ -4,7 +4,7 @@ date: 2025/11/16
 author: Berserker
 """
 
-from quant.models import Product, Exchange
+from quant.models import Product, Exchange,TdxMarket
 from quant.tool.database import SQLAlchemy
 from quant.spider.east_money.product_query import ProductQuery, futures_hist_separate_char_and_numbers_em
 import pandas as pd
@@ -207,8 +207,115 @@ def update_product():
                 print(data)
 
 
+def update_tdx_market():
+    market_df = pd.read_csv("./quant/tool/database/file/markets.csv")
+    with SQLAlchemy.session_context() as session:
+        for index, row in  market_df.iterrows():
+            market = TdxMarket(
+                    code=row["market"],
+                    name=row["name"],
+                    sname=row["short_name"]
+                )
+            try:
+                session.add(market)
+                session.commit()
+            except:
+                print("%s %d" % (row["name"], index))
+                break
+
+def update_future_product_csv():
+    future_df = pd.read_csv("./temp_future.csv")
+    instrument_df = pd.read_csv("./instrument_info.csv")
+    temp_list = []
+    for index, row in future_df.iterrows():
+        tdx_code = ''
+        if '次主连' in row['name']:
+            pre_tdx_code = str(row['code'][0:-1]).upper() 
+            flex = 'L7'
+        elif "主连" in row['name']:
+            pre_tdx_code = str(row['code'][0:-1]).upper() 
+            flex = 'L8'
+        elif "加权" in row['name']:
+            pre_tdx_code = str(row['code'][0:-2]).upper() 
+            flex = 'L9'
+        elif "当月连续" in row['name']:
+            pre_tdx_code = str(row['code'][0:-2]).upper() 
+            flex = "L0"
+        elif "下月连续" in row['name']:
+            pre_tdx_code = str(row['code'][0:-2]).upper() 
+            flex = 'L1'
+        elif "下季连续" in row['name']:
+            pre_tdx_code = str(row['code'][0:-2]).upper() 
+            flex = 'L2'
+        elif "隔季连续" in row['name']:
+            pre_tdx_code = str(row['code'][0:-2]).upper() 
+            flex = 'L3'
+        if pre_tdx_code == "LF":
+            tdx_code = 'L-F'+ flex
+        elif pre_tdx_code == "PPF":
+            tdx_code = 'PP-F'+ flex
+        elif pre_tdx_code == "VF":
+             tdx_code = 'V-F'+ flex
+        elif pre_tdx_code in ["WH", "PM", "RI", "JR"]:
+            tdx_code = "*"
+        else:
+            tdx_code = pre_tdx_code + flex
+            if tdx_code in ["TL3", "TFL3", "TSL3", "TLL3"]:
+                tdx_code = '*'
+        
+        if tdx_code == "*":
+            tdx_market_code = "*"
+        elif pre_tdx_code in["SI", "LC", "PS", "PS", "PT", "PD"]:
+            tdx_market_code = "66"
+        else:
+            tem_row = instrument_df.query("code == @tdx_code")
+            tdx_market_code = tem_row['market'].item()
+
+        temp_list.append({
+            "code":row['code'],
+            "name":row['name'],
+            "ex_name": row['ex_name'],
+            "ex_east_money_code":row['ex_east_money_code'],
+            "tdx_code": tdx_code,
+            "tdx_market_code": tdx_market_code,
+        })
+    temp_df = pd.DataFrame(temp_list)
+    temp_df.to_csv('./ret_future.csv',index=False)
+
+def update_future_product():
+    future_df = pd.read_csv("./quant/tool/database/file/ret_future.csv")
+    for index, row in future_df.iterrows():
+        if index < 0:
+            continue
+        with SQLAlchemy.session_context() as session:
+            product = session.query(Product).filter(
+                Product.code == row['code']
+            ).first()
+            market = session.query(TdxMarket).filter(
+                TdxMarket.code == row['tdx_market_code']
+            ).first()
+            if product is None:
+                exg = session.query(Exchange).filter(
+                    Exchange.east_money_code == row['ex_east_money_code']
+                ).first()
+
+                product = Product(
+                    code = row['code'],
+                    tdx_code = row['tdx_code'],
+                    name = row['name'],
+                    exchange_id = exg.id,
+                    tdx_market_id = market.id if market is not None else None,
+                    _type = ProductTypeEnum.PRODUCT_FUTURE.value
+                )
+                
+                session.add(product)
+            else:
+                product.tdx_code = row['tdx_code']
+                product.tdx_market_id = market.id if market is not None else None
+            session.commit()
+            print("%d %s" % (index, product))
 
 if __name__ == "__main__":
-    update_product()
+    update_future_product()
 
     pass

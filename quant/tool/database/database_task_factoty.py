@@ -150,8 +150,8 @@ class CacheFileWriterTaskFactory(XTaskFactory):
             if end > len(self.stock_list):
                 end = None
             self.temp_stock_list = self.stock_list[begin:end]
-        prefix_name = '%s%s(%d)_%s(%d)-' % (self.file_prefix_base_name, self.temp_stock_list[-1].code, self.temp_stock_list[-1].id, self.temp_stock_list[0].code, self.temp_stock_list[0].id)
-        XLog.info('%s : %s(%d)' % (prefix_name, stock.code,stock.id))
+        prefix_name = '%s%s(%d)_%s(%d)-' % (self.file_prefix_base_name, self.temp_stock_list[-1].scode, self.temp_stock_list[-1].id, self.temp_stock_list[0].scode, self.temp_stock_list[0].id)
+        XLog.info('%s : %s(%d)' % (prefix_name, stock.scode,stock.id))
         return prefix_name
         
     def get_task(self, data, stock, *args, **kwargs):

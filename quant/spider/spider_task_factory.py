@@ -5,13 +5,98 @@ author: Berserker
 """
 from quant.libs.error import XException
 from quant.libs.enums import ErrorCodeEnum
-from quant.libs.multi_thread.xtask import XTaskFactory
+from quant.libs.multi_thread.xtask import XTaskFactory, XTask
 from quant.spider.baostock.query_stock_info import QueryStockInfo
-from quant.spider.spider_task import KDataSpiderTask, ShareholderSpiderTask, StockInfoSpiderTask, ProductQuoteSpiderTask, QuotePeriodEnum
+from quant.spider.spider_task import KDataSpiderTask, ShareholderSpiderTask, StockInfoSpiderTask, ProductQuoteSpiderTask, QuotePeriodEnum, HKStockFinancialInfoSpiderTask, TdxQuotePeriodEnum, TdxQuery, TdxQuoteSpiderTask
 from quant.spider.east_money.shareholder_info import ShareholderInfo
 from quant.tool.baostock import BaoStock
-from quant.models.exchange import Exchange
+from quant.models import Exchange, TdxMarket, Product
 from quant.spider.east_money import ProductQuery
+
+
+class TdxQuoteSpiderTaskTaskFactory(XTaskFactory):
+
+    class TaskParam:
+        def __init__(self, product, market, code):
+            self.product:Product = product
+            self.market:str = market
+            self.code:str = code
+            pass
+
+    def __init__(self, period_type:TdxQuotePeriodEnum=TdxQuotePeriodEnum.DAILY, start_time='20060101', end_time='20500101', count:int=100):
+        super(TdxQuoteSpiderTaskTaskFactory, self).__init__(TdxQuoteSpiderTask)
+        self.period_type = period_type
+        self.start_time = start_time
+        self.end_time = end_time
+        self.count = count
+
+    def task_param_list_generator(self, market:TdxMarket, product_list):
+        class ParamIter():
+            def __init__(self,market:TdxMarket, product_list):                    
+                self.market = market
+                self.data_list = product_list
+                self.current = 0
+            def __iter__(self):
+                return self
+            def __next__(self):
+                if self.current < len(self.data_list):
+                    product:Product = self.data_list[self.current]
+                    param = TdxQuoteSpiderTaskTaskFactory.TaskParam(product, self.market.code, product.tdx_code)
+                    self.current += 1
+                    return param
+                else:
+                    raise StopIteration
+        return ParamIter(market, product_list)
+    
+
+    def env_prepare(self):
+        TdxQuery.connect()
+    
+    def env_release(self):
+        TdxQuery.disconnect()
+        
+    def get_task(self, param:TaskParam):
+        self.except_watch()
+        task:TdxQuoteSpiderTask = self.task_cls(param.product, param.market, param.code, 
+                 self.period_type, self.start_time, self.end_time, self.count)
+        task.add_except_callback(self.task_except_callback)
+        return task
+    
+    def task_except_callback(self, exception):
+        self._exception = exception
+
+    def except_watch(self):
+        if self._exception:
+            raise self._exception
+
+
+
+
+class  HKStockFinancialInfoSpiderTaskFactory(XTaskFactory):
+
+    def __init__(self, 
+                 prepare_type:ProductQuery.PrepareTypeEnum=ProductQuery.PrepareTypeEnum.SESSION, 
+                 use_mapping=False
+                 ):
+        super(HKStockFinancialInfoSpiderTaskFactory, self).__init__(HKStockFinancialInfoSpiderTask)
+        self._prepare_type = prepare_type
+        self._use_mapping = use_mapping
+
+    def get_task(self, product):
+        task:XTask = self.task_cls(product, product.code, use_mapping=self._use_mapping)
+        task.add_except_callback(self.task_except_callback)
+        return task
+
+    def env_prepare(self):
+        ProductQuery.prepare(self._prepare_type)
+
+    def task_except_callback(self, exception):
+        self._exception = exception
+
+    def except_watch(self):
+        if self._exception:
+            raise self._exception
+  
 
 
 class  ProductQuoteSpiderTaskFactory(XTaskFactory):

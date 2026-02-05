@@ -5,8 +5,8 @@ author: Berserker
 """
 from queue import Queue, Empty
 from quant.libs.multi_thread import XThread, XTask
-from quant.update import update_product_quote
-from quant.spider.east_money import QuotePeriodEnum
+from quant.update import update_stock_product_quote, update_future_product_quote
+from quant.libs.enums import QuotePeriodEnum
 import time
 
 class UpdateWorkerTask(XTask):
@@ -21,7 +21,8 @@ class UpdateWorkerTask(XTask):
 
     def task_main(self):
         UpdateWorkerTask.update_state = "Update State: running."
-        update_product_quote(self.period, self.start_time, self.end_time, limit=self.limit)
+        update_stock_product_quote(self.period, self.start_time, self.end_time, limit=self.limit)
+        update_future_product_quote(self.period, self.start_time, self.end_time)
         UpdateWorkerTask.update_state = "Update State: finished."
     
 

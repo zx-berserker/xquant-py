@@ -11,58 +11,106 @@ from quant.tool.function_tool import check_df_value
 from quant.spider.east_money.shareholder_info import ShareholderInfo
 from .east_money import QuotePeriodEnum, ProductQuery
 from quant.libs.log import XLog
+from .tdx import QuotePeriodEnum as TdxQuotePeriodEnum, TdxQuery
 
 
-class KDataSpiderTask(XTask):
 
-    def __init__(self, stock, freq_type=QueryStockInfo.FreqTypeEnum.FREQ_DAILY, start_date='2006-01-01', end_date=None):
-        super(KDataSpiderTask, self).__init__()
-        self.stock = stock
-        self.freq_type = freq_type
-        self.start_date = start_date
-        self.end_date = end_date
-        if self.stock is None:
-            raise XException(ErrorCodeEnum.CODE_PARAMETER_INVALID, "stock is None!!!")
+class TdxQuoteSpiderTask(XTask):
+
+    def __init__(self, product, market:str, code:str, 
+                 period_type:TdxQuotePeriodEnum=TdxQuotePeriodEnum.DAILY, 
+                 start_time='20060101', end_time="20500101", count:int=100):
+        super(TdxQuoteSpiderTask, self).__init__()
+        self.product = product
+        self.market = int(market)
+        self.code = code
+        self.period_type = period_type
+        self.start_time = start_time
+        self.end_time = end_time
+        self.count = count
         self.ret_data = None
-
-    def get_meta_data(self):
-        return self.stock
+        if self.product is None:
+            raise XException(ErrorCodeEnum.CODE_PARAMETER_INVALID, "product is None!!!")
 
     def task_main(self):
-        k_data_df = QueryStockInfo.query_k_data(self.stock.code, start_date=self.start_date, end_date=self.end_date, freq_type=self.freq_type)
+        if not TdxQuery.is_connected:
+            raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR, "TdxQuery disconnected!")
+        data_df = TdxQuery.get_quote(self.period_type, self.market, self.code, self.start_time, self.end_time, self.count)
         data_list = []
-        for index in k_data_df.index:
-            data_dict = {
-                'stock_id': self.stock.id,
-                'open': float(check_df_value(k_data_df.loc[index].values[2], 0.0)),
-                'high': float(check_df_value(k_data_df.loc[index].values[3], 0.0)),
-                'low': float(check_df_value(k_data_df.loc[index].values[4], 0.0)),
-                'close': float(check_df_value(k_data_df.loc[index].values[5], 0.0)),
-                'volume': int(check_df_value(k_data_df.loc[index].values[6], 0)),
-                'amount': float(check_df_value(k_data_df.loc[index].values[7], 0.0)),
-            }
-            date_time = k_data_df.loc[index].values[0]
-            if self.freq_type == QueryStockInfo.FreqTypeEnum.FREQ_HOURLY:
-                time_str = date_time[0:4] + '-' + date_time[4:6] + '-' + date_time[6:8] + ' ' + date_time[8:10] + ':' +\
-                           date_time[10:12] + ':' + date_time[12:14] + '.' + date_time[14:17]
-                data_dict['time'] = time_str
-            else:
-                data_dict['date'] = date_time
-                data_dict['turn'] = float(check_df_value(k_data_df.loc[index].values[8], 0.0))
-                data_dict['pct_chg'] = float(check_df_value(k_data_df.loc[index].values[9], 0.0))
-
-            if self.freq_type == QueryStockInfo.FreqTypeEnum.FREQ_DAILY:
-                data_dict['pre_close'] = float(check_df_value(k_data_df.loc[index].values[10], 0.0))
-                data_dict['pe_ttm'] = float(check_df_value(k_data_df.loc[index].values[11], 0.0))
-                data_dict['pb_mrq'] = float(check_df_value(k_data_df.loc[index].values[12], 0.0))
-                data_dict['ps_ttm'] = float(check_df_value(k_data_df.loc[index].values[13], 0.0))
-                data_dict['pcf_ncf_ttm'] = float(check_df_value(k_data_df.loc[index].values[14], 0.0))
-            data_list.append(data_dict)
-            self.ret_data = data_list
+        for index, row in  data_df.iterrows():
+            data_list.append({
+                "product_id": self.product.id,
+                "time": row["time"],
+                "open": row["open"],
+                "close": row["close"],
+                "high": row["high"],
+                "low": row["low"],
+                "volume": row["volume"],
+                "amount": row["amount"],
+                "pct_chg": row["pct_chg"],
+                "turn": row["turn"],
+                "hold": row["hold"],                
+            })
+        self.ret_data = data_list
         return data_list
+    
+    def get_meta_data(self):
+        return self.product
+    
+    def __repr__(self):
+        return "<TdxQuoteSpiderTask id:%d product:%s>" % (id(self), self.product)
+
+
+
+class HKStockFinancialInfoSpiderTask(XTask):
+
+    def __init__(self, product, symbol:str, use_mapping=False):
+        super(HKStockFinancialInfoSpiderTask, self).__init__()
+        self.product = product
+        self.symbol = symbol
+        self.use_mapping = use_mapping
+        if self.symbol is None:
+            raise XException(ErrorCodeEnum.CODE_PARAMETER_INVALID, "symbol is None!!!")
+
+    def task_main(self):
+        data_df = ProductQuery.get_hk_stock_financial_info(self.symbol, use_mapping=self.use_mapping)
+        data_list = []
+        for index, row in  data_df.iterrows():
+            data_list.append({
+                'name': self.product.name,
+                'product_id': self.product.id,
+                'symbol': self.symbol,
+                'BASIC_EPS': check_df_value(row['BASIC_EPS'], 0),
+                'BPS': check_df_value(row['BPS'], 0),
+                'COMMON_ACS': check_df_value(row['COMMON_ACS'], 0),
+                'PER_SHARES':  check_df_value(row['PER_SHARES'], 0),
+                'DIVIDEND_TTM': check_df_value(row['DIVIDEND_TTM'], 0),
+                'DIVI_RATIO': check_df_value(row['DIVI_RATIO'], 0),
+                'ISSUED_COMMON_SHARES': check_df_value(row['ISSUED_COMMON_SHARES'], 0),
+                'HK_COMMON_SHARES': check_df_value(row['HK_COMMON_SHARES'], 0),
+                'PER_NETCASH_OPERATE': check_df_value(row['PER_NETCASH_OPERATE'], 0),
+                'DIVIDEND_RATE': check_df_value(row['DIVIDEND_RATE'], 0),
+                'TOTAL_MARKET_CAP': check_df_value(row['TOTAL_MARKET_CAP'], 0),
+                'HKSK_MARKET_CAP': check_df_value(row['HKSK_MARKET_CAP'], 0),
+                'OPERATE_INCOME': check_df_value(row['OPERATE_INCOME'], 0),
+                'OPERATE_INCOME_QOQ': check_df_value(row['OPERATE_INCOME_QOQ'], 0),
+                'NET_PROFIT_RATIO': check_df_value(row['NET_PROFIT_RATIO'], 0),
+                'HOLDER_PROFIT': check_df_value(row['HOLDER_PROFIT'], 0),
+                'HOLDER_PROFIT_QOQ': check_df_value(row['HOLDER_PROFIT_QOQ'], 0),
+                'ROE_AVG': check_df_value(row['ROE_AVG'], 0),
+                'PE_TTM': check_df_value(row['PE_TTM'], 0),
+                'PB_TTM': check_df_value(row['PB_TTM'], 0),
+                'ROA': check_df_value(row['ROA'], 0)
+            })
+        return data_list
+    
+    def get_meta_data(self):
+        return self.product
 
     def __repr__(self):
-        return "<KDataSpiderTask id:%d stock:%s>" % (id(self), self.stock)
+        return "<HKStockFinancialInfoSpiderTask id:%d symbol:%s product:%s>" % (id(self), self.symbol, self.product)
+
+
 
 
 class ProductQuoteSpiderTask(XTask):
@@ -111,7 +159,7 @@ class ProductQuoteSpiderTask(XTask):
         return data_list
     
     def __repr__(self):
-        return "<KDataSpiderTask id:%d product:%s>" % (id(self), self.product)
+        return "<ProductQuoteSpiderTask id:%d product:%s>" % (id(self), self.product)
 
 
 class ShareholderSpiderTask(XTask):
@@ -174,3 +222,57 @@ class StockInfoSpiderTask(XTask):
 
     def __repr__(self):
         return "<StockInfoSpiderTask id:%d stock:%s>" % (id(self), self.stock)
+    
+
+
+
+class KDataSpiderTask(XTask):
+
+    def __init__(self, stock, freq_type=QueryStockInfo.FreqTypeEnum.FREQ_DAILY, start_date='2006-01-01', end_date=None):
+        super(KDataSpiderTask, self).__init__()
+        self.stock = stock
+        self.freq_type = freq_type
+        self.start_date = start_date
+        self.end_date = end_date
+        if self.stock is None:
+            raise XException(ErrorCodeEnum.CODE_PARAMETER_INVALID, "stock is None!!!")
+        self.ret_data = None
+
+    def get_meta_data(self):
+        return self.stock
+
+    def task_main(self):
+        k_data_df = QueryStockInfo.query_k_data(self.stock.code, start_date=self.start_date, end_date=self.end_date, freq_type=self.freq_type)
+        data_list = []
+        for index in k_data_df.index:
+            data_dict = {
+                'stock_id': self.stock.id,
+                'open': float(check_df_value(k_data_df.loc[index].values[2], 0.0)),
+                'high': float(check_df_value(k_data_df.loc[index].values[3], 0.0)),
+                'low': float(check_df_value(k_data_df.loc[index].values[4], 0.0)),
+                'close': float(check_df_value(k_data_df.loc[index].values[5], 0.0)),
+                'volume': int(check_df_value(k_data_df.loc[index].values[6], 0)),
+                'amount': float(check_df_value(k_data_df.loc[index].values[7], 0.0)),
+            }
+            date_time = k_data_df.loc[index].values[0]
+            if self.freq_type == QueryStockInfo.FreqTypeEnum.FREQ_HOURLY:
+                time_str = date_time[0:4] + '-' + date_time[4:6] + '-' + date_time[6:8] + ' ' + date_time[8:10] + ':' +\
+                           date_time[10:12] + ':' + date_time[12:14] + '.' + date_time[14:17]
+                data_dict['time'] = time_str
+            else:
+                data_dict['date'] = date_time
+                data_dict['turn'] = float(check_df_value(k_data_df.loc[index].values[8], 0.0))
+                data_dict['pct_chg'] = float(check_df_value(k_data_df.loc[index].values[9], 0.0))
+
+            if self.freq_type == QueryStockInfo.FreqTypeEnum.FREQ_DAILY:
+                data_dict['pre_close'] = float(check_df_value(k_data_df.loc[index].values[10], 0.0))
+                data_dict['pe_ttm'] = float(check_df_value(k_data_df.loc[index].values[11], 0.0))
+                data_dict['pb_mrq'] = float(check_df_value(k_data_df.loc[index].values[12], 0.0))
+                data_dict['ps_ttm'] = float(check_df_value(k_data_df.loc[index].values[13], 0.0))
+                data_dict['pcf_ncf_ttm'] = float(check_df_value(k_data_df.loc[index].values[14], 0.0))
+            data_list.append(data_dict)
+            self.ret_data = data_list
+        return data_list
+
+    def __repr__(self):
+        return "<KDataSpiderTask id:%d stock:%s>" % (id(self), self.stock)

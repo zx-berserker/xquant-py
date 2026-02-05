@@ -53,3 +53,10 @@ class ProductTypeEnum(Enum):
     PRODUCT_FUTURE = 4
     
     PRODUCT_OTHER = 9
+
+
+class QuotePeriodEnum(Enum):
+    DAILY = 1
+    WEEKLY = 2
+    MONTHLY = 3
+    HOURLY = 4

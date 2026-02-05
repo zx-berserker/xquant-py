@@ -18,6 +18,7 @@ async def update_quote(data_list:List[QuoteUpdate]):
         for item in data_list:
             task = UpdateWorkerTask(**item.to_dic())
             ServerWorker.worker_task_queue.put(task)
+            XLog.info("update task(start_time:%s, end_time:%s, period:%s)." % (item.startTime, item.endTime, item.period))
     except Exception as e:
         return Fail(str(e))
     return Success()
