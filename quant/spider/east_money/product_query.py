@@ -95,6 +95,14 @@ class ProductQuery(object):
         "st_pvi":  "10082738244952",
         "st_inirUrl":  "https%3A%2F%2Fwww.eastmoney.com%2F",
     }
+    temp_cookie_st_psi = None
+    temp_cookie_st_pvi = None
+    temp_cookie_st_si = None
+    temp_cookie_st_sp = None
+    temp_cookie_st_sn = None
+    temp_cookie_gviem = None
+    temp_cookie_nid18 = None
+
 
     headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
@@ -402,15 +410,33 @@ class ProductQuery(object):
             driver.quit()
         except Exception as e:
             pass 
+        
 
-
+        if "st_psi" in cookies_dic.keys():
+            cls.temp_cookie_st_psi = cookies_dic["st_psi"] 
+        if "st_pvi" in cookies_dic.keys():
+            cls.temp_cookie_st_pvi = cookies_dic["st_pvi"]
+        if "st_si" in cookies_dic.keys():
+            cls.temp_cookie_st_si = cookies_dic["st_si"]
+        if "st_sp" in cookies_dic.keys():
+            cls.temp_cookie_st_sp = cookies_dic["st_sp"] 
+        if "st_sn" in cookies_dic.keys():
+            cls.temp_cookie_st_sn = cookies_dic["st_sn"] 
+        if "gviem" in cookies_dic.keys():
+            cls.temp_cookie_gviem = cookies_dic["st_sn"] 
+        if "nid18" in cookies_dic.keys():
+            cls.temp_cookie_nid18 = cookies_dic["nid18"] 
+        
         cls.session_cookie_dic["qgqp_b_id"] = uuid4().hex
-        cls.session_cookie_dic["st_si"] = cookies_dic["st_si"] if "st_si" in cookies_dic.keys() else "".join(random.choices(string.digits, k=14))
-        cls.session_cookie_dic["st_pvi"] = cookies_dic["st_pvi"] if "st_pvi" in cookies_dic.keys() else "".join(random.choices(string.digits, k=14))
-        cls.session_cookie_dic["st_sp"] = cookies_dic["st_sp"] if "st_sp" in cookies_dic.keys() else "2025-11-30%2011%3A18%3A04"
-        cls.session_cookie_dic["st_sn"] = cookies_dic["st_sn"] if "st_sn" in cookies_dic.keys() else "4"
-        cls.session_cookie_dic["st_psi"] = cookies_dic["st_psi"] if "st_psi" in cookies_dic.keys() else "20260204092538939-111000300841-7573842112"
-
+        cls.session_cookie_dic["gviem"] = cls.temp_cookie_gviem if  cls.temp_cookie_gviem else "".join(random.choices(string.digits+string.ascii_letters +'-', k=14))
+        cls.session_cookie_dic["gviem_create_time"] = str(int(datetime.now().astimezone(time_zone).timestamp() * 1000))
+        cls.session_cookie_dic["nid18"] = cls.temp_cookie_nid18 if cls.temp_cookie_nid18 else "".join(random.choices(string.digits+string.ascii_letters, k=32))
+        cls.session_cookie_dic["nid18_create_time"] = str(int(datetime.now().astimezone(time_zone).timestamp() * 1000))
+        cls.session_cookie_dic["st_si"] = cls.temp_cookie_st_si if  cls.temp_cookie_st_si else "".join(random.choices(string.digits, k=14))
+        cls.session_cookie_dic["st_pvi"] = cls.temp_cookie_st_pvi if cls.temp_cookie_st_pvi else "".join(random.choices(string.digits, k=14))
+        cls.session_cookie_dic["st_sp"] = cls.temp_cookie_st_sp if cls.temp_cookie_st_sp else "2025-11-30%2011%3A18%3A04"
+        cls.session_cookie_dic["st_sn"] = cls.temp_cookie_st_sn if cls.temp_cookie_st_sn else "4"
+        cls.session_cookie_dic["st_psi"] = cls.temp_cookie_st_psi if cls.temp_cookie_st_psi else "20260206104508120-111000300841-2523010284"
 
         is_webreport = True
 
@@ -579,57 +605,6 @@ class ProductQuery(object):
             "forcect": "1",
         }
         
-
-        # wh_count = 0
-        # sleep_time_base = 5
-        # while(True):
-        #     try: 
-        #         if cls.prepare_type == ProductQuery.PrepareTypeEnum.PROXY and cls.proxy:
-        #             cls.headers["User-Agent"] = random.choice(cls.user_agent_list)
-        #             cls.headers["Cookie"] = ""
-        #             current_access = {
-        #                 "http": cls.proxy,
-        #                 "https": cls.proxy
-        #             }
-        #             r = requests.get(cls.quote_url_base, headers=cls.headers, timeout=10, params=params, proxies=current_access, verify=False)
-        #         elif cls.session and (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION or cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY):
-        #             r = cls.session.get(cls.quote_url_base, timeout=10, params=params, verify=False)
-        #         else: 
-        #             cls.headers["User-Agent"] = random.choice(cls.user_agent_list)
-        #             cls.headers["Cookie"] = random.choice(cls.cookie_list)
-        #             r = requests.get(cls.quote_url_base, headers=cls.headers, timeout=10, params=params)
-        #         data_json = r.json()
-        #     except (ProxyError, ConnectionError) as e:
-        #         XLog.error("%s requests.get while() except:" % (symbol))
-        #         XLog.error(e)
-        #         cls.prepare(cls.prepare_type)
-        #         continue
-        #     except Exception as e:
-        #         wh_count += 1
-        #         XLog.error("%s requests.get while(%d) except:" % (symbol, wh_count))
-        #         XLog.error(e)
-        #         if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION:
-        #             sleep_time = random.uniform(sleep_time_base*wh_count, sleep_time_base*(wh_count+1))
-        #             if wh_count > cls.while_max_count or sleep_time > 120:
-        #                 raise XException(ErrorCodeEnum.CODE_WEB_REQUEST_ERROR, "get_product_quote: web request error!")
-                
-        #             time.sleep(sleep_time)
-        #             sleep_time_base += sleep_time
-        #             cls.prepare(cls.prepare_type)
-        #             continue
-
-        #         if (cls.prepare_type == ProductQuery.PrepareTypeEnum.PROXY
-        #             or (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY and wh_count > 1)):
-        #             cls.prepare(cls.prepare_type)
-        #             continue
-        #         if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY:
-        #             try:                   
-        #                 cls._session_prepare()
-        #             except:
-        #                 cls.prepare(cls.prepare_type)
-        #         continue
-
-        #     break
         data_json = cls._request_loop(cls.quote_url_base, symbol, params)
         
         try: 
