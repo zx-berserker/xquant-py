@@ -13,7 +13,7 @@ import requests
 from requests.cookies import cookiejar_from_dict
 from quant.spider.east_money.lib.future import futures_hist_separate_char_and_numbers_em
 from quant.spider.east_money.lib.enum import QuotePeriodEnum
-from quant.spider.proxy import Proxy
+from quant.spider.proxy import Proxy, ProxyPool
 from quant.libs.error import XException
 from quant.libs.enums import ErrorCodeEnum
 import time
@@ -30,10 +30,15 @@ import json
 import string
 from quant.libs.log import XLog
 from requests.exceptions import ProxyError, ConnectionError
+from config import root_dir
+import os
 requests.packages.urllib3.disable_warnings()
 
 
 class ProductQuery(object):
+    json_temp_cookies_file_path = os.path.join(root_dir, "config", "temp_cookies.json")
+    proxy_pool:ProxyPool = None
+
     quote_url_base = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
     product_url_base = "https://push2.eastmoney.com/api/qt/clist/get"
     stock_url_params = {
@@ -322,18 +327,21 @@ class ProductQuery(object):
 
     @classmethod
     def _proxy_prepare(cls):
-        if cls.proxy_list is None or len(cls.proxy_list) <= 1:
-            cls.proxy_list = Proxy.get_proxy()
-            if len(cls.proxy_list) == 0:
-                raise XException(ErrorCodeEnum.CODE_INVALID, "cls.session_proxy_list len 0!")
+        if cls.proxy_pool is None:
+            if cls.proxy_list is None or len(cls.proxy_list) <= 1:
+                cls.proxy_list = Proxy.get_proxy()
+                if len(cls.proxy_list) == 0:
+                    raise XException(ErrorCodeEnum.CODE_INVALID, "cls.session_proxy_list len 0!")
 
-        if cls.proxy:
-            try:
-                cls.proxy_list.remove(cls.proxy)
-            except Exception as e:
-                pass
-        
-        cls.proxy = random.choice(cls.proxy_list)
+            if cls.proxy:
+                try:
+                    cls.proxy_list.remove(cls.proxy)
+                except Exception as e:
+                    pass
+                
+            cls.proxy = random.choice(cls.proxy_list)
+        else:
+            cls.proxy = cls.proxy_pool.get_proxy()
         XLog.info("session_proxy: ", cls.proxy)
 
 
@@ -744,6 +752,37 @@ class ProductQuery(object):
             ]]
         return temp_df
     
+    @classmethod
+    def save_temp_cookies(cls):
+        try:
+            temp_cookies = {
+                'temp_cookie_st_psi': cls.temp_cookie_st_psi,
+                'temp_cookie_st_pvi': cls.temp_cookie_st_pvi,
+                'temp_cookie_st_si': cls.temp_cookie_st_si,
+                'temp_cookie_st_sp': cls.temp_cookie_st_sp,
+                'temp_cookie_st_sn': cls.temp_cookie_st_sn,
+                'temp_cookie_gviem': cls.temp_cookie_gviem,
+                'temp_cookie_nid18': cls.temp_cookie_nid18,
+            }
+            with open(cls.json_temp_cookies_file_path,"w") as file:
+                json.dump(temp_cookies, file)
+        except:
+            pass
+
+    @classmethod
+    def read_temp_cookies(cls):
+        try:
+            with open(cls.json_temp_cookies_file_path,"r") as file:
+                temp_cookies = json.load(file)
+                cls.temp_cookie_st_psi = temp_cookies['temp_cookie_st_psi']
+                cls.temp_cookie_st_pvi = temp_cookies['temp_cookie_st_pvi']
+                cls.temp_cookie_st_si = temp_cookies['temp_cookie_st_si']
+                cls.temp_cookie_st_sp = temp_cookies['temp_cookie_st_sp']
+                cls.temp_cookie_st_sn = temp_cookies['temp_cookie_st_sn']
+                cls.temp_cookie_gviem = temp_cookies['temp_cookie_gviem']
+                cls.temp_cookie_nid18 = temp_cookies['temp_cookie_nid18']       
+        except:
+            pass
 
 
 if __name__ == "__main__":

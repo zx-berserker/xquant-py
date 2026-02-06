@@ -65,15 +65,17 @@ class Proxy(object):
     ]
 
     @classmethod
-    def get_proxy(cls,type:Type=Type.DEFAULT, use_request=True) -> list:
+    def get_proxy(cls,type:Type=Type.DEFAULT, use_request=True, use_json_file=True) -> list:
         proxy_list = []
         json_file_path = os.path.join(root_dir, "config", "proxy_list.json")
-        try:
-            with open(json_file_path,"r") as file:
-                data = json.load(file)
-                proxy_list.extend(data)
-        except:
-            pass
+        if use_json_file:
+            try:
+                
+                with open(json_file_path,"r") as file:
+                    data = json.load(file)
+                    proxy_list.extend(data)
+            except:
+                pass
         
         if not use_request:
             res_list = []

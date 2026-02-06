@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import string
 import random
+from quant.spider.proxy.proxy_pool import   ProxyPool
 
 def test():
     data_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -109,10 +110,18 @@ def pandas_test():
     # df["name"][0] = 'qq'
     print(df["name"][0])
     print(df[0:1]["name"][0])
+
+
+
+def xthread_test():
+    test =  ProxyPool()
+    test.start()
+    test.join()
+    
 if __name__ == '__main__':
     # test = "".join(random.choices(string.digits, k=14))
     # # test = "".join(random.sample(string.ascii_letters + string.digits + "-_", 25))
     # print(test)
     # # a = [0,1,2,3,4,5]
     # # print(a[:1])
-    pandas_test()
+    xthread_test()

@@ -8,6 +8,7 @@ from quant.models import Product, Exchange, QuoteDaily, QuoteHourly, QuoteMonthl
 from quant.libs.enums import StockTypeEnum, QuotePeriodEnum
 from quant.spider.baostock.query_stock_info import QueryStockInfo
 from quant.spider.east_money.shareholder_info import ShareholderInfo
+from quant.spider.proxy import ProxyPool
 from quant.spider.east_money import QuotePeriodEnum as EastQuotePeriodEnum, ProductQuery
 from quant.spider.tdx import QuotePeriodEnum as TdxQuotePeriodEnum, TdxQuery
 from quant.spider.spider_task_factory import ShareholderSpiderTaskFactory, KDataSpiderTaskFactory, StockInfoSpiderTaskFactory, ProductQuoteSpiderTaskFactory, HKStockFinancialInfoSpiderTaskFactory, TdxQuoteSpiderTaskTaskFactory
@@ -176,7 +177,12 @@ def update_stock_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY
     file_base_name = '' + period_type.name + '.json'
     flush_count = 1
     slice_capacity = 1000
+    error = None
     XLog.info("update_stock_product_quote start.")
+    if not ProductQuery.proxy_pool:
+        ProductQuery.proxy_pool = ProxyPool()
+        ProductQuery.proxy_pool.start()
+    ProductQuery.read_temp_cookies()
     for query in query_list:
         exg = query["exhange"]
         data_list = query["products"]
@@ -193,10 +199,14 @@ def update_stock_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY
         error = updater.join()
         if error:
             XLog.error(preflex + " error break!")
-            return
+            break
         XLog.info(preflex + "finish")
-    
-    XLog.info("update_stock_product_quote end.")
+
+    ProductQuery.save_temp_cookies()
+    ProductQuery.proxy_pool.stop()
+    ProductQuery.proxy_pool.join()
+    ProductQuery.proxy_pool = None
+    XLog.info("update_stock_product_quote stop.")
 
 
 def update_future_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, start_date:str='20060101', end_date:str="20500101", market_code:str=None, future_code:str=None, count=100):
@@ -298,7 +308,7 @@ def update_hk_stock_financial_info():
     
 
 if __name__ == "__main__":
-    update_stock_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20260204", end_date="20260205", limit=10000, symbol="1.600025")
+    update_stock_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20260204", end_date="20260205", limit=10000)
     update_stock_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20260129", end_date="20260205", limit=10000)
     update_stock_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20260124", end_date="20260131", limit=10000)
     update_stock_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20260101", end_date="20260201", limit=10000)
