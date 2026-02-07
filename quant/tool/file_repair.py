@@ -6,7 +6,7 @@ author: Berserker
 import os
 from quant.libs.log import XLog
 
-def quote_json_file_repair(dir_path:str='/home/xquant/cache'):
+def quote_json_file_repair(dir_path:str='/home/xquant/cache/Todo_Fix'):
     #
     file_name_list = os.listdir(dir_path)
     for name in file_name_list:

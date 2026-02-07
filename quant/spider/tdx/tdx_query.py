@@ -33,18 +33,25 @@ class TdxQuery:
             if len(hq_hosts_list) == 0:
                 raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR,"TdxQuery: hq_hosts is invalid.")
             _hq_name, _hq_ip, _hq_port, _hq_is_new = hq_hosts_list.pop(0)
-            cls.api = TdxHq_API(_hq_is_new, heartbeat=False, auto_retry=True, raise_exception=True, multithread=True)
-            ret = cls.api.connect(_hq_ip, _hq_port)
-            if ret:
-                break
+            try:
+                cls.api = TdxHq_API(_hq_is_new, heartbeat=False, auto_retry=True, raise_exception=True, multithread=True)
+                ret = cls.api.connect(_hq_ip, _hq_port)
+                if ret:
+                    break
+            except:
+                continue
         while True:
             if len(ex_hq_hosts_list) == 0:
                 raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR, "TdxQuery: ex_hq_hosts is invalid.")
             _ex_hq_name, _ex_hq_ip, _ex_hq_port, _ex_hq_is_new = ex_hq_hosts_list.pop(0)
-            cls.ex_api = TdxExHq_API(_ex_hq_is_new, heartbeat=False, auto_retry=True, raise_exception=True, multithread=True)
-            ret = cls.ex_api.connect(_ex_hq_ip, _ex_hq_port)
-            if ret:
-                break
+            try:
+                cls.ex_api = TdxExHq_API(_ex_hq_is_new, heartbeat=False, auto_retry=True, raise_exception=True, multithread=True)
+                ret = cls.ex_api.connect(_ex_hq_ip, _ex_hq_port)
+                if ret:
+                    break
+            except:
+                continue
+
         XLog.info("TdxQuery connected to TDX Hq host: ", _hq_name, "(", _hq_ip, ":", _hq_port, ")")
         XLog.info("TdxQuery connected to TDX Ex_Hq host: ", _ex_hq_name, "(", _ex_hq_ip, ":", _ex_hq_port, ")")
         cls._hq_name = _hq_name
@@ -60,8 +67,11 @@ class TdxQuery:
     def disconnect(cls):
         if not cls.is_connected:
             return  
-        cls.api.disconnect()
-        cls.ex_api.disconnect()
+        try:
+            cls.api.disconnect()
+            cls.ex_api.disconnect()
+        except:
+            pass
         cls.is_connected = False
         cls._hq_name = None
         cls._hq_ip = None 
