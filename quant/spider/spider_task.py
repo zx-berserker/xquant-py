@@ -37,10 +37,16 @@ class TdxQuoteSpiderTask(XTask):
             raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR, "TdxQuery disconnected!")
         data_df = TdxQuery.get_quote(self.period_type, self.market, self.code, self.start_time, self.end_time, self.count)
         data_list = []
-        for index, row in  data_df.iterrows():
+        for index, row in data_df.iterrows():
+
+            if self.period_type == TdxQuotePeriodEnum.HOURLY:
+                time = str(row["time"].strftime('%Y-%m-%d %H:%M'))
+            else:
+                time = str(row["time"].strftime('%Y-%m-%d'))
+
             data_list.append({
                 "product_id": self.product.id,
-                "time": row["time"],
+                "time": time,
                 "open": row["open"],
                 "close": row["close"],
                 "high": row["high"],

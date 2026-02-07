@@ -74,7 +74,7 @@ class TdxQuery:
 
     
     @classmethod
-    def get_quote(cls, period:QuotePeriodEnum, market:int, code, start_time:str='20260101', end_time:str='20260201', count:int=100):
+    def _get_quote(cls, period:QuotePeriodEnum, market:int, code, start_time:str='20260101', end_time:str='20260201', count:int=100):
         if not cls.is_connected:
             raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR,"TdxQuery: not connected.")
         
@@ -106,10 +106,6 @@ class TdxQuery:
         data_df.loc[:,'pct_chg'] = (data_df['close'] - data_df['close'].shift(1)) / data_df['close'].shift(1) * 100
         data_df.loc[data_df.index[0], 'pct_chg'] = (data_df.iloc[0]['close'] - data_df.iloc[0]['open']) / data_df.iloc[0]['open'] * 100
         data_df = data_df[(data_df['time'] >= date_time_start) & (data_df['time'] <= date_time_end)]
-        if period == QuotePeriodEnum.HOURLY:
-            data_df.loc[:,'time'] = data_df['time'].dt.strftime('%Y-%m-%d %H:%M')
-        else:
-            data_df.loc[:,'time'] = data_df['time'].dt.strftime('%Y-%m-%d')
         
         data_df.loc[:,'open'] = data_df['open'].round(2)
         data_df.loc[:,"close"] = data_df["close"].round(2)
@@ -137,6 +133,26 @@ class TdxQuery:
             ]
         ]
         return ret_data_df
+    
+
+    @classmethod
+    def get_quote(cls, period:QuotePeriodEnum, market:int, code, start_time:str='20260101', end_time:str='20260201', count:int=100):
+
+        while True:
+            try:
+                data_df = cls._get_quote(period, market, code, start_time, end_time, count)
+            except Exception as e:
+                XLog.error(e)
+                try:
+                    cls.disconnect()
+                except:
+                    pass
+                cls.connect()
+                continue
+            break
+        return data_df
+
+
         
 
 

@@ -342,7 +342,7 @@ class ProductQuery(object):
             cls.proxy = random.choice(cls.proxy_list)
         else:
             cls.proxy = cls.proxy_pool.get_proxy()
-        XLog.info("session_proxy: ", cls.proxy)
+        XLog.info("_proxy_prepare proxy: ", cls.proxy)
 
 
     @classmethod

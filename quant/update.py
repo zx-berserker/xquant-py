@@ -212,13 +212,13 @@ def update_stock_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY
 def update_future_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY, start_date:str='20060101', end_date:str="20500101", market_code:str=None, future_code:str=None, count=100):
     cls_type = QuoteDaily
     tdx_period_type = TdxQuotePeriodEnum.DAILY
-    if period_type == TdxQuotePeriodEnum.MONTHLY:
+    if period_type == QuotePeriodEnum.MONTHLY:
         cls_type = TdxQuotePeriodEnum
         tdx_period_type = TdxQuotePeriodEnum.MONTHLY
-    elif period_type == TdxQuotePeriodEnum.HOURLY:
+    elif period_type == QuotePeriodEnum.HOURLY:
         cls_type = QuoteHourly
         tdx_period_type = TdxQuotePeriodEnum.HOURLY
-    elif period_type == TdxQuotePeriodEnum.WEEKLY:
+    elif period_type == QuotePeriodEnum.WEEKLY:
         cls_type = QuoteWeekly
         tdx_period_type = TdxQuotePeriodEnum.WEEKLY
     query_list = []
@@ -310,13 +310,14 @@ def update_hk_stock_financial_info():
 if __name__ == "__main__":
     # update_stock_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20260204", end_date="20260205", limit=10000)
     # update_stock_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20260129", end_date="20260205", limit=10000)
-    update_stock_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20260124", end_date="20260131", limit=10000, symbol="0.300437")
-    update_stock_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20260101", end_date="20260201", limit=10000)
+    # update_stock_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20260124", end_date="20260131", limit=10000, symbol="0.300437")
+    # update_stock_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20260101", end_date="20260201", limit=10000)
     # update_hk_stock_financial_info()
-    update_future_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20170101", end_date="20260205")
+    # update_future_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20170101", end_date="20260205")
     update_future_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20170101", end_date="20260205")
-    update_future_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20170101", end_date="20260205")
-    update_future_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20170101", end_date="20260205")
+    # update_future_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20170101", end_date="20260205", market_code=28, future_code="SML9")
+    # update_future_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20170101", end_date="20260205")
     
     ##
+    pass
     
