@@ -444,7 +444,7 @@ class ProductQuery(object):
         cls.session_cookie_dic["st_pvi"] = cls.temp_cookie_st_pvi if cls.temp_cookie_st_pvi else "".join(random.choices(string.digits, k=14))
         cls.session_cookie_dic["st_sp"] = cls.temp_cookie_st_sp if cls.temp_cookie_st_sp else "2025-11-30%2011%3A18%3A04"
         cls.session_cookie_dic["st_sn"] = cls.temp_cookie_st_sn if cls.temp_cookie_st_sn else "4"
-        cls.session_cookie_dic["st_psi"] = cls.temp_cookie_st_psi if cls.temp_cookie_st_psi else "20260206104508120-111000300841-2523010284"
+        cls.session_cookie_dic["st_psi"] = cls.temp_cookie_st_psi if cls.temp_cookie_st_psi else "2026020711490590-111000300841-4044564500"
 
         is_webreport = True
 

@@ -192,7 +192,7 @@ def update_stock_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAILY
         param_list = spider_factory.task_param_list_generator(exg, data_list)
         Updater.spider_thread_pool_capacity = 1
         Updater.update_thread_pool_capacity = 1
-        Updater.sleep_uniform_max = 5
+        Updater.sleep_uniform_max = 3
         Updater.sleep_uniform_min = 1
         updater = Updater(param_list, update_task_factory, spider_factory)
         updater.start()
@@ -269,7 +269,7 @@ def update_future_product_quote(period_type:QuotePeriodEnum=QuotePeriodEnum.DAIL
         param_list = spider_factory.task_param_list_generator(market, data_list)
         Updater.spider_thread_pool_capacity = 1
         Updater.update_thread_pool_capacity = 1
-        Updater.sleep_uniform_max = 5
+        Updater.sleep_uniform_max = 2
         Updater.sleep_uniform_min = 1
         updater = Updater(param_list, update_task_factory, spider_factory)
         updater.start()
@@ -308,9 +308,9 @@ def update_hk_stock_financial_info():
     
 
 if __name__ == "__main__":
-    update_stock_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20260204", end_date="20260205", limit=10000)
-    update_stock_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20260129", end_date="20260205", limit=10000)
-    update_stock_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20260124", end_date="20260131", limit=10000)
+    # update_stock_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20260204", end_date="20260205", limit=10000)
+    # update_stock_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20260129", end_date="20260205", limit=10000)
+    update_stock_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20260124", end_date="20260131", limit=10000, symbol="0.000619")
     update_stock_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20260101", end_date="20260201", limit=10000)
     # update_hk_stock_financial_info()
     update_future_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20170101", end_date="20260205")
