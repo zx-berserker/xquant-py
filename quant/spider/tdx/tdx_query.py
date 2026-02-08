@@ -31,7 +31,8 @@ class TdxQuery:
             return  
         while True:
             if len(hq_hosts_list) == 0:
-                raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR,"TdxQuery: hq_hosts is invalid.")
+                hq_hosts_list.extend(hq_hosts)
+                # raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR,"TdxQuery: hq_hosts is invalid.")
             _hq_name, _hq_ip, _hq_port, _hq_is_new = hq_hosts_list.pop(0)
             try:
                 cls.api = TdxHq_API(_hq_is_new, heartbeat=False, auto_retry=True, raise_exception=True, multithread=True)
@@ -42,7 +43,8 @@ class TdxQuery:
                 continue
         while True:
             if len(ex_hq_hosts_list) == 0:
-                raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR, "TdxQuery: ex_hq_hosts is invalid.")
+                ex_hq_hosts_list.extend(ex_hq_hosts)
+                # raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR, "TdxQuery: ex_hq_hosts is invalid.")
             _ex_hq_name, _ex_hq_ip, _ex_hq_port, _ex_hq_is_new = ex_hq_hosts_list.pop(0)
             try:
                 cls.ex_api = TdxExHq_API(_ex_hq_is_new, heartbeat=False, auto_retry=True, raise_exception=True, multithread=True)
