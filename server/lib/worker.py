@@ -22,7 +22,7 @@ class UpdateWorkerTask(XTask):
     def task_main(self):
         UpdateWorkerTask.update_state = "Update State: running."
         update_stock_product_quote(self.period, self.start_time, self.end_time, limit=self.limit)
-        update_future_product_quote(self.period, self.start_time, self.end_time)
+        # update_future_product_quote(self.period, self.start_time, self.end_time)
         UpdateWorkerTask.update_state = "Update State: finished."
     
 

@@ -309,12 +309,12 @@ def update_hk_stock_financial_info():
 
 if __name__ == "__main__":
     # update_stock_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20260204", end_date="20260205", limit=10000)
-    update_stock_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20260206", end_date="20260207", limit=10000)
-    update_stock_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20260201", end_date="20260207", limit=10000)
+    # update_stock_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20260206", end_date="20260207", limit=10000)
+    # update_stock_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20260201", end_date="20260207", limit=10000)
     # update_stock_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20260101", end_date="20260201", limit=10000)
     # update_hk_stock_financial_info()
-    update_future_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20260206", end_date="20260207", market_code='47', future_code='TLL9')
-    update_future_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20260206", end_date="20260207")
+    # update_future_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20260206", end_date="20260207", market_code='47', future_code='TLL9')
+    update_future_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20260206", end_date="20260207", market_code='29', future_code='BBL8')
     update_future_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20260201", end_date="20260207")
     # update_future_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20170101", end_date="20260205")
     
