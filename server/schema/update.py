@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import List
-from quant.spider.east_money import QuotePeriodEnum
+from quant.libs.enums import QuotePeriodEnum
 
 
 class QuoteUpdate(BaseModel):
@@ -10,7 +10,7 @@ class QuoteUpdate(BaseModel):
     limit: int
 
     def to_dic(self):
-        QuotePeriodEnum.DAILY
+
         return {
             'start_time': self.startTime,
             'end_time': self.endTime,
