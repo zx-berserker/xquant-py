@@ -522,6 +522,7 @@ class ProductQuery(object):
                     cls._session_prepare()
             except (Exception, XException) as e:
                 XLog.error("error prepare: %s count:%d" % (type.name, while_count))
+                XLog.error(e)
                 # if while_count > 3:
                 #     raise e
                 continue
