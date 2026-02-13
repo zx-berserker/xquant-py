@@ -311,7 +311,7 @@ if __name__ == "__main__":
     update_stock_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20260212", end_date="20260212", limit=10000, symbol="1.603341")
     update_stock_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20260213", end_date="20260213", limit=10000)
 
-    update_stock_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20260206", end_date="20260213", limit=10000)
+    update_stock_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20260207", end_date="20260213", limit=10000)
     # update_stock_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20260201", end_date="20260207", limit=10000)
     # update_stock_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20260101", end_date="20260201", limit=10000)
     # update_hk_stock_financial_info()
