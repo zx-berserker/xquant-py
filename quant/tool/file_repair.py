@@ -10,6 +10,8 @@ def quote_json_file_repair(dir_path:str='/home/xquant/cache/Todo_Fix'):
     #
     file_name_list = os.listdir(dir_path)
     for name in file_name_list:
+        if not name.endswith(".json"):
+            continue
         XLog.info(name)
         file_name = os.path.join(dir_path, name)
         with open(file_name,"r", encoding="utf-8") as file:

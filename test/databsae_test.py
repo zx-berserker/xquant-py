@@ -16,7 +16,9 @@ from quant.tool.database.data_models.block import BlockData
 from quant.tool.file_writer import FileWriterTaskFactory
 from quant.models.stock import Stock
 from quant.models.stock_info import StockInfo
-from quant.models import Exchange
+from quant.models import Product, Exchange, QuoteDaily, QuoteHourly, QuoteMonthly, QuoteWeekly, TdxMarket
+from quant.libs.enums import StockTypeEnum, QuotePeriodEnum
+from sqlalchemy import delete
 
 def query_test():
     with SQLAlchemy.session_context() as session:
@@ -54,6 +56,38 @@ def query_yearly_net_profit():
     for data in data_list:
         if data[1] > 0:
             print(data[0])
+
+def sql_delete():
+    with SQLAlchemy.session_context() as session:
+        market_list = session.query(TdxMarket).filter((TdxMarket.sname == "QS") |
+                                                  (TdxMarket.sname == "CZ") |
+                                                  (TdxMarket.sname == "QG") |
+                                                  (TdxMarket.sname == "QZ") | 
+                                                  (TdxMarket.sname == "QD")).all()
+        for market in market_list:
+                prod_list = market.products
+                for product in prod_list:
+                    stmt = delete(QuoteDaily).where(QuoteDaily.product_id == product.id)
+                    result = session.execute(stmt)
+                    session.commit()
+                    print(f"delete {product.name} QuoteDaily data: {result.rowcount}")
+
+
+                    stmt = delete(QuoteWeekly).where(QuoteWeekly.product_id == product.id)
+                    result = session.execute(stmt)
+                    session.commit()
+                    print(f"delete {product.name} QuoteWeekly data: {result.rowcount}")
+
+                    stmt = delete(QuoteMonthly).where(QuoteMonthly.product_id == product.id)
+                    result = session.execute(stmt)
+                    session.commit()
+                    print(f"delete {product.name} QuoteMonthly data: {result.rowcount}")
+
+                    stmt = delete(QuoteHourly).where(QuoteHourly.product_id == product.id)
+                    result = session.execute(stmt)
+                    session.commit()
+                    print(f"delete {product.name} QuoteHourly data: {result.rowcount}")
+                    print(f"delete {product.name} quote data success")
 
 
 

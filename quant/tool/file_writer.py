@@ -81,18 +81,23 @@ class FileWriterHandle(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.flush_condition_callback(self):
             self.writer.write(self.cache_data)
+            self.writer.flush()
             self.cache_data = ''
         if self.finish_condition_callback(self):
             if self.cache_data != '':
                 self.writer.write(self.cache_data)
+                self.writer.flush()
                 self.writer.close()
+                self.cache_data = ''
             if self.before_release_callback:
                 self.before_release_callback(self)
     
     def release(self):
         if self.cache_data != '':
                 self.writer.write(self.cache_data)
+                self.writer.flush()
                 self.writer.close()
+                self.cache_data = ''
         if self.before_release_callback:
                 self.before_release_callback(self)
 

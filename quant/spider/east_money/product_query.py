@@ -324,6 +324,14 @@ class ProductQuery(object):
         ])
         temp_df = pd.DataFrame(exchg_list)
         return temp_df
+    
+    @classmethod
+    def init_temp_cookie(cls):
+        cls.temp_cookie_st_pvi = None
+        cls.temp_cookie_st_si = None
+        cls.temp_cookie_st_sn = None
+        cls.temp_cookie_gviem = None
+        cls.temp_cookie_nid18 = None
 
     @classmethod
     def _proxy_prepare(cls):
@@ -553,13 +561,18 @@ class ProductQuery(object):
                 data_json = r.json()
                 return data_json
             except (ProxyError, ConnectionError) as e:
-                XLog.error("%s requests.get while() except:" % (symbol))
+                wh_count += 1
+                XLog.error("%s requests.get while() except except (ProxyError, ConnectionError):" % (symbol, wh_count))
                 XLog.error(e)
+                if wh_count > 2:
+                    cls.init_temp_cookie()
                 cls.prepare(cls.prepare_type)                 
             except Exception as e:
                 wh_count += 1
-                XLog.error("%s requests.get while(%d) except:" % (symbol, wh_count))
+                XLog.error("%s requests.get while(%d) except Exception:" % (symbol, wh_count))
                 XLog.error(e)
+                if wh_count > 2:
+                    cls.init_temp_cookie()
                 if cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION:
                     sleep_time = random.uniform(sleep_time_base*wh_count, sleep_time_base*(wh_count+1))
                     if wh_count > cls.while_max_count or sleep_time > 120:
@@ -577,7 +590,7 @@ class ProductQuery(object):
                         cls._session_prepare()
                     except:
                         cls.prepare(cls.prepare_type)
-                continue
+                
         
 
 

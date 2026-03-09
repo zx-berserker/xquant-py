@@ -40,6 +40,7 @@ class TdxQuery:
                 if ret:
                     break
             except:
+                XLog.error("TdxHq_API connect error. name: %s, ip: %s" % (_hq_name, _hq_ip))
                 continue
         while True:
             if len(ex_hq_hosts_list) == 0:
@@ -52,6 +53,7 @@ class TdxQuery:
                 if ret:
                     break
             except:
+                XLog.error("TdxExHq_API connect error. name: %s, ip: %s" % (_ex_hq_name, _ex_hq_ip))
                 continue
 
         XLog.info("TdxQuery connected to TDX Hq host: ", _hq_name, "(", _hq_ip, ":", _hq_port, ")")
@@ -106,7 +108,7 @@ class TdxQuery:
             length = len(temp_df)
             if temp_df.at[length-1, 'datetime'] < date_time_start or length < count:
                 break
-            start += count
+            start += length
         if market in [0,1]:
             data_df = cls.api.to_df(ret_data)
         else:
