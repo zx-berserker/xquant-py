@@ -50,3 +50,7 @@ async def sse_update_quote_root(request: Request):
     return EventSourceResponse(f)
 
 
+@router.post("/update/cookie")
+async def update_cookie(data):
+    pass
+
