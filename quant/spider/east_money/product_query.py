@@ -562,7 +562,7 @@ class ProductQuery(object):
                 return data_json
             except (ProxyError, ConnectionError) as e:
                 wh_count += 1
-                XLog.error("%s requests.get while() except except (ProxyError, ConnectionError):" % (symbol, wh_count))
+                XLog.error("%s requests.get while(%d) except except (ProxyError, ConnectionError):" % (symbol, wh_count))
                 XLog.error(e)
                 if wh_count > 2:
                     cls.init_temp_cookie()
