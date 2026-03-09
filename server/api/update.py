@@ -1,11 +1,13 @@
 from fastapi import APIRouter
-from server.schema import QuoteUpdate, Fail, Success
+from server.schema import QuoteUpdate, Fail, Success, CookieUpdate
 from sse_starlette.sse import EventSourceResponse
 from fastapi import FastAPI, Request
 import time
 from server.lib.worker import UpdateWorkerTask, ServerWorker, UpdateWorkerTask
 from quant.libs.log import XLog
 from typing import List
+from quant.spider.east_money import ProductQuery
+import json
 
 __all__ = ["router"]
 
@@ -22,6 +24,7 @@ async def update_quote(data_list:List[QuoteUpdate]):
     except Exception as e:
         return Fail(str(e))
     return Success()
+
 
 
 @router.get("/sse")
@@ -50,7 +53,22 @@ async def sse_update_quote_root(request: Request):
     return EventSourceResponse(f)
 
 
-@router.post("/update/cookie")
-async def update_cookie(data):
+
+@router.put("/cookie")
+async def update_cookie(data: CookieUpdate):
+    cookie_data_dic = data.to_dic()
+    try:
+        with open(ProductQuery.json_temp_cookies_file_path,"r") as file:
+            temp_cookies = json.load(file)
+        for key in cookie_data_dic.keys():
+            if cookie_data_dic[key] and cookie_data_dic[key] != '':
+                temp_cookies[key] = cookie_data_dic[key]
+        with open(ProductQuery.json_temp_cookies_file_path,"w") as file:
+            json.dump(temp_cookies,file)
+        
+        ProductQuery.read_temp_cookies()
+
+    except:
+        pass
     pass
 
