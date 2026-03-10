@@ -64,7 +64,9 @@ class Product(Base):
         else:
             return False
         
-    def to_dic(self):
+    def to_dic(self, exchange_eastmoney_code=None):
         data = asdict(self)
         data["type"] = self._type
+        if exchange_eastmoney_code:
+            data["exchange"] = exchange_eastmoney_code
         return data

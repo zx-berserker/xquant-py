@@ -121,16 +121,19 @@ class TdxQuery:
         data_df.loc[data_df.index[0], 'pct_chg'] = (data_df.iloc[0]['close'] - data_df.iloc[0]['open']) / data_df.iloc[0]['open'] * 100
         data_df = data_df[(data_df['time'] >= date_time_start) & (data_df['time'] <= date_time_end)]
         
-        data_df.loc[:,'open'] = data_df['open'].round(2)
-        data_df.loc[:,"close"] = data_df["close"].round(2)
-        data_df.loc[:,'high'] = data_df['high'].round(2)
-        data_df.loc[:,'low'] = data_df['low'].round(2)
-        data_df.loc[:,'pct_chg'] = data_df['pct_chg'].round(2)
-        data_df.loc[:,'turn'] = 0
-        data_df.loc[:,'hold'] = data_df['position']
-        data_df.loc[:,'volume'] = data_df['trade']
-        data_df.loc[:,'amount'] = 0
-
+        if len(data_df) > 0:
+            data_df.loc[:,'open'] = data_df['open'].round(2)
+            data_df.loc[:,"close"] = data_df["close"].round(2)
+            data_df.loc[:,'high'] = data_df['high'].round(2)
+            data_df.loc[:,'low'] = data_df['low'].round(2)
+            data_df.loc[:,'pct_chg'] = data_df['pct_chg'].round(2)
+            data_df.loc[:,'turn'] = 0
+            data_df.loc[:,'hold'] = data_df['position']
+            data_df.loc[:,'volume'] = data_df['trade']
+            data_df.loc[:,'amount'] = 0
+        else:
+            ret_data_df = data_df
+            return data_df
 
         ret_data_df = data_df[
             [

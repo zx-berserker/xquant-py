@@ -54,7 +54,7 @@ async def sse_update_quote_root(request: Request):
 
 
 
-@router.put("/cookie")
+@router.post("/cookie")
 async def update_cookie(data: CookieUpdate):
     cookie_data_dic = data.to_dic()
     try:
@@ -67,8 +67,6 @@ async def update_cookie(data: CookieUpdate):
             json.dump(temp_cookies,file)
         
         ProductQuery.read_temp_cookies()
-
-    except:
-        pass
-    pass
-
+    except Exception as e:
+        return Fail(str(e))
+    return Success()

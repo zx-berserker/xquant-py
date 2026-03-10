@@ -248,7 +248,7 @@ class KDataSpiderTask(XTask):
 
     def task_main(self):
         k_data_df = QueryStockInfo.query_k_data(self.stock.code, start_date=self.start_date, end_date=self.end_date, freq_type=self.freq_type)
-        data_list = []
+        data_list = []      
         for index in k_data_df.index:
             data_dict = {
                 'stock_id': self.stock.id,

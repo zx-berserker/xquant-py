@@ -800,9 +800,9 @@ class ProductQuery(object):
 
 
 if __name__ == "__main__":
-    # ProductQuery._session_prepare()
-    data = ProductQuery.get_future_product()
-    data.to_csv('./future.csv')
+    ProductQuery._session_prepare()
+    # data = ProductQuery.get_future_product()
+    # data.to_csv('./future.csv')
 
 
 

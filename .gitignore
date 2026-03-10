@@ -7,3 +7,4 @@ config/secure.py
 config/proxy_list.json
 migrations/*
 alembic.ini
+config/temp_cookies.json
