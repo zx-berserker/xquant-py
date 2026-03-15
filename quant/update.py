@@ -309,13 +309,13 @@ def update_hk_stock_financial_info():
 
 if __name__ == "__main__":
     # update_stock_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20260309", end_date="20260310", limit=10000)
-    update_stock_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20260313", end_date="20260314", limit=10000, symbol="1.600866")
-    # update_stock_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20260214", end_date="20260308", limit=10000)
+    update_stock_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20260313", end_date="20260314", limit=10000, symbol="1.688230")
+    update_stock_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20260308", end_date="20260314", limit=10000)
     # update_stock_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20260201", end_date="20260301", limit=10000)
 
     # update_future_product_quote(period_type=QuotePeriodEnum.DAILY, start_date="20260310", end_date="20260310")
     update_future_product_quote(period_type=QuotePeriodEnum.HOURLY, start_date="20260313", end_date="20260314")
-    # update_future_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20260309", end_date="20260309")
+    update_future_product_quote(period_type=QuotePeriodEnum.WEEKLY, start_date="20260308", end_date="20260314")
     # update_future_product_quote(period_type=QuotePeriodEnum.MONTHLY, start_date="20260309", end_date="20260309")
 
     # update_hk_stock_financial_info()
