@@ -32,6 +32,7 @@ from quant.libs.log import XLog
 from requests.exceptions import ProxyError, ConnectionError
 from config import root_dir
 import os
+import psutil
 requests.packages.urllib3.disable_warnings()
 
 
@@ -352,6 +353,16 @@ class ProductQuery(object):
             cls.proxy = cls.proxy_pool.get_proxy()
         XLog.info("_proxy_prepare proxy: ", cls.proxy)
 
+    @classmethod
+    def _kill_chrome_process(cls):
+        process_list = psutil.process_iter()
+        for process in process_list:
+            try:
+                if "chrome" in process.name().lower():
+                    process.kill()
+                    XLog.info("kill chrome process: %s(%d)" % (process.name(), process.pid))
+            except:
+                pass
 
     @classmethod
     def _session_prepare(cls):
@@ -424,6 +435,7 @@ class ProductQuery(object):
         try:
             driver.close()
             driver.quit()
+            cls._kill_chrome_process()
         except Exception as e:
             pass 
         

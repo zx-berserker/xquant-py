@@ -8,7 +8,7 @@ import pandas as pd
 import string
 import random
 from quant.spider.proxy.proxy_pool import   ProxyPool
-
+import json
 def test():
     data_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     print(data_list[-3:])
@@ -95,7 +95,7 @@ def str_test():
     print(date)
 
 def json_test():
-    js = ""
+    js = json.loads()
 
 
 def pandas_test():

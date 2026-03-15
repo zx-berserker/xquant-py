@@ -59,39 +59,36 @@ def query_yearly_net_profit():
 
 def sql_delete():
     with SQLAlchemy.session_context() as session:
-        market_list = session.query(TdxMarket).filter((TdxMarket.sname == "QS") |
-                                                  (TdxMarket.sname == "CZ") |
-                                                  (TdxMarket.sname == "QG") |
-                                                  (TdxMarket.sname == "QZ") | 
-                                                  (TdxMarket.sname == "QD")).all()
-        for market in market_list:
-                prod_list = market.products
-                for product in prod_list:
-                    stmt = delete(QuoteDaily).where(QuoteDaily.product_id == product.id)
-                    result = session.execute(stmt)
-                    session.commit()
-                    print(f"delete {product.name} QuoteDaily data: {result.rowcount}")
 
 
-                    stmt = delete(QuoteWeekly).where(QuoteWeekly.product_id == product.id)
-                    result = session.execute(stmt)
-                    session.commit()
-                    print(f"delete {product.name} QuoteWeekly data: {result.rowcount}")
+        # stmt = delete(QuoteDaily).where(QuoteDaily.product_id == 2143)
+        # result = session.execute(stmt)
+        # session.commit()
+        # print(f"delete QuoteDaily data: {result.rowcount}")
+        # stmt = delete(QuoteWeekly).where(QuoteWeekly.product_id == 2143)
+        # result = session.execute(stmt)
+        # session.commit()
+        # print(f"delete QuoteWeekly data: {result.rowcount}")
+        # stmt = delete(QuoteMonthly).where(QuoteMonthly.product_id == 2143)
+        # result = session.execute(stmt)
+        # session.commit()
+        # print(f"delete QuoteMonthly data: {result.rowcount}")
+        # stmt = delete(QuoteHourly).where(QuoteHourly.product_id == 2143)
+        # result = session.execute(stmt)
+        # session.commit()
+        # print(f"delete QuoteHourly data: {result.rowcount}")
 
-                    stmt = delete(QuoteMonthly).where(QuoteMonthly.product_id == product.id)
-                    result = session.execute(stmt)
-                    session.commit()
-                    print(f"delete {product.name} QuoteMonthly data: {result.rowcount}")
 
-                    stmt = delete(QuoteHourly).where(QuoteHourly.product_id == product.id)
-                    result = session.execute(stmt)
-                    session.commit()
-                    print(f"delete {product.name} QuoteHourly data: {result.rowcount}")
-                    print(f"delete {product.name} quote data success")
+        stmt = delete(Product).where(Product.id == 2143)
+        result = session.execute(stmt)
+        session.commit()
+        print(f"delete QuoteDaily data: {result.rowcount}")
+        print(f"delete quote data success")
 
 
 
 if __name__ == '__main__':
-    # SQLAlchemy.create_all()
-    block_list = query_test()
-    print(block_list)
+    sql_delete()
+    # # SQLAlchemy.create_all()
+    # block_list = query_test()
+    # print(block_list)
