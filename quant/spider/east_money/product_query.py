@@ -358,9 +358,9 @@ class ProductQuery(object):
         process_list = psutil.process_iter()
         for process in process_list:
             try:
-                if "chrome" in process.name().lower():
-                    process.kill()
+                if "chrome/chrome" in process.name().lower():
                     XLog.info("kill chrome process: %s(%d)" % (process.name(), process.pid))
+                    process.kill()
             except:
                 pass
 
@@ -437,6 +437,7 @@ class ProductQuery(object):
             driver.quit()
             cls._kill_chrome_process()
         except Exception as e:
+            XLog(str(e))
             pass 
         
 
@@ -574,7 +575,7 @@ class ProductQuery(object):
                 return data_json
             except (ProxyError, ConnectionError) as e:
                 wh_count += 1
-                XLog.error("%s requests.get while(%d) except except (ProxyError, ConnectionError):" % (symbol, wh_count))
+                XLog.error("%s requests.get while(%d) except (ProxyError, ConnectionError):" % (symbol, wh_count))
                 XLog.error(e)
                 if wh_count > 2:
                     cls.init_temp_cookie()
@@ -619,7 +620,7 @@ class ProductQuery(object):
             while True:
                 try:
                     cls._session_prepare()
-                except:
+                except Exception as e:
                     continue
                 break
 
@@ -812,7 +813,7 @@ class ProductQuery(object):
 
 
 if __name__ == "__main__":
-    ProductQuery._session_prepare()
+    ProductQuery._kill_chrome_process()
     # data = ProductQuery.get_future_product()
     # data.to_csv('./future.csv')
 
