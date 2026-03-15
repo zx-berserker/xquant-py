@@ -432,14 +432,14 @@ class ProductQuery(object):
         cookies_dic = {}
         for item in cookie_list:
             cookies_dic[item["name"]] = item["value"]
+
         try:
             driver.close()
             driver.quit()
             cls._kill_chrome_process()
         except Exception as e:
-            XLog(str(e))
-            pass 
-        
+            XLog.error("chrome exit error: ", e)
+     
 
         if "st_psi" in cookies_dic.keys():
             cls.temp_cookie_st_psi = cookies_dic["st_psi"] 
@@ -468,15 +468,13 @@ class ProductQuery(object):
         cls.session_cookie_dic["st_psi"] = cls.temp_cookie_st_psi if cls.temp_cookie_st_psi else "2026020711490590-111000300841-4044564500"
 
         is_webreport = True
-
         try:
             cookies_str = f'st_nvi={cookies_dic["st_nvi"]}; st_si={cookies_dic["st_si"]}; st_pvi={cookies_dic["st_pvi"]}; st_sp={cookies_dic["st_sp"]}; st_inirUrl=https%3A%2F%2Fwww.eastmoney.com%2F; st_sn={cookies_dic["st_sn"]}; st_psi={cookies_dic["st_psi"]}; st_asi=delete'
         except Exception as e:
             XLog.error("webreport False: ", e)
             is_webreport = False
 
-        if is_webreport:
-            
+        if is_webreport:           
             cls.session.cookies = cookiejar_from_dict(cookies_dic)
             post_data = {
                 "language": "en-US",
@@ -813,9 +811,11 @@ class ProductQuery(object):
 
 
 if __name__ == "__main__":
-    ProductQuery._kill_chrome_process()
+    # ProductQuery._kill_chrome_process()
+    # XLog.info("kill chrome process: %s(%d)" % ("process.name()", 13245))
     # data = ProductQuery.get_future_product()
     # data.to_csv('./future.csv')
+    pass
 
 
 
