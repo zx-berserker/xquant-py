@@ -61,34 +61,62 @@ def sql_delete():
     with SQLAlchemy.session_context() as session:
 
 
-        # stmt = delete(QuoteDaily).where(QuoteDaily.product_id == 2143)
-        # result = session.execute(stmt)
-        # session.commit()
-        # print(f"delete QuoteDaily data: {result.rowcount}")
-        # stmt = delete(QuoteWeekly).where(QuoteWeekly.product_id == 2143)
-        # result = session.execute(stmt)
-        # session.commit()
-        # print(f"delete QuoteWeekly data: {result.rowcount}")
-        # stmt = delete(QuoteMonthly).where(QuoteMonthly.product_id == 2143)
-        # result = session.execute(stmt)
-        # session.commit()
-        # print(f"delete QuoteMonthly data: {result.rowcount}")
-        # stmt = delete(QuoteHourly).where(QuoteHourly.product_id == 2143)
-        # result = session.execute(stmt)
-        # session.commit()
-        # print(f"delete QuoteHourly data: {result.rowcount}")
+        stmt = delete(QuoteDaily).where(QuoteDaily.product_id == 8582)
+        result = session.execute(stmt)
+        session.commit()
+        print(f"delete QuoteDaily data: {result.rowcount}")
+        stmt = delete(QuoteWeekly).where(QuoteWeekly.product_id == 8582)
+        result = session.execute(stmt)
+        session.commit()
+        print(f"delete QuoteWeekly data: {result.rowcount}")
+        stmt = delete(QuoteMonthly).where(QuoteMonthly.product_id == 8582)
+        result = session.execute(stmt)
+        session.commit()
+        print(f"delete QuoteMonthly data: {result.rowcount}")
+        stmt = delete(QuoteHourly).where(QuoteHourly.product_id == 8582)
+        result = session.execute(stmt)
+        session.commit()
+        print(f"delete QuoteHourly data: {result.rowcount}")
 
 
-        stmt = delete(Product).where(Product.id == 2143)
+        stmt = delete(Product).where(Product.id == 8582)
         result = session.execute(stmt)
         session.commit()
         print(f"delete QuoteDaily data: {result.rowcount}")
         print(f"delete quote data success")
 
 
+def sql_delete_quote():
+    with SQLAlchemy.session_context() as session:
+        exg_list = session.query(Exchange).filter((Exchange.code == "SH") |
+                                                  (Exchange.code == "SZ") |
+                                                  (Exchange.code == "HK") |
+                                                  (Exchange.code == "GI") |
+                                                  (Exchange.code == "HKI")).all()
+        for exg in exg_list:
+            product_list = exg.products
+            for product in product_list:
+                stmt = delete(QuoteDaily).where((QuoteDaily.product_id == product.id) &
+                                                (QuoteDaily.time>"2026-03-15"))
+                result = session.execute(stmt)
+                session.commit()
+                print(product)
+                print(f"delete QuoteDaily data: {result.rowcount}")
+
+                stmt = delete(QuoteWeekly).where((QuoteWeekly.product_id == product.id) &
+                                                (QuoteWeekly.time>"2026-03-08"))
+                result = session.execute(stmt)
+                session.commit()
+                print(product)
+                print(f"delete QuoteWeekly data: {result.rowcount}")
+
+
+
 
 if __name__ == '__main__':
-    sql_delete()
+    sql_delete_quote()
+    # sql_delete()
     # # SQLAlchemy.create_all()
     # block_list = query_test()
     # print(block_list)
+    pass

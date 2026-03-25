@@ -12,7 +12,7 @@ from quant.spider.east_money.shareholder_info import ShareholderInfo
 from .east_money import QuotePeriodEnum, ProductQuery
 from quant.libs.log import XLog
 from .tdx import QuotePeriodEnum as TdxQuotePeriodEnum, TdxQuery
-
+import pandas as pd
 
 
 class TdxQuoteSpiderTask(XTask):
@@ -22,7 +22,10 @@ class TdxQuoteSpiderTask(XTask):
                  start_time='20060101', end_time="20500101", count:int=100):
         super(TdxQuoteSpiderTask, self).__init__()
         self.product = product
-        self.market = int(market)
+        if market:
+            self.market = int(market)
+        else:
+            self.market = market
         self.code = code
         self.period_type = period_type
         self.start_time = start_time
@@ -37,25 +40,47 @@ class TdxQuoteSpiderTask(XTask):
             raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR, "TdxQuery disconnected!")
         data_df = TdxQuery.get_quote(self.period_type, self.market, self.code, self.start_time, self.end_time, self.count)
         data_list = []
-        for index, row in data_df.iterrows():
-            if self.period_type == TdxQuotePeriodEnum.HOURLY:
-                time = str(row["time"].strftime('%Y-%m-%d %H:%M'))
-            else:
-                time = str(row["time"].strftime('%Y-%m-%d'))
+        if type(data_df) == list:
+            for item in data_df:
+                datatime = pd.to_datetime(item["time"], format='%Y-%m-%d %H:%M:%S')
+                if self.period_type == TdxQuotePeriodEnum.HOURLY:
+                    
+                    time = str(datatime.strftime('%Y-%m-%d %H:%M'))
+                else:
+                    time = str(datatime.strftime('%Y-%m-%d'))
+                data_list.append({
+                    "product_id": self.product.id,
+                    "time": time,
+                    "open": item["open"],
+                    "close": item["close"],
+                    "high": item["high"],
+                    "low": item["low"],
+                    "volume": item["volume"],
+                    "amount": item["amount"],
+                    "pct_chg": item["pct_chg"],
+                    "turn": item["turn"],
+                    "hold": item["hold"],                
+                })
+        else:
+            for index, row in data_df.iterrows():
+                if self.period_type == TdxQuotePeriodEnum.HOURLY:
+                    time = str(row["time"].strftime('%Y-%m-%d %H:%M'))
+                else:
+                    time = str(row["time"].strftime('%Y-%m-%d'))
 
-            data_list.append({
-                "product_id": self.product.id,
-                "time": time,
-                "open": row["open"],
-                "close": row["close"],
-                "high": row["high"],
-                "low": row["low"],
-                "volume": row["volume"],
-                "amount": row["amount"],
-                "pct_chg": row["pct_chg"],
-                "turn": row["turn"],
-                "hold": row["hold"],                
-            })
+                data_list.append({
+                    "product_id": self.product.id,
+                    "time": time,
+                    "open": row["open"],
+                    "close": row["close"],
+                    "high": row["high"],
+                    "low": row["low"],
+                    "volume": row["volume"],
+                    "amount": row["amount"],
+                    "pct_chg": row["pct_chg"],
+                    "turn": row["turn"],
+                    "hold": row["hold"],                
+                })
         self.ret_data = data_list
         return data_list
     

@@ -3,10 +3,11 @@ from server.schema import QuoteUpdate, Fail, Success, CookieUpdate
 from sse_starlette.sse import EventSourceResponse
 from fastapi import FastAPI, Request
 import time
-from server.lib.worker import UpdateWorkerTask, ServerWorker, UpdateWorkerTask
+from server.lib.worker import StockUpdateWorkerTask, ServerWebWorker, FutureUpdateWorkerTask
 from quant.libs.log import XLog
 from typing import List
 from quant.spider.east_money import ProductQuery
+from server.lib.event import EventQueue
 import json
 
 __all__ = ["router"]
@@ -15,39 +16,54 @@ router = APIRouter()
 
 @router.post("/quote")
 async def update_quote(data_list:List[QuoteUpdate]):
-    UpdateWorkerTask.update_state = "Update State: Start."
+    StockUpdateWorkerTask.update_state = "StockUpdateWorkerTask State: Start."
     try:
         for item in data_list:
-            task = UpdateWorkerTask(**item.to_dic())
-            ServerWorker.worker_task_queue.put(task)
-            XLog.info("update task(start_time:%s, end_time:%s, period:%s)." % (item.startTime, item.endTime, item.period))
+            task = StockUpdateWorkerTask(**item.to_dic())
+            ServerWebWorker.put_task(task)
+            XLog.info("StockUpdateWorkerTask(start_time:%s, end_time:%s, period:%s)." % (item.startTime, item.endTime, item.period))
     except Exception as e:
         return Fail(str(e))
     return Success()
 
+
+@router.post("/quote_future")
+async def update_quote(data_list:List[QuoteUpdate]):
+    FutureUpdateWorkerTask.update_state = "FutureUpdateWorkerTask State: Start."
+    try:
+        for item in data_list:
+            task = FutureUpdateWorkerTask(**item.to_dic())
+            ServerWebWorker.put_task(task)
+            XLog.info("FutureUpdateWorkerTask(start_time:%s, end_time:%s, period:%s)." % (item.startTime, item.endTime, item.period))
+    except Exception as e:
+        return Fail(str(e))
+    return Success()
 
 
 @router.get("/sse")
 async def sse_update_quote_root(request: Request):
     async def update_quote_task_event_generator(request: Request):
         is_first = True
+        EventQueue.set_available(True)
         while True:
+            event = None
             if await request.is_disconnected():
+                EventQueue.set_available(False)
                 break
             if is_first:
-                message = UpdateWorkerTask.update_state
-                is_first = False
-            else:
-                message = XLog.fastapi_get()
-            if message:
+                message = StockUpdateWorkerTask.update_state + " || " + FutureUpdateWorkerTask.update_state
                 id = str(time.time())
-                data = {
+                event = {
                     "event": "QuoteUpdateEvent", 
                     "id": id,
                     "data": message,
                     "retry": 3000,
                 }
-                yield data
+                is_first = False
+            else:
+                event = EventQueue.get_event()
+            if event:
+                yield event
     
     f = update_quote_task_event_generator(request)
     return EventSourceResponse(f)
@@ -56,6 +72,7 @@ async def sse_update_quote_root(request: Request):
 
 @router.post("/cookie")
 async def update_cookie(data: CookieUpdate):
+    XLog.info("update_cookie(cookieStPsi:%s)." % CookieUpdate.cookieStPsi)
     cookie_data_dic = data.to_dic()
     try:
         with open(ProductQuery.json_temp_cookies_file_path,"r") as file:

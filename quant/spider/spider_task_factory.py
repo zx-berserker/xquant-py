@@ -41,7 +41,10 @@ class TdxQuoteSpiderTaskTaskFactory(XTaskFactory):
             def __next__(self):
                 if self.current < len(self.data_list):
                     product:Product = self.data_list[self.current]
-                    param = TdxQuoteSpiderTaskTaskFactory.TaskParam(product, self.market.code, product.tdx_code)
+                    market_code = None
+                    if self.market:
+                        market_code = self.market.code
+                    param = TdxQuoteSpiderTaskTaskFactory.TaskParam(product, market_code, product.tdx_code)
                     self.current += 1
                     return param
                 else:

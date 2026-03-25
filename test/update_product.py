@@ -10,6 +10,7 @@ from quant.spider.east_money.product_query import ProductQuery, futures_hist_sep
 import pandas as pd
 from quant.libs.enums import ProductTypeEnum
 import time
+from quant.spider.tdx import TdxQuery
 
 def update_exchange():
     # data_df = ProductQuery.get_exchange()
@@ -315,7 +316,65 @@ def update_future_product():
             session.commit()
             print("%d %s" % (index, product))
 
-if __name__ == "__main__":
-    update_future_product()
 
+def update_tdx_product():
+    market_list = ['9']
+    product_type = ProductTypeEnum.PRODUCT_STOCK.value
+    for market in market_list:
+        market_code = market
+        if market_code == "31":
+            product_type = ProductTypeEnum.PRODUCT_FUND.value
+        elif market_code == '9':
+            product_type = ProductTypeEnum.PRODUCT_INDEX.value
+
+        product_list = TdxQuery.get_product_list(market_code)
+        with SQLAlchemy.session_context() as session:
+            for prod in product_list:
+                code = prod['Code']
+                name = prod['Name']
+                print("product: %s-%s" % (code, name))
+                code_list = code.split('.')
+                exg_code = code_list[1]
+                if exg_code == 'SZ' or exg_code == 'SH':
+                    pass
+                elif exg_code == 'OT' or exg_code == "HK":
+                    exg_code = "HKI"
+                else:
+                    exg_code = "GI"
+                exg = session.query(Exchange).filter(
+                    Exchange.code == exg_code
+                ).first()
+                if exg is None:
+                    continue
+                product = session.query(Product).filter(
+                    (Product.code == code_list[0]) &
+                    (Product.exchange_id == exg.id)
+                ).first()
+                if product:
+                    # continue
+                    product.tdx_code = code
+                    session.commit()
+                    print("Update:")
+                    print(product)
+                else:
+                    product = Product(
+                        code=code_list[0],
+                        tdx_code=code,
+                        name=name,
+                        exchange_id=exg.id,
+                        _type = product_type
+                    )
+                    session.add(product)
+                    session.commit()
+                    print("Add Product")
+
+
+        
+
+
+if __name__ == "__main__":
+    # update_tdx_product()
+    a = pd.DataFrame()
+    if type(a) == list:
+        print("ok")
     pass

@@ -62,7 +62,8 @@ class BaseParser(object):
         pass
 
     def setup(self):
-        raise Exception("BaseParser use abstractmethod setup()!")
+        pass
+        # raise Exception("BaseParser use abstractmethod setup()!")
 
 
 

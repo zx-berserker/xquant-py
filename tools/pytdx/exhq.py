@@ -136,8 +136,8 @@ class TdxExHq_API(BaseSocketClient):
 if __name__ == '__main__':
     import pprint
 
-    api = TdxExHq_API()
-    with api.connect('121.14.110.210', 7727):
+    api = TdxExHq_API(True)
+    with api.connect('39.108.101.114', 7727):
         # log.info("获取市场代码")
         # pprint.pprint(api.to_df(api.get_markets()))
         # log.info("查询市场中商品数量")
@@ -151,18 +151,19 @@ if __name__ == '__main__':
         #pprint.pprint(api.to_df(api.get_minute_time_data(47, "IFL0")))
         #pprint.pprint(api.to_df(api.get_minute_time_data(8, "10000889")).tail())
         #pprint.pprint(api.get_minute_time_data(31, "00020"))
-        log.info("查询历史分时行情")
-        pprint.pprint(api.to_df(api.get_history_minute_time_data(31, "00020", 20170811)).tail())
-        log.info("查询分时成交")
-        pprint.pprint(api.to_df(api.get_transaction_data(31, "00020")).tail())
+        # log.info("查询历史分时行情")
+        # pprint.pprint(api.to_df(api.get_history_minute_time_data(31, "00020", 20170811)).tail())
+        # log.info("查询分时成交")
+        # pprint.pprint(api.to_df(api.get_transaction_data(31, "00020")).tail())
 
-        log.info("查询历史分时成交")
-        pprint.pprint(api.to_df(api.get_history_transaction_data(31, "00020", 20170811)).tail())
+        # log.info("查询历史分时成交")
+        # pprint.pprint(api.to_df(api.get_history_transaction_data(31, "00020", 20170811)).tail())
         #data = api.get_history_minute_time_data(47, 'IFL0', 20170811)
         # pprint.pprint(data)
 
         # log.info("查询k线")
         #pprint.pprint(api.to_df(api.get_instrument_bars(TDXParams.KLINE_TYPE_DAILY, 8, "10000843")))
-        #pprint.pprint(api.to_df(api.get_instrument_bars(TDXParams.KLINE_TYPE_DAILY, 31, "00700")))
+        pprint.pprint(api.to_df(api.get_instrument_bars(TDXParams.KLINE_TYPE_DAILY, 31, "00700")))
         # log.info("查询代码列表")
         #pprint.pprint(api.to_df(api.get_instrument_info(10000, 98)))
+        api.disconnect()

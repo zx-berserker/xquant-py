@@ -10,8 +10,14 @@ from quant.libs.error import XException, ErrorCodeEnum
 from quant.libs.log import XLog
 from quant.spider.tdx.lib.enum import QuotePeriodEnum
 import pandas as pd
+import requests
+import json
+import time
+from datetime import timedelta
+from pandas import Timestamp
 
 class TdxQuery:
+    _stock_market_list = [0,1,31]
     is_connected: bool = False
     api: TdxHq_API = None
     ex_api: TdxExHq_API = None
@@ -21,12 +27,34 @@ class TdxQuery:
     _ex_hq_name = None
     _ex_hq_ip = None
     _ex_hq_port = None
+    _request_base_url = 'http://127.0.0.1:8020/api/v1/tdx'
+    requset_market = [
+        {
+            "name": '沪深A股',
+            "code": '50',
+        },
+        {
+            "name": 'ETF基金',
+            "code": '31',
+        },
+        {
+            "name": '港股',
+            "code": '102',
+        },
+        {
+            "name": '重点指数',
+            "code": '9',
+        }
+    ]
+
     @classmethod
     def connect(cls):
         hq_hosts_list = []
         ex_hq_hosts_list = []
         hq_hosts_list.extend(hq_hosts)
         ex_hq_hosts_list.extend(ex_hq_hosts)
+
+        
         if cls.is_connected:
             return  
         while True:
@@ -96,8 +124,9 @@ class TdxQuery:
         date_time_start = str(pd.to_datetime(start_time, format='%Y%m%d'))
         date_time_end = str(pd.to_datetime(end_time+' 23:59', format='%Y%m%d %H:%M'))
         start = 0
+        
         while True:
-            if market in [0,1]: #TODO 上证、深证
+            if market in [0,1]: #TODO 深证、上证
                 data = cls.api.get_security_bars(period.value, market, code, start, count)
             else: #TODO 期货 扩展行情
                 data = cls.ex_api.get_instrument_bars(period.value, market, code, start, count)
@@ -114,7 +143,35 @@ class TdxQuery:
         else:
             data_df = cls.ex_api.to_df(ret_data)
         
+        
+        # data_df.loc[:,'datetime'] = pd.to_datetime(data_df['datetime'])
+        
+        def data_time_fix(data:str):
+            value = pd.to_datetime(data, format='%Y-%m-%d %H:%M')
+            if (value.hour>19) and ((value.hour<23) or ((value.hour==23) and (value.minute<=59))):
+                days = 1
+                while True:
+                    temp_time_str = (value - timedelta(days=days)).strftime('%Y-%m-%d')
+                    temp_time_end = temp_time_str + " 16:00"
+                    tmep_time_start = temp_time_str + " 09:00"
+                    temp_df = data_df[(data_df['datetime']>tmep_time_start) & (data_df['datetime']<temp_time_end)]
+                    if len(temp_df) == 0:
+                        temp_df_2 = data_df[data_df['datetime']<tmep_time_start]
+                        if len(temp_df_2) > 0:
+                            days += 1
+                            continue
+                        else:
+                            return (value - timedelta(days=days)).strftime('%Y-%m-%d %H:%M')
+                    else:
+                        ret_str = "%s %02d:%02d" % (temp_time_str, value.hour, value.minute)
+                        return  ret_str
+            else:
+                return data
+
+        data_df.loc[:,'datetime'] = data_df['datetime'].apply(data_time_fix)
+        
         data_df.loc[:,'time'] = pd.to_datetime(data_df['datetime'])
+        # data_df.loc[:,'time'] = data_df['datetime']
         data_df.set_index('datetime', inplace=True)
         data_df.sort_index(inplace=True)
         data_df.loc[:,'pct_chg'] = (data_df['close'] - data_df['close'].shift(1)) / data_df['close'].shift(1) * 100
@@ -128,9 +185,13 @@ class TdxQuery:
             data_df.loc[:,'low'] = data_df['low'].round(2)
             data_df.loc[:,'pct_chg'] = data_df['pct_chg'].round(2)
             data_df.loc[:,'turn'] = 0
-            data_df.loc[:,'hold'] = data_df['position']
-            data_df.loc[:,'volume'] = data_df['trade']
-            data_df.loc[:,'amount'] = 0
+            if market in [0,1]:
+                data_df.loc[:,'hold'] = 0
+                data_df.loc[:,'volume'] = data_df['vol']
+            else:
+                data_df.loc[:,'hold'] = data_df['position']
+                data_df.loc[:,'volume'] = data_df['trade']
+                data_df.loc[:,'amount'] = 0
         else:
             ret_data_df = data_df
             return data_df
@@ -153,30 +214,63 @@ class TdxQuery:
     
 
     @classmethod
-    def get_quote(cls, period:QuotePeriodEnum, market:int, code, start_time:str='20260101', end_time:str='20260201', count:int=100):
+    def get_quote(cls, period:QuotePeriodEnum, market:int, code, start_time:str='20260101', end_time:str='20260201', count:int=100) -> pd.DataFrame | list:
 
         while True:
             try:
-                data_df = cls._get_quote(period, market, code, start_time, end_time, count)
+                if market is not None:
+                    data = cls._get_quote(period, market, code, start_time, end_time, count)
+                else: 
+                    data = cls._get_stock_quote(code, period, start_time, end_time)
             except Exception as e:
                 XLog.error(e)
-                try:
-                    cls.disconnect()
-                except:
-                    pass
-                cls.connect()
+                if market is not None:
+                    try:
+                        cls.disconnect()
+                    except:
+                        pass
+                    cls.connect()
+                time.sleep(5)
                 continue
             break
-        return data_df
+        return data
 
-
-        
+    @classmethod
+    def _get_stock_quote(cls, code:str, period:QuotePeriodEnum, start_time:str='20260101', end_time:str='20260201'):
+        params = {
+            "code": code,
+            "startDate": start_time,
+            "endDate": end_time,
+            "period": period.name,
+        }
+        url = cls._request_base_url + '/quote_list'
+        r = requests.get(url, timeout=10, params=params, verify=False)
+        data_json = r.json()
+        data = json.loads(data_json['data'])
+        return data
+    
+    @classmethod
+    def get_product_list(cls, market:str):
+        params = {
+             "market": market,  # 0:上海
+        }
+        url = cls._request_base_url + '/product_list'
+        r = requests.get(url, timeout=10, params=params, verify=False)
+        data_json = r.json()
+        data = json.loads(data_json['data'])
+        return data
 
 
 if __name__ == '__main__':
     TdxQuery.connect()
-    k_data = TdxQuery.get_quote(QuotePeriodEnum.DAILY, 66, "SIL9", "20260128", "20260203", count=2)
+    stock_code = "RBL9"
+    k_data = TdxQuery.get_quote(QuotePeriodEnum.HOURLY,30,stock_code, "20260324", "20260324", count=100)
+    # k_data = TdxQuery.get_quote(QuotePeriodEnum.DAILY, None, "09626.HK", "20260319", "20260319", count=100)
     print(k_data)
+    # data = TdxQuery.get_product_list('50')
+    # for item in  data:
+        # print(item['Name'])
+    # print(data)
     # data = TdxQuery.ex_api.get_instrument_bars(QuotePeriodEnum.DAILY.value, 30, "AUL9", start=0, count=10) 96
     # print(data)
     # start = 0

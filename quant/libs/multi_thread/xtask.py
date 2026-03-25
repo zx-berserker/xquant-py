@@ -50,7 +50,7 @@ class XTaskBase(ABC):
 
 class XTask(XTaskBase):
 
-    def __init__(self):
+    def __init__(self, name="XTask"):
         self._result = None
         self._is_done = False
         self._exception = None
@@ -59,6 +59,11 @@ class XTask(XTaskBase):
         self._except_callback = None
         self._exe_event = Event()
         self._exe_lock = RLock()
+        self._name = name
+    
+    @property
+    def name(self) -> str:
+        return self._name
 
     @abstractmethod
     def task_main(self):

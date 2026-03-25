@@ -33,6 +33,9 @@ from requests.exceptions import ProxyError, ConnectionError
 from config import root_dir
 import os
 import psutil
+from config.settings import GlobeConfig
+from server.lib.event import QuoteUpdateCookieEvent, EventQueue
+
 requests.packages.urllib3.disable_warnings()
 
 
@@ -202,7 +205,7 @@ class ProductQuery(object):
         cls.stock_url_params["fs"] = fs.value
         cls.headers["User-Agent"] = random.choice(cls.user_agent_list)
         cls.headers["Cookie"] = random.choice(cls.cookie_list)
-        current_access = random.choice(cls.access_points_list)
+        # current_access = random.choice(cls.access_points_list)
         r = requests.get(cls.product_url_base, headers=cls.headers, timeout=10, params=cls.stock_url_params)#, proxies=current_access)
         data_json = r.json()
         total = data_json["data"]["total"]
@@ -409,6 +412,10 @@ class ProductQuery(object):
         driver.set_window_size(1280,1024)
         try:
             driver.get("https://www.eastmoney.com/")
+            try:
+                WebDriverWait(driver, 10, 0.5).until(Expect.presence_of_all_elements_located((By.CLASS_NAME, "nlist")))
+            except:
+                pass
             driver.get("https://data.eastmoney.com/center/")
             driver.get("https://js1.eastmoney.com/tg.aspx?ID=666")
             while_count = 0
@@ -553,8 +560,15 @@ class ProductQuery(object):
     def _request_loop(cls, url:str, symbol:str, params:dict):
         wh_count = 0
         sleep_time_base = 5
+
         while(True):
             try: 
+                if wh_count > 30 and GlobeConfig.is_fastapi_server and (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION or cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY):
+                    if EventQueue.is_available():
+                        event = QuoteUpdateCookieEvent()
+                        EventQueue.put_event(event)
+                        wh_count = wh_count - int(wh_count) + 3 + 0.01                        
+
                 if cls.prepare_type == ProductQuery.PrepareTypeEnum.PROXY and cls.proxy:
                     cls.headers["User-Agent"] = random.choice(cls.user_agent_list)
                     cls.headers["Cookie"] = ""
@@ -573,14 +587,14 @@ class ProductQuery(object):
                 return data_json
             except (ProxyError, ConnectionError) as e:
                 wh_count += 1
-                XLog.error("%s requests.get while(%d) except (ProxyError, ConnectionError):" % (symbol, wh_count))
+                XLog.error("%s requests.get while(%.2f) except (ProxyError, ConnectionError):" % (symbol, wh_count))
                 XLog.error(e)
                 if wh_count > 2:
                     cls.init_temp_cookie()
                 cls.prepare(cls.prepare_type)                 
             except Exception as e:
                 wh_count += 1
-                XLog.error("%s requests.get while(%d) except Exception:" % (symbol, wh_count))
+                XLog.error("%s requests.get while(%.2f) except Exception:" % (symbol, wh_count))
                 XLog.error(e)
                 if wh_count > 2:
                     cls.init_temp_cookie()
@@ -601,9 +615,6 @@ class ProductQuery(object):
                         cls._session_prepare()
                     except:
                         cls.prepare(cls.prepare_type)
-                
-        
-
 
     @classmethod
     def get_product_quote(cls,
@@ -622,8 +633,6 @@ class ProductQuery(object):
                     continue
                 break
 
-
-            
         params = {
             "secid": symbol,
             "klt": period.value,
@@ -815,6 +824,7 @@ if __name__ == "__main__":
     # XLog.info("kill chrome process: %s(%d)" % ("process.name()", 13245))
     # data = ProductQuery.get_future_product()
     # data.to_csv('./future.csv')
+    print("%.2f" % (3.1 - int(3.1)))
     pass
 
 
