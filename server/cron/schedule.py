@@ -16,12 +16,12 @@ class CronSchedule:
     @classmethod
     def init(cls, crons: Crons):
 
-        @crons.cron("* * */1 * *", name="corn_start", tags=["server"])
+        @crons.cron("0 0 */1 * *", name="corn_start", tags=["server"])
         async def cron_start():
              now = datetime.now()
              XLog.info("@cron cron_start(%s)" % str(now))
 
-        @crons.cron("* * * * 1,2,3,4,5,6", name="cron_future_update", tags=["server"])
+        @crons.cron("0 10 * * 1,2,3,4,5,6", name="cron_future_update", tags=["server"])
         async def cron_future_update():
             ServerWebWorker.future_update()
             XLog.info("@cron cron_future_update()")
