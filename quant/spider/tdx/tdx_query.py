@@ -15,6 +15,7 @@ import json
 import time
 from datetime import timedelta
 from pandas import Timestamp
+from config.secure import HOST
 
 class TdxQuery:
     _stock_market_list = [0,1,31]
@@ -27,7 +28,7 @@ class TdxQuery:
     _ex_hq_name = None
     _ex_hq_ip = None
     _ex_hq_port = None
-    _request_base_url = 'http://127.0.0.1:8020/api/v1/tdx'
+    _request_base_url = f'http://{HOST}:8020/api/v1/tdx'
     requset_market = [
         {
             "name": '沪深A股',
@@ -263,8 +264,9 @@ class TdxQuery:
 
 if __name__ == '__main__':
     TdxQuery.connect()
-    stock_code = "RBL9"
-    k_data = TdxQuery.get_quote(QuotePeriodEnum.HOURLY,30,stock_code, "20260324", "20260324", count=100)
+    stock_code = "CL8"
+    k_data = TdxQuery.get_quote(QuotePeriodEnum.HOURLY,29,stock_code, "20260320", "20260320", count=100)
+
     # k_data = TdxQuery.get_quote(QuotePeriodEnum.DAILY, None, "09626.HK", "20260319", "20260319", count=100)
     print(k_data)
     # data = TdxQuery.get_product_list('50')

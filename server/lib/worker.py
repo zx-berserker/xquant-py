@@ -24,6 +24,7 @@ class StockUpdateWorkerTask(XTask):
 
     def task_main(self):
         StockUpdateWorkerTask.update_state = "StockUpdateWorkerTask State: running."
+
         update_stock_product_quote(self.period, self.start_time, self.end_time, limit=self.limit)
         # update_future_product_quote(self.period, self.start_time, self.end_time)
         StockUpdateWorkerTask.update_state = "StockUpdateWorkerTask State: finished."
@@ -61,8 +62,8 @@ class ServerWebWorker(WorkerBass):
         super(ServerWebWorker,self).__init__("ServerWebWorker")
 
     @classmethod
-    def future_update(cls):
-        cls._is_future_update =  True
+    def future_update(cls, value=True):
+        cls._is_future_update = value
 
     @classmethod
     def put_task(cls, task:XTask):
@@ -80,8 +81,8 @@ class ServerWebWorker(WorkerBass):
                         time.sleep(10)
                 else:
                         task.executive()
-            except:
-                ServerWebWorker._is_future_update = False
+            except Exception as e:
+                XLog.error(f'ServerWebWorker(): {str(e)}')
                 pass
 
 

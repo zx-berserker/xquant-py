@@ -11,6 +11,7 @@ import pandas as pd
 from quant.libs.enums import ProductTypeEnum
 import time
 from quant.spider.tdx import TdxQuery
+from quant.models import QuoteHourly
 
 def update_exchange():
     # data_df = ProductQuery.get_exchange()
@@ -368,13 +369,28 @@ def update_tdx_product():
                     session.commit()
                     print("Add Product")
 
+from quant.spider.tdx.lib.enum import QuotePeriodEnum
+from quant.spider.tdx.tdx_query import TdxQuery
 
-        
+def fix_cl8_hourly():
+    TdxQuery.connect()
+    stock_code = "CL8"
+    k_data = TdxQuery.get_quote(QuotePeriodEnum.HOURLY,29,stock_code, "20260320", "20260320", count=100)
+    data_df = k_data[(k_data.index>="2026-03-20 22:00") & (k_data.index<= "2026-03-20 23:00")]
+    print(data_df)
+    with SQLAlchemy.session_context() as session:
+        proudct = session.query(Product).filter(Product.tdx_code=='CL8').first()
+        for index, row in data_df.iterrows():
+            
+            time = str(row["time"].strftime('%Y-%m-%d %H:%M'))
+            quote =  QuoteHourly(time=time, product_id=proudct.id, open=row["open"], close=row["close"],
+                                 high=row["high"], low=row["low"], volume=row["volume"], amount=row["amount"],
+                                 pct_chg=row["pct_chg"], turn=row["turn"], hold=row["hold"])
+            print(quote)
+            session.add(quote)
+            session.commit()
 
 
 if __name__ == "__main__":
-    # update_tdx_product()
-    a = pd.DataFrame()
-    if type(a) == list:
-        print("ok")
+    fix_cl8_hourly()
     pass
