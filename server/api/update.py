@@ -3,16 +3,22 @@ from server.schema import QuoteUpdate, Fail, Success, CookieUpdate
 from sse_starlette.sse import EventSourceResponse
 from fastapi import FastAPI, Request
 import time
-from server.lib.worker import StockUpdateWorkerTask, ServerWebWorker, FutureUpdateWorkerTask
+from server.lib.worker import ServerWebWorker
+from server.lib.worker_task import StockUpdateWorkerTask, FutureUpdateWorkerTask
 from quant.libs.log import XLog
 from typing import List
 from quant.spider.east_money import ProductQuery
 from server.lib.event import EventQueue
 import json
+from server.lib.worker import ServerWebWorker
 
 __all__ = ["router"]
 
 router = APIRouter()
+
+@router.post("/exit")
+async def update_exit():
+    ServerWebWorker.task_exit()
 
 @router.post("/quote")
 async def update_quote(data_list:List[QuoteUpdate]):
@@ -51,7 +57,7 @@ async def sse_update_quote_root(request: Request):
                 EventQueue.set_available(False)
                 break
             if is_first:
-                message = StockUpdateWorkerTask.update_state + " || " + FutureUpdateWorkerTask.update_state
+                message = f'Stock {StockUpdateWorkerTask.update_state} || Future {FutureUpdateWorkerTask.update_state}({FutureUpdateWorkerTask.is_active}) <Task: {ServerWebWorker.get_task_num()}>'
                 id = str(time.time())
                 event = {
                     "event": "QuoteUpdateEvent", 

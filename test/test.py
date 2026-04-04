@@ -124,4 +124,5 @@ if __name__ == '__main__':
     # print(test)
     # # a = [0,1,2,3,4,5]
     # # print(a[:1])
-    xthread_test()
+    a = f'{True}'
+    print(a)

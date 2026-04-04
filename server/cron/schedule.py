@@ -7,6 +7,7 @@ from tools import Crons
 from server.lib.worker import ServerWebWorker
 from quant.libs.log import XLog
 from datetime import datetime
+from server.lib.worker_task import FutureUpdateWorkerTask
 # from server.lib.cookie import Cookie
 __all__ = ["CronSchedule"]
 
@@ -21,16 +22,15 @@ class CronSchedule:
              now = datetime.now()
              XLog.info("@cron cron_start(%s)" % str(now))
 
-        @crons.cron("*/1 9-12 * * 1-6", name="cron_future_update", tags=["server"])
+        @crons.cron("*/10 0-6 * * 1-6", name="cron_future_update", tags=["server"])
         async def cron_future_update():
-            ServerWebWorker.future_update()
+            FutureUpdateWorkerTask.is_active = True
             XLog.info("@cron cron_future_update()")
-        #     Cookie.cookie_update()
-        #     print("update cookie.")
 
-        @crons.cron("*/1 2-8 * * 1-6", name="cron_future_forbidden_update", tags=["server"])
+
+        @crons.cron("*/10 15-23 * * 1-5", name="cron_future_forbidden_update", tags=["server"])
         async def cron_future_forbidden_update():
-            ServerWebWorker.future_update(False)
+            FutureUpdateWorkerTask.is_active = False
             XLog.info("@cron cron_future_forbidden_update()")
 
 

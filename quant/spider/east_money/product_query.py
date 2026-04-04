@@ -42,6 +42,7 @@ requests.packages.urllib3.disable_warnings()
 class ProductQuery(object):
     json_temp_cookies_file_path = os.path.join(root_dir, "config", "temp_cookies.json")
     proxy_pool:ProxyPool = None
+    is_active = True
 
     quote_url_base = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
     product_url_base = "https://push2.eastmoney.com/api/qt/clist/get"
@@ -419,7 +420,7 @@ class ProductQuery(object):
             driver.get("https://data.eastmoney.com/center/")
             driver.get("https://js1.eastmoney.com/tg.aspx?ID=666")
             while_count = 0
-            while True:
+            while cls.is_active:
                 while_count += 1
                 try:
                     WebDriverWait(driver, 10, 0.5).until(Expect.presence_of_all_elements_located((By.CLASS_NAME, "quotetable")))
@@ -536,7 +537,7 @@ class ProductQuery(object):
         while_count = 0
         if type == ProductQuery.PrepareTypeEnum.DEFAULT:
             raise XException(ErrorCodeEnum.CODE_PARAMETER_INVALID, "param type invalid.")
-        while True:
+        while cls.is_active:
             while_count += 1
             try:
                 if type == ProductQuery.PrepareTypeEnum.PROXY:
@@ -561,7 +562,7 @@ class ProductQuery(object):
         wh_count = 0
         sleep_time_base = 5
 
-        while(True):
+        while(cls.is_active):
             try: 
                 if wh_count > 30 and GlobeConfig.is_fastapi_server and (cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION or cls.prepare_type == ProductQuery.PrepareTypeEnum.SESSION_PROXY):
                     if EventQueue.is_available():
@@ -626,7 +627,7 @@ class ProductQuery(object):
     ) -> pd.DataFrame:
         
         if (cls.prepare_type == cls.PrepareTypeEnum.SESSION or  cls.prepare_type == cls.PrepareTypeEnum.SESSION_PROXY) and cls.request_count > cls.session_request_count_max:
-            while True:
+            while cls.is_active:
                 try:
                     cls._session_prepare()
                 except Exception as e:

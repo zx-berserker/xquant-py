@@ -18,6 +18,7 @@ from pandas import Timestamp
 from config.secure import HOST
 
 class TdxQuery:
+    is_active = True
     _stock_market_list = [0,1,31]
     is_connected: bool = False
     api: TdxHq_API = None
@@ -58,7 +59,7 @@ class TdxQuery:
         
         if cls.is_connected:
             return  
-        while True:
+        while cls.is_active:
             if len(hq_hosts_list) == 0:
                 hq_hosts_list.extend(hq_hosts)
                 # raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR,"TdxQuery: hq_hosts is invalid.")
@@ -71,7 +72,7 @@ class TdxQuery:
             except:
                 XLog.error("TdxHq_API connect error. name: %s, ip: %s" % (_hq_name, _hq_ip))
                 continue
-        while True:
+        while cls.is_active:
             if len(ex_hq_hosts_list) == 0:
                 ex_hq_hosts_list.extend(ex_hq_hosts)
                 # raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR, "TdxQuery: ex_hq_hosts is invalid.")
@@ -126,7 +127,7 @@ class TdxQuery:
         date_time_end = str(pd.to_datetime(end_time+' 23:59', format='%Y%m%d %H:%M'))
         start = 0
         
-        while True:
+        while cls.is_active:
             if market in [0,1]: #TODO 深证、上证
                 data = cls.api.get_security_bars(period.value, market, code, start, count)
             else: #TODO 期货 扩展行情
@@ -151,7 +152,7 @@ class TdxQuery:
             value = pd.to_datetime(data, format='%Y-%m-%d %H:%M')
             if (value.hour>19) and ((value.hour<23) or ((value.hour==23) and (value.minute<=59))):
                 days = 1
-                while True:
+                while cls.is_active:
                     temp_time_str = (value - timedelta(days=days)).strftime('%Y-%m-%d')
                     temp_time_end = temp_time_str + " 16:00"
                     tmep_time_start = temp_time_str + " 09:00"
@@ -216,8 +217,8 @@ class TdxQuery:
 
     @classmethod
     def get_quote(cls, period:QuotePeriodEnum, market:int, code, start_time:str='20260101', end_time:str='20260201', count:int=100) -> pd.DataFrame | list:
-
-        while True:
+        data = pd.DataFrame()
+        while cls.is_active:
             try:
                 if market is not None:
                     data = cls._get_quote(period, market, code, start_time, end_time, count)

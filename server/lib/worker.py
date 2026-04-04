@@ -10,41 +10,41 @@ from quant.libs.enums import QuotePeriodEnum
 import time
 from quant.libs.log import XLog
 from .event import QuoteUpdateEvent, EventQueue
+from server.lib.worker_task import WorkerTaskBase
 
+# class StockUpdateWorkerTask(XTask):
+#     update_state = 'Update State'
 
-class StockUpdateWorkerTask(XTask):
-    update_state = 'Update State'
+#     def __init__(self, period:QuotePeriodEnum, start_time=None, end_time=None, limit=1000):
+#         super(StockUpdateWorkerTask, self).__init__('StockUpdateWorkerTask')
+#         self.period = period
+#         self.start_time = start_time
+#         self.end_time = end_time
+#         self.limit = limit
 
-    def __init__(self, period:QuotePeriodEnum, start_time=None, end_time=None, limit=1000):
-        super(StockUpdateWorkerTask, self).__init__('StockUpdateWorkerTask')
-        self.period = period
-        self.start_time = start_time
-        self.end_time = end_time
-        self.limit = limit
+#     def task_main(self):
+#         StockUpdateWorkerTask.update_state = "StockUpdateWorkerTask State: running."
 
-    def task_main(self):
-        StockUpdateWorkerTask.update_state = "StockUpdateWorkerTask State: running."
-
-        update_stock_product_quote(self.period, self.start_time, self.end_time, limit=self.limit)
-        # update_future_product_quote(self.period, self.start_time, self.end_time)
-        StockUpdateWorkerTask.update_state = "StockUpdateWorkerTask State: finished."
+#         update_stock_product_quote(self.period, self.start_time, self.end_time, limit=self.limit)
+#         # update_future_product_quote(self.period, self.start_time, self.end_time)
+#         StockUpdateWorkerTask.update_state = "StockUpdateWorkerTask State: finished."
     
 
-class FutureUpdateWorkerTask(XTask):
-    update_state = 'Update State'
+# class FutureUpdateWorkerTask(XTask):
+#     update_state = 'Update State'
 
-    def __init__(self, period:QuotePeriodEnum, start_time=None, end_time=None, limit=1000):
-        super(FutureUpdateWorkerTask, self).__init__('FutureUpdateWorkerTask')
-        self.period = period
-        self.start_time = start_time
-        self.end_time = end_time
-        self.limit = limit
+#     def __init__(self, period:QuotePeriodEnum, start_time=None, end_time=None, limit=1000):
+#         super(FutureUpdateWorkerTask, self).__init__('FutureUpdateWorkerTask')
+#         self.period = period
+#         self.start_time = start_time
+#         self.end_time = end_time
+#         self.limit = limit
 
-    def task_main(self):
-        FutureUpdateWorkerTask.update_state = "FutureUpdateWorkerTask State: running."
-        # update_stock_product_quote(self.period, self.start_time, self.end_time, limit=self.limit)
-        update_future_product_quote(self.period, self.start_time, self.end_time)
-        FutureUpdateWorkerTask.update_state = "FutureUpdateWorkerTask State: finished."
+#     def task_main(self):
+#         FutureUpdateWorkerTask.update_state = "FutureUpdateWorkerTask State: running."
+#         # update_stock_product_quote(self.period, self.start_time, self.end_time, limit=self.limit)
+#         update_future_product_quote(self.period, self.start_time, self.end_time)
+#         FutureUpdateWorkerTask.update_state = "FutureUpdateWorkerTask State: finished."
 
 
 class WorkerBass(XThread):
@@ -57,13 +57,25 @@ class WorkerBass(XThread):
 
 class ServerWebWorker(WorkerBass):
     _worker_task_queue = Queue()
-    _is_future_update = False
+    _is_future_update = True
+    _temp_task = None
+    
     def __init__(self):
         super(ServerWebWorker,self).__init__("ServerWebWorker")
 
     @classmethod
-    def future_update(cls, value=True):
-        cls._is_future_update = value
+    def task_exit(cls):
+        if cls._temp_task:
+            cls._temp_task.exit()
+        try:
+            while True:
+                cls._worker_task_queue.get(block=False)
+        except:
+            pass
+
+    @classmethod
+    def get_task_num(cls):
+        return cls._worker_task_queue.qsize()
 
     @classmethod
     def put_task(cls, task:XTask):
@@ -72,17 +84,17 @@ class ServerWebWorker(WorkerBass):
     def thread_main(self):
         while WorkerBass._is_running:
             try:
-                task:XTask = ServerWebWorker._worker_task_queue.get(timeout=10)
-                if task.name == 'FutureUpdateWorkerTask':
-                    if ServerWebWorker._is_future_update:
-                        task.executive()
-                    else:
-                        ServerWebWorker._worker_task_queue.put(task)
-                        time.sleep(10)
+                ServerWebWorker._temp_task = ServerWebWorker._worker_task_queue.get(timeout=10)
+                if ServerWebWorker._temp_task.is_active:
+                    ServerWebWorker._temp_task.executive()
                 else:
-                        task.executive()
+                    ServerWebWorker._worker_task_queue.put(ServerWebWorker._temp_task)
+                    time.sleep(10)
+                ServerWebWorker._temp_task = None
+
             except Exception as e:
-                XLog.error(f'ServerWebWorker(): {str(e)}')
+                time.sleep(10)
+                # XLog.error(f'ServerWebWorker(): {str(e)}')
                 pass
 
 

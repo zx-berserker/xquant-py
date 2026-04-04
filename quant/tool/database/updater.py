@@ -40,6 +40,8 @@ class Updater(XThread):
         self.spider_thread_pool = XThreadPool(self.spider_thread_pool_capacity)
         self._is_exit = False
 
+    def exit(self):
+        self._is_exit = True
 
     def thread_main(self):
         try:
@@ -48,6 +50,8 @@ class Updater(XThread):
             self.spider_task_factory.env_prepare()
             
             for param in self.param_list:
+                if self._is_exit:
+                    break
                 spider_task = self.spider_task_factory.get_task(param)
                 if not spider_task:
                     continue

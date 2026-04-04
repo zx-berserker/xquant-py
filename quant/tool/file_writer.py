@@ -158,7 +158,10 @@ class FileWriterTaskFactory(XTaskFactory):
     
 
     def env_release(self):
-        for key in self.handle_dic:
-            self.handle_dic[key].release()
-            self.handle_dic.pop(key,"")
+        try:
+            for key in self.handle_dic.keys():
+                self.handle_dic[key].release()
+                self.handle_dic.pop(key,"")
+        except:
+            pass
     
