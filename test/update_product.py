@@ -11,7 +11,8 @@ import pandas as pd
 from quant.libs.enums import ProductTypeEnum
 import time
 from quant.spider.tdx import TdxQuery
-from quant.models import QuoteHourly
+from quant.models import QuoteHourly, QuoteDaily, QuoteMonthly, QuoteWeekly
+from datetime import datetime
 
 def update_exchange():
     # data_df = ProductQuery.get_exchange()
@@ -390,7 +391,73 @@ def fix_cl8_hourly():
             session.add(quote)
             session.commit()
 
+def fix_HSTECH():
+    TdxQuery.connect()
+    stock_code = 'HZ5017.HI'
+    k_data = TdxQuery.get_quote(QuotePeriodEnum.HOURLY,None,stock_code, "20260314", "20260429", count=100)
+    data_list = [x for x in k_data if (datetime.strptime(x["time"], "%Y-%m-%d %H:%M:%S")>=datetime.strptime("2026-03-13 22:00", "%Y-%m-%d %H:%M")) & (datetime.strptime(x["time"], "%Y-%m-%d %H:%M:%S")<=datetime.strptime("2026-04-28 23:00", "%Y-%m-%d %H:%M"))]
+    print(data_list)
+    with SQLAlchemy.session_context() as session:
+        proudct = session.query(Product).filter(Product.tdx_code==stock_code).first()
+        for row in data_list:
+            
+            time = str(datetime.strptime(row["time"], "%Y-%m-%d %H:%M:%S").strftime('%Y-%m-%d %H:%M'))
+            quote =  QuoteHourly(time=time, product_id=proudct.id, open=row["open"], close=row["close"],
+                                 high=row["high"], low=row["low"], volume=row["volume"], amount=row["amount"],
+                                 pct_chg=row["pct_chg"], turn=row["turn"], hold=row["hold"])
+            print(quote)
+            session.add(quote)
+            session.commit()
 
+    k_data = TdxQuery.get_quote(QuotePeriodEnum.DAILY,None,stock_code, "20260314", "20260428", count=100)
+    data_list = [x for x in k_data if (datetime.strptime(x["time"], "%Y-%m-%d %H:%M:%S")>=datetime.strptime("2026-03-13 22:00", "%Y-%m-%d %H:%M")) & (datetime.strptime(x["time"], "%Y-%m-%d %H:%M:%S")<= datetime.strptime("2026-04-28 23:00", "%Y-%m-%d %H:%M"))]
+    print(data_list)
+    with SQLAlchemy.session_context() as session:
+        proudct = session.query(Product).filter(Product.tdx_code==stock_code).first()
+        for row in data_list:
+            
+            time = str(datetime.strptime(row["time"], "%Y-%m-%d %H:%M:%S").strftime('%Y-%m-%d'))
+            quote =  QuoteDaily(time=time, product_id=proudct.id, open=row["open"], close=row["close"],
+                                 high=row["high"], low=row["low"], volume=row["volume"], amount=row["amount"],
+                                 pct_chg=row["pct_chg"], turn=row["turn"], hold=row["hold"])
+            print(quote)
+            session.add(quote)
+            session.commit()
+
+    k_data = TdxQuery.get_quote(QuotePeriodEnum.WEEKLY,None,stock_code, "20260308", "20260428", count=100)
+    data_list = [x for x in k_data if (datetime.strptime(x["time"], "%Y-%m-%d %H:%M:%S")>=datetime.strptime("2026-03-08 22:00", "%Y-%m-%d %H:%M")) & (datetime.strptime(x["time"], "%Y-%m-%d %H:%M:%S")<=datetime.strptime("2026-04-28 23:00", "%Y-%m-%d %H:%M"))]
+    print(data_list)
+    with SQLAlchemy.session_context() as session:
+        proudct = session.query(Product).filter(Product.tdx_code==stock_code).first()
+        for row in data_list:
+            
+            time = str(datetime.strptime(row["time"], "%Y-%m-%d %H:%M:%S").strftime('%Y-%m-%d'))
+            quote =  QuoteWeekly(time=time, product_id=proudct.id, open=row["open"], close=row["close"],
+                                 high=row["high"], low=row["low"], volume=row["volume"], amount=row["amount"],
+                                 pct_chg=row["pct_chg"], turn=row["turn"], hold=row["hold"])
+            print(quote)
+            session.add(quote)
+            session.commit()
+
+    k_data = TdxQuery.get_quote(QuotePeriodEnum.MONTHLY,None,stock_code, "20260308", "20260401", count=100)
+    data_list =[x for x in k_data if (datetime.strptime(x["time"], "%Y-%m-%d %H:%M:%S")>=datetime.strptime("2026-03-08 22:00", "%Y-%m-%d %H:%M")) & (datetime.strptime(x["time"], "%Y-%m-%d %H:%M:%S")<=datetime.strptime("2026-04-01 23:00", "%Y-%m-%d %H:%M"))]
+    print(data_list)
+    with SQLAlchemy.session_context() as session:
+        proudct = session.query(Product).filter(Product.tdx_code==stock_code).first()
+        for row in data_list:
+            
+            time = str(datetime.strptime(row["time"], "%Y-%m-%d %H:%M:%S").strftime('%Y-%m-%d'))
+            quote =  QuoteMonthly(time=time, product_id=proudct.id, open=row["open"], close=row["close"],
+                                 high=row["high"], low=row["low"], volume=row["volume"], amount=row["amount"],
+                                 pct_chg=row["pct_chg"], turn=row["turn"], hold=row["hold"])
+            print(quote)
+            session.add(quote)
+            session.commit()
+
+    TdxQuery.disconnect()
+
+
+    
 if __name__ == "__main__":
-    fix_cl8_hourly()
+
     pass

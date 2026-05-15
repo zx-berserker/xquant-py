@@ -44,5 +44,7 @@ def quote_json_file_repair_change(dir_path:str='/home/xquant/cache/Todo_Fix'):
         with open(file_name_1, 'w', encoding="utf-8") as  file:
             json.dump(json_data_list, file)
 
+
+
 if __name__ == "__main__":
     quote_json_file_repair_change()

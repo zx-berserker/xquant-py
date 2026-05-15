@@ -48,6 +48,7 @@ class TdxQuery:
             "code": '9',
         }
     ]
+    tdx_query_count = 100
 
     @classmethod
     def connect(cls):
@@ -121,30 +122,45 @@ class TdxQuery:
     def _get_quote(cls, period:QuotePeriodEnum, market:int, code, start_time:str='20260101', end_time:str='20260201', count:int=100):
         if not cls.is_connected:
             raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR,"TdxQuery: not connected.")
-        
+
         ret_data = []
-        date_time_start = str(pd.to_datetime(start_time, format='%Y%m%d'))
-        date_time_end = str(pd.to_datetime(end_time+' 23:59', format='%Y%m%d %H:%M'))
+        if start_time == '' or  end_time == '':
+            date_time_start = None
+            date_time_end = None
+        else:
+            date_time_start = str(pd.to_datetime(start_time, format='%Y%m%d'))
+            date_time_end = str(pd.to_datetime(end_time+' 23:59', format='%Y%m%d %H:%M'))
         start = 0
+
+        if period == QuotePeriodEnum.MINUTELY10:
+            category = QuotePeriodEnum.MINUTELY1.value
+            count = count*10
+        else:
+            category = period.value
+
+        
         
         while cls.is_active:
             if market in [0,1]: #TODO 深证、上证
-                data = cls.api.get_security_bars(period.value, market, code, start, count)
+                data = cls.api.get_security_bars(category, market, code, start, cls.tdx_query_count)
             else: #TODO 期货 扩展行情
-                data = cls.ex_api.get_instrument_bars(period.value, market, code, start, count)
+                data = cls.ex_api.get_instrument_bars(category, market, code, start, cls.tdx_query_count)
             if not data:
                 break
             ret_data.extend(data)
             temp_df = cls.api.to_df(data)
             length = len(temp_df)
-            if temp_df.at[length-1, 'datetime'] < date_time_start or length < count:
-                break
             start += length
+            if date_time_start and (temp_df.at[length-1, 'datetime'] < date_time_start or length < cls.tdx_query_count):
+                break
+            elif date_time_start is None and (start > count or length < cls.tdx_query_count):
+                break
+            
         if market in [0,1]:
             data_df = cls.api.to_df(ret_data)
         else:
             data_df = cls.ex_api.to_df(ret_data)
-        
+
         
         # data_df.loc[:,'datetime'] = pd.to_datetime(data_df['datetime'])
         
@@ -174,12 +190,35 @@ class TdxQuery:
         
         data_df.loc[:,'time'] = pd.to_datetime(data_df['datetime'])
         # data_df.loc[:,'time'] = data_df['datetime']
+        data_df.loc[:,'datetime'] = pd.to_datetime(data_df['datetime'])
         data_df.set_index('datetime', inplace=True)
         data_df.sort_index(inplace=True)
+        if period == QuotePeriodEnum.MINUTELY10:
+            args = {
+                'open': 'first',    # 开盘价取该周期的第一个
+                'high': 'max',      # 最高价取该周期的最大值
+                'low': 'min',       # 最低价取该周期的最小值
+                'close': 'last',    # 收盘价取该周期的最后一个
+                # 'trade': 'sum',       # 成交量求和
+                'amount': 'sum',     # 成交额求和
+                'time': 'last',
+                # 'position': 'sum',
+            }
+            if market in [0,1]:
+                args['vol'] = 'sum'
+                args['hold'] = 'sum'
+            else:
+                args['position'] = 'sum'
+                args['trade'] = 'sum'
+            data_df = data_df.resample('10min').agg(args).dropna() # 去掉没有数据的空行
+
         data_df.loc[:,'pct_chg'] = (data_df['close'] - data_df['close'].shift(1)) / data_df['close'].shift(1) * 100
         data_df.loc[data_df.index[0], 'pct_chg'] = (data_df.iloc[0]['close'] - data_df.iloc[0]['open']) / data_df.iloc[0]['open'] * 100
-        data_df = data_df[(data_df['time'] >= date_time_start) & (data_df['time'] <= date_time_end)]
         
+        if date_time_start:
+            data_df = data_df[(data_df['time'] >= date_time_start) & (data_df['time'] <= date_time_end)]
+        else:
+            data_df = data_df.tail(count)
         if len(data_df) > 0:
             data_df.loc[:,'open'] = data_df['open'].round(2)
             data_df.loc[:,"close"] = data_df["close"].round(2)
@@ -214,6 +253,29 @@ class TdxQuery:
         ]
         return ret_data_df
     
+
+    @classmethod
+    def get_realtime_quote(cls, period:QuotePeriodEnum, market:int, code, count:int=240) -> list:
+        if not cls.is_connected:
+            raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR,"TdxQuery: not connected.")
+        data_list = []
+        data_df = cls._get_quote(period, market, code, '', '', count)
+        for index, row in data_df.iterrows():
+            time = str(row["time"].strftime('%Y-%m-%d %H:%M:%S'))
+            data_list.append({
+                "Date": time,
+                "Open": row["open"],
+                "Close": row["close"],
+                "High": row["high"],
+                "Low": row["low"],
+                "Volume": row["volume"],
+                "Amount": row["amount"],
+                # "pct_chg": row["pct_chg"],
+                # "turn": row["turn"],
+                # "hold": row["hold"],                
+            })
+        return data_list
+
 
     @classmethod
     def get_quote(cls, period:QuotePeriodEnum, market:int, code, start_time:str='20260101', end_time:str='20260201', count:int=100) -> pd.DataFrame | list:
@@ -266,9 +328,9 @@ class TdxQuery:
 if __name__ == '__main__':
     TdxQuery.connect()
     stock_code = "CL8"
-    k_data = TdxQuery.get_quote(QuotePeriodEnum.HOURLY,29,stock_code, "20260320", "20260320", count=100)
+    # k_data = TdxQuery.get_quote(QuotePeriodEnum.HOURLY,29,stock_code, "20260320", "20260320", count=100)
 
-    # k_data = TdxQuery.get_quote(QuotePeriodEnum.DAILY, None, "09626.HK", "20260319", "20260319", count=100)
+    k_data = TdxQuery.get_quote(QuotePeriodEnum.MINUTELY10, 31, "09626", "", "", count=100)
     print(k_data)
     # data = TdxQuery.get_product_list('50')
     # for item in  data:

@@ -126,3 +126,14 @@ if __name__ == '__main__':
     # # print(a[:1])
     a = f'{True}'
     print(a)
+
+    from datetime import datetime, timedelta
+
+    # 获取当前日期和时间
+    now = datetime.today()
+
+    # 减去 2 天
+    time = now - timedelta(days=2)
+
+    start_time = datetime(year=time.year,month=time.month,day=time.day,hour=17,tzinfo=)
+    print(start_time.timestamp())

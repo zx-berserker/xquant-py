@@ -3,6 +3,13 @@
 date: 2025/10/27
 author: Berserker
 """
+import sys
+import asyncio
+
+# 仅在 Windows 系统下强制切换为 ProactorEventLoop
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 
 from fastapi import FastAPI
 from server.api import router

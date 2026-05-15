@@ -60,3 +60,9 @@ class QuotePeriodEnum(Enum):
     WEEKLY = 2
     MONTHLY = 3
     HOURLY = 4
+    MINUTELY30 = 5
+    MINUTELY15 = 6
+    MINUTELY5 = 7
+    MINUTELY1 = 8
+    MINUTELY10 = 9
+    QUARTER = 10

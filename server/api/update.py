@@ -11,6 +11,7 @@ from quant.spider.east_money import ProductQuery
 from server.lib.event import EventQueue
 import json
 from server.lib.worker import ServerWebWorker
+from uuid import uuid4
 
 __all__ = ["router"]
 
@@ -50,24 +51,26 @@ async def update_quote(data_list:List[QuoteUpdate]):
 async def sse_update_quote_root(request: Request):
     async def update_quote_task_event_generator(request: Request):
         is_first = True
-        EventQueue.set_available(True)
+        id = uuid4().hex
+        EventQueue.set_available(True, id)
         while True:
             event = None
             if await request.is_disconnected():
-                EventQueue.set_available(False)
+                EventQueue.set_available(False, id)
+                print("Client disconnected from SSE.")
                 break
             if is_first:
                 message = f'Stock {StockUpdateWorkerTask.update_state} || Future {FutureUpdateWorkerTask.update_state}({FutureUpdateWorkerTask.is_active}) <Task: {ServerWebWorker.get_task_num()}>'
-                id = str(time.time())
+                event_id = str(time.time())
                 event = {
                     "event": "QuoteUpdateEvent", 
-                    "id": id,
+                    "id": event_id,
                     "data": message,
                     "retry": 3000,
                 }
                 is_first = False
             else:
-                event = EventQueue.get_event()
+                event = EventQueue.get_event(id)
             if event:
                 yield event
     
