@@ -16,6 +16,9 @@ import time
 from datetime import timedelta
 from pandas import Timestamp
 from config.secure import HOST
+import warnings
+warnings.simplefilter(action='error', category=FutureWarning)
+
 
 class TdxQuery:
     is_active = True
@@ -129,7 +132,7 @@ class TdxQuery:
             date_time_end = None
         else:
             date_time_start = str(pd.to_datetime(start_time, format='%Y%m%d'))
-            date_time_end = str(pd.to_datetime(end_time+' 23:59', format='%Y%m%d %H:%M'))
+            date_time_end = str(pd.to_datetime(end_time+' 23:59:59', format='%Y%m%d %H:%M:%s'))
         start = 0
 
         if period == QuotePeriodEnum.MINUTELY10:
@@ -157,9 +160,9 @@ class TdxQuery:
                 break
             
         if market in [0,1]:
-            data_df = cls.api.to_df(ret_data)
+            data_df:pd.DataFrame = cls.api.to_df(ret_data)
         else:
-            data_df = cls.ex_api.to_df(ret_data)
+            data_df:pd.DataFrame = cls.ex_api.to_df(ret_data)
 
         
         # data_df.loc[:,'datetime'] = pd.to_datetime(data_df['datetime'])
@@ -170,8 +173,8 @@ class TdxQuery:
                 days = 1
                 while cls.is_active:
                     temp_time_str = (value - timedelta(days=days)).strftime('%Y-%m-%d')
-                    temp_time_end = temp_time_str + " 16:00"
-                    tmep_time_start = temp_time_str + " 09:00"
+                    temp_time_end = temp_time_str + " 16:00:00"
+                    tmep_time_start = temp_time_str + " 09:00:00"
                     temp_df = data_df[(data_df['datetime']>tmep_time_start) & (data_df['datetime']<temp_time_end)]
                     if len(temp_df) == 0:
                         temp_df_2 = data_df[data_df['datetime']<tmep_time_start]
@@ -179,20 +182,20 @@ class TdxQuery:
                             days += 1
                             continue
                         else:
-                            return (value - timedelta(days=days)).strftime('%Y-%m-%d %H:%M')
+                            return (value - timedelta(days=days)).strftime('%Y-%m-%d %H:%M:%S')
                     else:
-                        ret_str = "%s %02d:%02d" % (temp_time_str, value.hour, value.minute)
+                        ret_str = "%s %02d:%02d:%02d" % (temp_time_str, value.hour, value.minute, value.second)
                         return  ret_str
             else:
-                return data
+                # return data
+                return str(value.strftime('%Y-%m-%d %H:%M:%S'))
 
         data_df.loc[:,'datetime'] = data_df['datetime'].apply(data_time_fix)
         
         data_df.loc[:,'time'] = pd.to_datetime(data_df['datetime'])
         # data_df.loc[:,'time'] = data_df['datetime']
         data_df.loc[:,'datetime'] = pd.to_datetime(data_df['datetime'])
-        data_df.set_index('datetime', inplace=True)
-        data_df.sort_index(inplace=True)
+        data_df = data_df.copy().infer_objects(copy=False).set_index('datetime').sort_index()
         if period == QuotePeriodEnum.MINUTELY10:
             args = {
                 'open': 'first',    # 开盘价取该周期的第一个
@@ -210,7 +213,8 @@ class TdxQuery:
             else:
                 args['position'] = 'sum'
                 args['trade'] = 'sum'
-            data_df = data_df.resample('10min').agg(args).dropna() # 去掉没有数据的空行
+            data_df = data_df.resample('10min',label='right', closed='right').agg(args).dropna().infer_objects(copy=False) # 去掉没有数据的空行
+
 
         data_df.loc[:,'pct_chg'] = (data_df['close'] - data_df['close'].shift(1)) / data_df['close'].shift(1) * 100
         data_df.loc[data_df.index[0], 'pct_chg'] = (data_df.iloc[0]['close'] - data_df.iloc[0]['open']) / data_df.iloc[0]['open'] * 100
@@ -330,7 +334,7 @@ if __name__ == '__main__':
     stock_code = "CL8"
     # k_data = TdxQuery.get_quote(QuotePeriodEnum.HOURLY,29,stock_code, "20260320", "20260320", count=100)
 
-    k_data = TdxQuery.get_quote(QuotePeriodEnum.MINUTELY10, 31, "09626", "", "", count=100)
+    k_data = TdxQuery.get_quote(QuotePeriodEnum.MINUTELY10, 30, "AGL9", "", "", count=100)
     print(k_data)
     # data = TdxQuery.get_product_list('50')
     # for item in  data:
