@@ -61,8 +61,7 @@ class TdxQuery:
     def connect(cls):
         hq_hosts_list = []
         ex_hq_hosts_list = []
-        hq_hosts_list = []
-        ex_hq_hosts_list = []
+        ex_hq_future_hosts_list = []
 
         
         if cls.is_connected:
@@ -94,9 +93,9 @@ class TdxQuery:
                 continue
 
         while cls.is_active:
-            if len(ex_hq_hosts_list) == 0:
-                ex_hq_hosts_list.extend(ex_hq_hosts[-4:])
-            _ex_hq_future_name, _ex_hq_future_ip, _ex_hq_future_port, _ex_hq_future_is_new = ex_hq_hosts_list.pop(0)
+            if len(ex_hq_future_hosts_list) == 0:
+                ex_hq_future_hosts_list.extend(ex_hq_hosts[-2:])
+            _ex_hq_future_name, _ex_hq_future_ip, _ex_hq_future_port, _ex_hq_future_is_new = ex_hq_future_hosts_list.pop(0)
             try:
                 cls.ex_future_api = TdxExHq_API(_ex_hq_future_is_new, heartbeat=False, auto_retry=True, raise_exception=True, multithread=True)
                 ret = cls.ex_future_api.connect(_ex_hq_future_ip, _ex_hq_future_port)
