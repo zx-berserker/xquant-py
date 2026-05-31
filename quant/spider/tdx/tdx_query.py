@@ -153,7 +153,7 @@ class TdxQuery:
             date_time_end = None
         else:
             date_time_start = str(pd.to_datetime(start_time, format='%Y%m%d'))
-            date_time_end = str(pd.to_datetime(end_time+' 23:59:59', format='%Y%m%d %H:%M:%s'))
+            date_time_end = str(pd.to_datetime(end_time+' 23:59:59', format='%Y%m%d %H:%M:%S'))
         start = 0
 
         if period == QuotePeriodEnum.MINUTELY10:
