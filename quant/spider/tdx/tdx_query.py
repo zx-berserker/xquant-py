@@ -26,12 +26,16 @@ class TdxQuery:
     is_connected: bool = False
     api: TdxHq_API = None
     ex_api: TdxExHq_API = None
+    ex_future_api: TdxExHq_API = None
     _hq_name = None
     _hq_ip = None 
     _hq_port = None
     _ex_hq_name = None
     _ex_hq_ip = None
     _ex_hq_port = None
+    _ex_hq_future_name = None
+    _ex_hq_future_ip = None
+    _ex_hq_future_port = None
     _request_base_url = f'http://{HOST}:8020/api/v1/tdx'
     requset_market = [
         {
@@ -78,8 +82,7 @@ class TdxQuery:
                 continue
         while cls.is_active:
             if len(ex_hq_hosts_list) == 0:
-                ex_hq_hosts_list.extend(ex_hq_hosts)
-                # raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR, "TdxQuery: ex_hq_hosts is invalid.")
+                ex_hq_hosts_list.extend(ex_hq_hosts[0:5])
             _ex_hq_name, _ex_hq_ip, _ex_hq_port, _ex_hq_is_new = ex_hq_hosts_list.pop(0)
             try:
                 cls.ex_api = TdxExHq_API(_ex_hq_is_new, heartbeat=False, auto_retry=True, raise_exception=True, multithread=True)
@@ -90,14 +93,31 @@ class TdxQuery:
                 XLog.error("TdxExHq_API connect error. name: %s, ip: %s" % (_ex_hq_name, _ex_hq_ip))
                 continue
 
+        while cls.is_active:
+            if len(ex_hq_hosts_list) == 0:
+                ex_hq_hosts_list.extend(ex_hq_hosts[-4:])
+            _ex_hq_future_name, _ex_hq_future_ip, _ex_hq_future_port, _ex_hq_future_is_new = ex_hq_hosts_list.pop(0)
+            try:
+                cls.ex_future_api = TdxExHq_API(_ex_hq_future_is_new, heartbeat=False, auto_retry=True, raise_exception=True, multithread=True)
+                ret = cls.ex_future_api.connect(_ex_hq_future_ip, _ex_hq_future_port)
+                if ret:
+                    break
+            except:
+                XLog.error("TdxExHq_API connect error. name: %s, ip: %s" % (_ex_hq_name, _ex_hq_ip))
+                continue
+
         XLog.info("TdxQuery connected to TDX Hq host: ", _hq_name, "(", _hq_ip, ":", _hq_port, ")")
         XLog.info("TdxQuery connected to TDX Ex_Hq host: ", _ex_hq_name, "(", _ex_hq_ip, ":", _ex_hq_port, ")")
+        XLog.info("TdxQuery connected to TDX Ex_Hq Future host: ", _ex_hq_future_name, "(", _ex_hq_future_ip, ":", _ex_hq_future_port, ")")
         cls._hq_name = _hq_name
         cls._hq_ip = _hq_ip 
         cls._hq_port = _hq_port
         cls._ex_hq_name = _ex_hq_name
         cls._ex_hq_ip = _ex_hq_ip
         cls._ex_hq_port = _ex_hq_port
+        cls._ex_hq_future_name = _ex_hq_future_name
+        cls._ex_hq_future_ip = _ex_hq_future_ip
+        cls._ex_hq_future_port = _ex_hq_future_port
         cls.is_connected = True
         
     
@@ -108,6 +128,7 @@ class TdxQuery:
         try:
             cls.api.disconnect()
             cls.ex_api.disconnect()
+            cls.ex_future_api.disconnect()
         except:
             pass
         cls.is_connected = False
@@ -146,8 +167,10 @@ class TdxQuery:
         while cls.is_active:
             if market in [0,1]: #TODO 深证、上证
                 data = cls.api.get_security_bars(category, market, code, start, cls.tdx_query_count)
-            else: #TODO 期货 扩展行情
+            elif market in [31,27]: #HK
                 data = cls.ex_api.get_instrument_bars(category, market, code, start, cls.tdx_query_count)
+            else: #TODO 期货 扩展行情
+                data = cls.ex_future_api.get_instrument_bars(category, market, code, start, cls.tdx_query_count)
             if not data:
                 break
             ret_data.extend(data)
@@ -220,9 +243,9 @@ class TdxQuery:
         data_df.loc[data_df.index[0], 'pct_chg'] = (data_df.iloc[0]['close'] - data_df.iloc[0]['open']) / data_df.iloc[0]['open'] * 100
         
         if date_time_start:
-            data_df = data_df[(data_df['time'] >= date_time_start) & (data_df['time'] <= date_time_end)]
+            data_df = data_df[(data_df['time'] >= date_time_start) & (data_df['time'] <= date_time_end)].copy()
         else:
-            data_df = data_df.tail(count)
+            data_df = data_df.tail(count).copy()
         if len(data_df) > 0:
             data_df.loc[:,'open'] = data_df['open'].round(2)
             data_df.loc[:,"close"] = data_df["close"].round(2)
