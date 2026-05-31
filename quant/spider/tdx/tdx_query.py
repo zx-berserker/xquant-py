@@ -61,8 +61,8 @@ class TdxQuery:
     def connect(cls):
         hq_hosts_list = []
         ex_hq_hosts_list = []
-        hq_hosts_list.extend(hq_hosts)
-        ex_hq_hosts_list.extend(ex_hq_hosts)
+        hq_hosts_list = []
+        ex_hq_hosts_list = []
 
         
         if cls.is_connected:
