@@ -56,6 +56,7 @@ class TdxQuery:
         }
     ]
     tdx_query_count = 100
+    _bad_query_count = 0
 
     @classmethod
     def connect(cls):
@@ -137,12 +138,16 @@ class TdxQuery:
         cls._ex_hq_name = None
         cls._ex_hq_ip = None
         cls._ex_hq_port = None
+        cls._ex_hq_future_name = None
+        cls._ex_hq_future_ip = None
+        cls._ex_hq_future_port = None
         XLog.info("TdxQuery disconnect TDX Hq host: ", cls._hq_name, "(", cls._hq_ip, ":", cls._hq_port, ")")
         XLog.info("TdxQuery disconnect TDX Ex_Hq host: ", cls._ex_hq_name, "(", cls._ex_hq_ip, ":", cls._ex_hq_port, ")")
+        XLog.info("TdxQuery connected to TDX Ex_Hq Future host: ", cls._ex_hq_future_name, "(", cls._ex_hq_future_ip, ":", cls._ex_hq_future_port, ")")
 
     
     @classmethod
-    def _get_quote(cls, period:QuotePeriodEnum, market:int, code, start_time:str='20260101', end_time:str='20260201', count:int=100):
+    def _get_quote(cls, period:QuotePeriodEnum, market:int, code, start_time:str, end_time:str, count:int=100):
         if not cls.is_connected:
             raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR,"TdxQuery: not connected.")
 
@@ -162,12 +167,21 @@ class TdxQuery:
             category = period.value
 
         
-        
+        hk_market = None
         while cls.is_active:
             if market in [0,1]: #TODO 深证、上证
                 data = cls.api.get_security_bars(category, market, code, start, cls.tdx_query_count)
-            elif market in [31,27]: #HK
-                data = cls.ex_api.get_instrument_bars(category, market, code, start, cls.tdx_query_count)
+            elif market in [31,27,71]: #HK
+                if market == 31 and hk_market is None:
+                    first_temp = cls.ex_api.get_instrument_bars(category, 71, code, start, 3)
+                    if len(first_temp)>0:
+                        hk_market = 71
+                    else:
+                        hk_market = 31
+                else:
+                    hk_market = market
+                data = cls.ex_api.get_instrument_bars(category, hk_market, code, start, cls.tdx_query_count)
+
             else: #TODO 期货 扩展行情
                 data = cls.ex_future_api.get_instrument_bars(category, market, code, start, cls.tdx_query_count)
             if not data:
@@ -231,7 +245,6 @@ class TdxQuery:
             }
             if market in [0,1]:
                 args['vol'] = 'sum'
-                args['hold'] = 'sum'
             else:
                 args['position'] = 'sum'
                 args['trade'] = 'sum'
@@ -349,15 +362,26 @@ class TdxQuery:
         data_json = r.json()
         data = json.loads(data_json['data'])
         return data
+    
+    @classmethod
+    def is_bad_query(cls, ret:bool=False):
+        if ret:
+            cls._bad_query_count += 1
+        else:
+            cls._bad_query_count = 0
 
+        if cls._bad_query_count > 20:
+            cls.disconnect()
 
 if __name__ == '__main__':
     TdxQuery.connect()
-    stock_code = "CL8"
-    # k_data = TdxQuery.get_quote(QuotePeriodEnum.HOURLY,29,stock_code, "20260320", "20260320", count=100)
+    market = 0
+    stock_code = "159915"
+    # data = TdxQuery.get_quote(QuotePeriodEnum.HOURLY,29,stock_code, "20260320", "20260320", count=100)
 
-    k_data = TdxQuery.get_quote(QuotePeriodEnum.MINUTELY10, 30, "AGL9", "", "", count=100)
-    print(k_data)
+    data = TdxQuery.get_realtime_quote(QuotePeriodEnum.MINUTELY10, market, stock_code,count=20)
+    # data = TdxQuery.ex_api.get_markets()
+    print(data)
     # data = TdxQuery.get_product_list('50')
     # for item in  data:
         # print(item['Name'])
