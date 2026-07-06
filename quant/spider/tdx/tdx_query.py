@@ -106,9 +106,6 @@ class TdxQuery:
                 XLog.error("TdxExHq_API connect error. name: %s, ip: %s" % (_ex_hq_name, _ex_hq_ip))
                 continue
 
-        XLog.info("TdxQuery connected to TDX Hq host: ", _hq_name, "(", _hq_ip, ":", _hq_port, ")")
-        XLog.info("TdxQuery connected to TDX Ex_Hq host: ", _ex_hq_name, "(", _ex_hq_ip, ":", _ex_hq_port, ")")
-        XLog.info("TdxQuery connected to TDX Ex_Hq Future host: ", _ex_hq_future_name, "(", _ex_hq_future_ip, ":", _ex_hq_future_port, ")")
         cls._hq_name = _hq_name
         cls._hq_ip = _hq_ip 
         cls._hq_port = _hq_port
@@ -119,7 +116,9 @@ class TdxQuery:
         cls._ex_hq_future_ip = _ex_hq_future_ip
         cls._ex_hq_future_port = _ex_hq_future_port
         cls.is_connected = True
-        
+        XLog.info("TdxQuery connected to TDX Hq host: ", _hq_name, "(", _hq_ip, ":", _hq_port, ")")
+        XLog.info("TdxQuery connected to TDX Ex_Hq host: ", _ex_hq_name, "(", _ex_hq_ip, ":", _ex_hq_port, ")")
+        XLog.info("TdxQuery connected to TDX Ex_Hq Future host: ", _ex_hq_future_name, "(", _ex_hq_future_ip, ":", _ex_hq_future_port, ")")
     
     @classmethod
     def disconnect(cls):
@@ -131,7 +130,6 @@ class TdxQuery:
             cls.ex_future_api.disconnect()
         except:
             pass
-        cls.is_connected = False
         cls._hq_name = None
         cls._hq_ip = None 
         cls._hq_port = None
@@ -141,9 +139,11 @@ class TdxQuery:
         cls._ex_hq_future_name = None
         cls._ex_hq_future_ip = None
         cls._ex_hq_future_port = None
+        cls.is_connected = False
         XLog.info("TdxQuery disconnect TDX Hq host: ", cls._hq_name, "(", cls._hq_ip, ":", cls._hq_port, ")")
         XLog.info("TdxQuery disconnect TDX Ex_Hq host: ", cls._ex_hq_name, "(", cls._ex_hq_ip, ":", cls._ex_hq_port, ")")
         XLog.info("TdxQuery connected to TDX Ex_Hq Future host: ", cls._ex_hq_future_name, "(", cls._ex_hq_future_ip, ":", cls._ex_hq_future_port, ")")
+        
 
     
     @classmethod
@@ -370,18 +370,26 @@ class TdxQuery:
         else:
             cls._bad_query_count = 0
 
-        if cls._bad_query_count > 20:
+        if cls._bad_query_count > 50:
             cls.disconnect()
 
 if __name__ == '__main__':
-    TdxQuery.connect()
-    market = 0
-    stock_code = "159915"
+    # TdxQuery.connect()
+    # market = 0
+    # stock_code = "159915"
     # data = TdxQuery.get_quote(QuotePeriodEnum.HOURLY,29,stock_code, "20260320", "20260320", count=100)
 
-    data = TdxQuery.get_realtime_quote(QuotePeriodEnum.MINUTELY10, market, stock_code,count=20)
+    # data = TdxQuery.get_realtime_quote(QuotePeriodEnum.MINUTELY10, market, stock_code,count=20)
     # data = TdxQuery.ex_api.get_markets()
-    print(data)
+    ex_api = TdxExHq_API(False, heartbeat=False, auto_retry=True, raise_exception=True, multithread=True)
+    ret = ex_api.connect(ex_hq_hosts[1][1], ex_hq_hosts[1][2])
+    if ret:
+        pass
+    category = QuotePeriodEnum.MINUTELY1.value
+    code = "09988"
+    start = 0
+    first_temp = ex_api.get_instrument_bars(category, 71, code, start, 3)
+    print(first_temp)
     # data = TdxQuery.get_product_list('50')
     # for item in  data:
         # print(item['Name'])

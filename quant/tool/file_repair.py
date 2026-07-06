@@ -47,4 +47,4 @@ def quote_json_file_repair_change(dir_path:str='/home/xquant/cache/Todo_Fix'):
 
 
 if __name__ == "__main__":
-    quote_json_file_repair_change()
+    quote_json_file_repair()

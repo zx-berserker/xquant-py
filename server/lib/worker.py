@@ -11,6 +11,7 @@ import time
 from quant.libs.log import XLog
 from .event import QuoteUpdateEvent, EventQueue
 from server.lib.worker_task import WorkerTaskBase
+from quant.spider.tdx import TdxQuery
 
 # class StockUpdateWorkerTask(XTask):
 #     update_state = 'Update State'
@@ -53,6 +54,20 @@ class WorkerBass(XThread):
     def __init__(self, id:str="WorkerBass"):
         super(WorkerBass,self).__init__(id)
 
+
+
+class TdxConnectionKeepWorker(WorkerBass):
+    def __init__(self):
+        super(TdxConnectionKeepWorker, self).__init__("TdxConnectionKeepWorker")
+        TdxQuery.connect()
+
+    def thread_main(self):
+        while WorkerBass._is_running:
+            if TdxQuery.is_connected:
+                time.sleep(10)
+                continue
+            else:
+                TdxQuery.connect()
 
 
 class ServerWebWorker(WorkerBass):
@@ -107,7 +122,7 @@ class ServerXLogEventWorker(WorkerBass):
     def thread_main(self):
         while WorkerBass._is_running:
             if not EventQueue.is_available():
-                time.sleep(5)
+                time.sleep(10)
                 continue
             message = XLog.fastapi_get()
             if message:
@@ -117,7 +132,7 @@ class ServerXLogEventWorker(WorkerBass):
 
 class ServerWorkerController:
     
-    _worker_list:list[WorkerBass.__class__] = [ServerWebWorker, ServerXLogEventWorker]
+    _worker_list:list[WorkerBass.__class__] = [ServerWebWorker, ServerXLogEventWorker, TdxConnectionKeepWorker]
     _worker_obj_list = []
 
     @classmethod
