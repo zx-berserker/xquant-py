@@ -16,7 +16,6 @@ async def realtime_quote(
     code:str = Query("*", description="code"),
     count:int = Query(100, description="count"),
 ):
-    # TdxQuery.connect()
     tdx_period = TdxQuotePeriodEnum[period]
     
     try:
