@@ -18,15 +18,15 @@ class CronSchedule:
     @classmethod
     def init(cls, crons: Crons):
 
-        @crons.cron("*/1 * * * *", name="corn_start", tags=["server"])
+        @crons.cron("*/2 * * * *", name="corn_start", tags=["server"])
         async def cron_start():
              now = datetime.now()
              XLog.info("@cron(%s) cron_start() xquant running." % str(now))
 
-        # @crons.cron("*/10 0-6 * * 1-6", name="cron_future_update", tags=["server"])
-        # async def cron_future_update():
-        #     FutureUpdateWorkerTask.is_active = True
-        #     XLog.info("@cron cron_future_update()")
+        @crons.cron("*/10 0-6 * * 1-6", name="cron_future_update", tags=["server"])
+        async def cron_future_update():
+            FutureUpdateWorkerTask.is_active = True
+            XLog.info("@cron cron_future_update()")
 
         @crons.cron("26 9 * * 1-5", name="tdx_reconnect", tags=["server"])
         async def tdx_reconnect():
@@ -35,10 +35,10 @@ class CronSchedule:
             TdxQuery.disconnect()
 
 
-        # @crons.cron("*/10 15-23 * * 1-5", name="cron_future_forbidden_update", tags=["server"])
-        # async def cron_future_forbidden_update():
-        #     FutureUpdateWorkerTask.is_active = False
-        #     XLog.info("@cron cron_future_forbidden_update()")
+        @crons.cron("*/10 15-23 * * 1-5", name="cron_future_forbidden_update", tags=["server"])
+        async def cron_future_forbidden_update():
+            FutureUpdateWorkerTask.is_active = False
+            XLog.info("@cron cron_future_forbidden_update()")
 
 
 
