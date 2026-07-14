@@ -57,7 +57,7 @@ async def sse_update_quote_root(request: Request):
             event = None
             if await request.is_disconnected():
                 EventQueue.set_available(False, id)
-                print("Client disconnected from SSE.")
+                print("XQuant Client disconnected from SSE.")
                 break
             if is_first:
                 message = f'Stock {StockUpdateWorkerTask.update_state} || Future {FutureUpdateWorkerTask.update_state}({FutureUpdateWorkerTask.is_active}) <Task: {ServerWebWorker.get_task_num()}>'

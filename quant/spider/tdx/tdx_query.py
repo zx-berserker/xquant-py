@@ -65,7 +65,7 @@ class TdxQuery:
         ex_hq_future_hosts_list = []
 
         
-        if cls.is_connected:
+        if cls.is_connected or not cls.is_active:
             return  
         while cls.is_active:
             if len(hq_hosts_list) == 0:
@@ -148,10 +148,12 @@ class TdxQuery:
     
     @classmethod
     def _get_quote(cls, period:QuotePeriodEnum, market:int, code, start_time:str, end_time:str, count:int=100):
+        ret_data = []
+        if not cls.is_active:
+            return ret_data
         if not cls.is_connected:
             raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR,"TdxQuery: not connected.")
-
-        ret_data = []
+        
         if start_time == '' or  end_time == '':
             date_time_start = None
             date_time_end = None
@@ -162,9 +164,10 @@ class TdxQuery:
 
         if period == QuotePeriodEnum.MINUTELY10:
             category = QuotePeriodEnum.MINUTELY1.value
-            count = count*10
+            start_count = count*10
         else:
             category = period.value
+            start_count = count
 
         
         hk_market = None
@@ -192,7 +195,7 @@ class TdxQuery:
             start += length
             if date_time_start and (temp_df.at[length-1, 'datetime'] < date_time_start or length < cls.tdx_query_count):
                 break
-            elif date_time_start is None and (start > count or length < cls.tdx_query_count):
+            elif date_time_start is None and (start > start_count or length < cls.tdx_query_count):
                 break
             
         if market in [0,1]:
@@ -295,9 +298,12 @@ class TdxQuery:
 
     @classmethod
     def get_realtime_quote(cls, period:QuotePeriodEnum, market:int, code, count:int=240) -> list:
+        data_list = []
+        if not cls.is_active:
+            return data_list
         if not cls.is_connected:
             raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR,"TdxQuery: not connected.")
-        data_list = []
+       
         data_df = cls._get_quote(period, market, code, '', '', count)
         for index, row in data_df.iterrows():
             time = str(row["time"].strftime('%Y-%m-%d %H:%M:%S'))
@@ -370,26 +376,27 @@ class TdxQuery:
         else:
             cls._bad_query_count = 0
 
-        if cls._bad_query_count > 50:
+        if cls._bad_query_count > 200:
             cls.disconnect()
 
 if __name__ == '__main__':
-    # TdxQuery.connect()
-    # market = 0
-    # stock_code = "159915"
-    # data = TdxQuery.get_quote(QuotePeriodEnum.HOURLY,29,stock_code, "20260320", "20260320", count=100)
+    TdxQuery.connect()
+    market = 30
+    stock_code = "BUL9"
+    # data = TdxQuery.get_quote(QuotePeriodEnum.HOURLY,market,stock_code, "20260320", "20260320", count=100)
 
-    # data = TdxQuery.get_realtime_quote(QuotePeriodEnum.MINUTELY10, market, stock_code,count=20)
+    data = TdxQuery.get_realtime_quote(QuotePeriodEnum.MINUTELY15, market, stock_code,count=20)
+    print(data)
     # data = TdxQuery.ex_api.get_markets()
-    ex_api = TdxExHq_API(False, heartbeat=False, auto_retry=True, raise_exception=True, multithread=True)
-    ret = ex_api.connect(ex_hq_hosts[1][1], ex_hq_hosts[1][2])
-    if ret:
-        pass
-    category = QuotePeriodEnum.MINUTELY1.value
-    code = "09988"
-    start = 0
-    first_temp = ex_api.get_instrument_bars(category, 71, code, start, 3)
-    print(first_temp)
+    # ex_api = TdxExHq_API(False, heartbeat=False, auto_retry=True, raise_exception=True, multithread=True)
+    # ret = ex_api.connect(ex_hq_hosts[1][1], ex_hq_hosts[1][2])
+    # if ret:
+    #     pass
+    # category = QuotePeriodEnum.MINUTELY1.value
+    # code = "09988"
+    # start = 0
+    # first_temp = ex_api.get_instrument_bars(category, 71, code, start, 3)
+    # print(first_temp)
     # data = TdxQuery.get_product_list('50')
     # for item in  data:
         # print(item['Name'])

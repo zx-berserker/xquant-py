@@ -20,6 +20,11 @@ from config.settings import GlobeConfig
 from server.lib.lifespan import lifespan
 from server.cron import CronSchedule
 from tools import Crons, get_cron_router
+import asyncio
+
+# 仅在 Windows 系统下强制切换为 ProactorEventLoop
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 
 GlobeConfig.is_fastapi_server = True

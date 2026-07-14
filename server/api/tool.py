@@ -5,6 +5,7 @@ from quant.spider.tdx.tdx_query import TdxQuery, QuotePeriodEnum as TdxQuotePeri
 from quant.libs.enums import QuotePeriodEnum
 import os
 from pathlib import Path
+from quant.libs.log import XLog
 
 __all__ = ["router"]
 
@@ -12,7 +13,8 @@ router = APIRouter()
 
 
 @router.get('/remove_json')
-async def realtime_quote():   
+async def remove_json():   
+    XLog.info("remove_json()")
     try:
         directory = Path('/home/xquant/cache/')
         for json_file in directory.glob('*.json'):
@@ -23,7 +25,8 @@ async def realtime_quote():
     
 
 @router.get('/remove_log')
-async def realtime_quote():
+async def remove_log():
+    XLog.info("remove_log()")
     try:
         directory = Path('/home/xquant/log/')
         for json_file in directory.glob('*.log'):
