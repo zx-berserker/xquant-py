@@ -164,25 +164,27 @@ def sql_delete_quote_future():
             product_list = mrk.products
             for prod in product_list:
                 print(prod)
-                stmt = delete(QuoteHourly).where(
-                    (QuoteHourly.product_id == prod.id)
-                    & (QuoteHourly.time>="2026-07-02 00:00:00") 
-                    & (QuoteHourly.time<"2026-07-03 00:00:00") 
-                    # & (QuoteHourly.id>=6174852)
-                )
-                result = session.execute(stmt)
-                session.commit()
-                print(f"delete QuoteHourly data: {result.rowcount}")
 
                 stmt = delete(QuoteDaily).where(
-                    (QuoteDaily.product_id == prod.id) 
-                    & (QuoteDaily.time>="2026-07-02 00:00:00") 
-                    & (QuoteDaily.time<"2026-07-03 00:00:00")
+                    (QuoteDaily.id >= 24088472) 
+                    & (QuoteDaily.time>="2026-08-06 00:00:00") 
+                    & (QuoteDaily.time<"2026-08-07 00:00:00")
                     # & (QuoteDaily.id>=23306669)
                 )
                 result = session.execute(stmt)
                 session.commit()
                 print(f"delete QuoteDaily data: {result.rowcount}")
+
+
+                stmt = delete(QuoteHourly).where(
+                    (QuoteHourly.id>= 9431159)
+                    & (QuoteHourly.time>="2026-08-06 00:00:00") 
+                    & (QuoteHourly.time<"2026-08-07 00:00:00") 
+                    # & (QuoteHourly.id>=6174852)
+                )
+                result = session.execute(stmt)
+                session.commit()
+                print(f"delete QuoteHourly data: {result.rowcount}")
 
 
 def future_quote_hourly_update_v2():
@@ -323,5 +325,5 @@ def update_stock_product():
                 product.tdx_code = data['Code']
                 session.commit()
 if __name__ == '__main__':
-
+    sql_delete_quote_future()
     pass

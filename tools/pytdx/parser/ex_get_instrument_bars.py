@@ -50,11 +50,12 @@ class GetInstrumentBars(BaseParser):
                                                                 # 这个1还不确定是什么作用，疑似和是否复权有关
         self.send_pkg = pkg
 
+
     def parseResponse(self, body_buf):
         pos = 0
 
         # 算了，前面不解析了，没太大用
-        # (market, code) = struct.unpack("<B9s", body_buf[0: 10])
+        (market, code) = struct.unpack("<B9s", body_buf[0: 10])
         pos += 18
         (ret_count, ) = struct.unpack('<H', body_buf[pos: pos+2])
         pos += 2
@@ -64,7 +65,11 @@ class GetInstrumentBars(BaseParser):
         for i in range(ret_count):
             year, month, day, hour, minute, pos = get_datetime(self.category, body_buf, pos)
             (open_price, high, low, close, position, trade, price) = struct.unpack("<ffffIIf", body_buf[pos: pos+28])
-            (amount, ) = struct.unpack("f", body_buf[pos+16: pos+16+4])
+            if market in [31,27,71]: #HK
+                (amount, ) = struct.unpack("f", body_buf[pos+16: pos+16+4])
+                position = 0
+            else:
+                amount = 0
 
 
             pos += 28
@@ -90,15 +95,3 @@ class GetInstrumentBars(BaseParser):
 
         return klines
 
-
-
-if __name__ == '__main__':
-    from tools.pytdx.exhq import TdxExHq_API
-    from tools.pytdx.params import TDXParams
-    api = TdxExHq_API()
-    # cmd = GetInstrumentBars(api)
-    # cmd.setParams(4, 7, "10000843", 0, 10)
-    # print(cmd.send_pkg)
-    with api.connect('61.152.107.141', 7727):
-        print(api.to_df(api.get_instrument_bars(TDXParams.KLINE_TYPE_EXHQ_1MIN, 74, 'BABA')).tail())
-        print(api.to_df(api.get_instrument_bars(TDXParams.KLINE_TYPE_DAILY, 31, '00001')).tail())

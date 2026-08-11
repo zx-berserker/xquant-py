@@ -26,6 +26,7 @@ from tools.pytdx.parser.ex_get_instrument_bars import GetInstrumentBars
 from tools.pytdx.parser.ex_get_instrument_info import GetInstrumentInfo
 from tools.pytdx.parser.ex_get_history_instrument_bars_range import GetHistoryInstrumentBarsRange
 from tools.pytdx.parser.ex_get_instrument_quote_list import GetInstrumentQuoteList
+from tools.pytdx.parser.ex_get_quote_bars import GetQuoteBars
 
 
 from tools.pytdx.params import TDXParams
@@ -84,6 +85,12 @@ class TdxExHq_API(BaseSocketClient):
     @update_last_ack_time
     def get_instrument_bars(self, category, market, code, start=0, count=700):
         cmd = GetInstrumentBars(self.client, lock=self.lock)
+        cmd.setParams(category, market, code, start=start, count=count)
+        return cmd.call_api()
+
+    @update_last_ack_time
+    def get_quote_bars(self, category, market, code, start=0, count=700):
+        cmd = GetQuoteBars(self.client, lock=self.lock)
         cmd.setParams(category, market, code, start=start, count=count)
         return cmd.call_api()
 

@@ -26,3 +26,25 @@ async def realtime_quote(
     except Exception as e:
         TdxQuery.is_bad_query(True)
         return Fail(str(e))
+
+
+
+@router.get('/realtime_quote')
+async def realtime_quote(
+    period:str = Query('DAILY', description="period"),
+    market:str = Query('-1', description="market"),
+    code:str = Query("*", description="code"),
+    startTime:str = Query("", description="code"),
+    endTime:str = Query("", description="code"),
+    count:int = Query(100, description="count"),
+):
+    tdx_period = TdxQuotePeriodEnum[period]
+    
+    try:
+        data_list = TdxQuery.get_realtime_quote(period=tdx_period, market=int(market), code=code,startTime=startTime, endTime=endTime, count=count)
+        data_js = json.dumps(data_list)
+        TdxQuery.is_bad_query()
+        return Success(data_js)
+    except Exception as e:
+        TdxQuery.is_bad_query(True)
+        return Fail(str(e))

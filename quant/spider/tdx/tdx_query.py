@@ -147,7 +147,7 @@ class TdxQuery:
 
     
     @classmethod
-    def _get_quote(cls, period:QuotePeriodEnum, market:int, code, start_time:str, end_time:str, count:int=100):
+    def _get_quote(cls, period:QuotePeriodEnum, market:int, code, start_time:str, end_time:str, count:int=100, is_realtime=False):
         ret_data = []
         if not cls.is_active:
             return ret_data
@@ -186,7 +186,10 @@ class TdxQuery:
                 data = cls.ex_api.get_instrument_bars(category, hk_market, code, start, cls.tdx_query_count)
 
             else: #TODO 期货 扩展行情
-                data = cls.ex_future_api.get_instrument_bars(category, market, code, start, cls.tdx_query_count)
+                if is_realtime:
+                    data = cls.ex_future_api.get_quote_bars(category, market, code, start, cls.tdx_query_count)
+                else:
+                    data = cls.ex_future_api.get_instrument_bars(category, market, code, start, cls.tdx_query_count)
             if not data:
                 break
             ret_data.extend(data)
@@ -262,11 +265,11 @@ class TdxQuery:
         else:
             data_df = data_df.tail(count).copy()
         if len(data_df) > 0:
-            data_df.loc[:,'open'] = data_df['open'].round(2)
-            data_df.loc[:,"close"] = data_df["close"].round(2)
-            data_df.loc[:,'high'] = data_df['high'].round(2)
-            data_df.loc[:,'low'] = data_df['low'].round(2)
-            data_df.loc[:,'pct_chg'] = data_df['pct_chg'].round(2)
+            data_df.loc[:,'open'] = data_df['open'].round(3)
+            data_df.loc[:,"close"] = data_df["close"].round(3)
+            data_df.loc[:,'high'] = data_df['high'].round(3)
+            data_df.loc[:,'low'] = data_df['low'].round(3)
+            data_df.loc[:,'pct_chg'] = data_df['pct_chg'].round(3)
             data_df.loc[:,'turn'] = 0
             if market in [0,1]:
                 data_df.loc[:,'hold'] = 0
@@ -274,7 +277,7 @@ class TdxQuery:
             else:
                 data_df.loc[:,'hold'] = data_df['position']
                 data_df.loc[:,'volume'] = data_df['trade']
-                data_df.loc[:,'amount'] = 0
+
         else:
             ret_data_df = data_df
             return data_df
@@ -297,14 +300,14 @@ class TdxQuery:
     
 
     @classmethod
-    def get_realtime_quote(cls, period:QuotePeriodEnum, market:int, code, count:int=240) -> list:
+    def get_realtime_quote(cls, period:QuotePeriodEnum, market:int, code, start_time:str='', end_time:str='', count:int=240) -> list:
         data_list = []
         if not cls.is_active:
             return data_list
         if not cls.is_connected:
             raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR,"TdxQuery: not connected.")
        
-        data_df = cls._get_quote(period, market, code, '', '', count)
+        data_df = cls._get_quote(period, market, code, start_time, end_time, count, True)
         for index, row in data_df.iterrows():
             time = str(row["time"].strftime('%Y-%m-%d %H:%M:%S'))
             data_list.append({
@@ -381,22 +384,29 @@ class TdxQuery:
 
 if __name__ == '__main__':
     TdxQuery.connect()
-    market = 30
-    stock_code = "BUL9"
+    # market = 1
+    # # stock_code = "512880"
     # data = TdxQuery.get_quote(QuotePeriodEnum.HOURLY,market,stock_code, "20260320", "20260320", count=100)
-
-    data = TdxQuery.get_realtime_quote(QuotePeriodEnum.MINUTELY15, market, stock_code,count=20)
+    
+    market = 30
+    code = "AGL9"
+    data = TdxQuery.get_quote(QuotePeriodEnum.DAILY, market, code, '', '', count=20)
     print(data)
     # data = TdxQuery.ex_api.get_markets()
     # ex_api = TdxExHq_API(False, heartbeat=False, auto_retry=True, raise_exception=True, multithread=True)
-    # ret = ex_api.connect(ex_hq_hosts[1][1], ex_hq_hosts[1][2])
+    # ret = ex_api.connect(ex_hq_hosts[2][1], ex_hq_hosts[2][2])
     # if ret:
     #     pass
-    # category = QuotePeriodEnum.MINUTELY1.value
-    # code = "09988"
+    # category = QuotePeriodEnum.DAILY.value
+    # # market = 71
+    # # code = "09988"
+
+    # market = 30
+    # code = "AUL9"
     # start = 0
-    # first_temp = ex_api.get_instrument_bars(category, 71, code, start, 3)
-    # print(first_temp)
+    # ret_data = ex_api.get_instrument_bars(category, market, code, start, 3)
+    # data_df:pd.DataFrame = ex_api.to_df(ret_data)
+    # print(data_df)
     # data = TdxQuery.get_product_list('50')
     # for item in  data:
         # print(item['Name'])
