@@ -147,7 +147,7 @@ class TdxQuery:
 
     
     @classmethod
-    def _get_quote(cls, period:QuotePeriodEnum, market:int, code, start_time:str, end_time:str, count:int=100, is_realtime=False):
+    def _get_quote(cls, period:QuotePeriodEnum, market:int, code, start_time:str, end_time:str, count:int=100, is_realtime=True):
         ret_data = []
         if not cls.is_active:
             return ret_data
@@ -322,7 +322,9 @@ class TdxQuery:
                 # "turn": row["turn"],
                 # "hold": row["hold"],                
             })
+
         return data_list
+
 
 
     @classmethod
@@ -387,10 +389,11 @@ if __name__ == '__main__':
     # market = 1
     # # stock_code = "512880"
     # data = TdxQuery.get_quote(QuotePeriodEnum.HOURLY,market,stock_code, "20260320", "20260320", count=100)
-    
+    time_str = '20260812'
     market = 30
-    code = "AGL9"
-    data = TdxQuery.get_quote(QuotePeriodEnum.DAILY, market, code, '', '', count=20)
+    code = "SS2707"
+    data = TdxQuery.get_realtime_quote(QuotePeriodEnum.DAILY, market, code, time_str, time_str, count=1)
+    
     print(data)
     # data = TdxQuery.ex_api.get_markets()
     # ex_api = TdxExHq_API(False, heartbeat=False, auto_retry=True, raise_exception=True, multithread=True)

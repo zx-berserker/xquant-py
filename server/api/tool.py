@@ -6,6 +6,7 @@ from quant.libs.enums import QuotePeriodEnum
 import os
 from pathlib import Path
 from quant.libs.log import XLog
+from quant.spider.tdx.tdx_query import TdxQuery
 
 __all__ = ["router"]
 
@@ -34,3 +35,14 @@ async def remove_log():
         return Success()
     except Exception as e:
         return Fail(str(e))
+
+
+
+@router.get('/tdx_reconnect')
+async def tdx_reconnect():
+    try:
+        TdxQuery.disconnect()
+        return Success()
+    except Exception as e:
+        return Fail(str(e))
+

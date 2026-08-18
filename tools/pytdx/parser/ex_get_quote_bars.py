@@ -121,3 +121,19 @@ class GetQuoteBars(BaseParser):
 
         return klines
 
+
+
+if __name__ == '__main__':
+
+    from tools.pytdx.exhq import TdxExHq_API
+    from quant.spider.tdx.lib.host import hq_hosts, ex_hq_hosts 
+    from quant.spider.tdx.lib.enum import QuotePeriodEnum
+    ex_api = TdxExHq_API(is_new_version=True)
+    category = QuotePeriodEnum.DAILY.value
+    with ex_api.connect(ex_hq_hosts[-1][1], ex_hq_hosts[-1][2]):
+        market = 30
+        code = "SS2707"
+        print(ex_api.to_df(ex_api.get_quote_bars(category,market,code,0,100)))
+        #print(api.to_df(api.get_history_transaction_data(31,  "01918", 20171026))[["date","price","volume",'zengcang','nature']])
+        #api.to_df(api.get_history_transaction_data(47, 'IFL0', 20170810)).to_excel('//Users//wy//data//iflo.xlsx')
+
