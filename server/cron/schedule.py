@@ -30,12 +30,12 @@ class CronSchedule:
             FutureUpdateWorkerTask.is_active = True
             XLog.info("@cron cron_future_update()")
 
-        @crons.cron("*/1 8 * * *", name="cron_tdx_deacitve", tags=["server"])
+        @crons.cron("0-45 8 * * 1-5", name="cron_tdx_deacitve", tags=["server"])
         async def cron_tdx_deacitve():
             TdxQuery.is_active = False
             XLog.info("@cron cron_tdx_deacitve()")
 
-        @crons.cron("*/1 9 * * *", name="cron_tdx_acitve", tags=["server"])
+        @crons.cron("50-59 8 * * 1-5", name="cron_tdx_acitve", tags=["server"])
         async def cron_tdx_acitve():
             TdxQuery.is_active = True
             XLog.info("@cron cron_tdx_acitve()")

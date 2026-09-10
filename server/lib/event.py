@@ -89,13 +89,19 @@ class EventQueue:
                 
             
 
+class XLogEvent(EventBase):
+    name = "XLogEvent"
+
+    def __init__(self, message):
+        super(XLogEvent, self).__init__(message)
+
 
 
 
 class QuoteUpdateEvent(EventBase):
     name = "QuoteUpdateEvent"
 
-    def __init__(self, message):
+    def __init__(self, message="Finish"):
         super(QuoteUpdateEvent, self).__init__(message)
 
 

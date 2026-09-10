@@ -8,7 +8,7 @@ from server.lib.worker_task import StockUpdateWorkerTask, FutureUpdateWorkerTask
 from quant.libs.log import XLog
 from typing import List
 from quant.spider.east_money import ProductQuery
-from server.lib.event import EventQueue
+from server.lib.event import EventQueue, QuoteUpdateEvent
 import json
 from server.lib.worker import ServerWebWorker
 from uuid import uuid4
@@ -21,12 +21,23 @@ router = APIRouter()
 async def update_exit():
     ServerWebWorker.task_exit()
 
+
+def update_worker_task_finish_callback():
+    event = QuoteUpdateEvent()
+    EventQueue.put_event(event)
+
+# def update_worker_task_exception_callback(e):
+#     event = QuoteUpdateEvent(str(e))
+#     EventQueue.put_event(event)
+
 @router.post("/quote")
 async def update_quote(data_list:List[QuoteUpdate]):
     StockUpdateWorkerTask.update_state = "StockUpdateWorkerTask State: Start."
     try:
-        for item in data_list:
+        for i, item in enumerate(data_list):
             task = StockUpdateWorkerTask(**item.to_dic())
+            if i == len(data_list) - 1:
+                task.add_done_callback(update_worker_task_finish_callback)
             ServerWebWorker.put_task(task)
             XLog.info("StockUpdateWorkerTask(start_time:%s, end_time:%s, period:%s)." % (item.startTime, item.endTime, item.period))
     except Exception as e:
@@ -38,8 +49,10 @@ async def update_quote(data_list:List[QuoteUpdate]):
 async def update_quote(data_list:List[QuoteUpdate]):
     FutureUpdateWorkerTask.update_state = "FutureUpdateWorkerTask State: Start."
     try:
-        for item in data_list:
+        for i, item in enumerate(data_list):
             task = FutureUpdateWorkerTask(**item.to_dic())
+            if i == len(data_list) - 1:
+                task.add_done_callback(update_worker_task_finish_callback)
             ServerWebWorker.put_task(task)
             XLog.info("FutureUpdateWorkerTask(start_time:%s, end_time:%s, period:%s)." % (item.startTime, item.endTime, item.period))
     except Exception as e:
@@ -63,7 +76,7 @@ async def sse_update_quote_root(request: Request):
                 message = f'Stock {StockUpdateWorkerTask.update_state} || Future {FutureUpdateWorkerTask.update_state}({FutureUpdateWorkerTask.is_active}) <Task: {ServerWebWorker.get_task_num()}>'
                 event_id = str(time.time())
                 event = {
-                    "event": "QuoteUpdateEvent", 
+                    "event": "XLogEvent", 
                     "id": event_id,
                     "data": message,
                     "retry": 3000,

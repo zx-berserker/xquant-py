@@ -121,29 +121,29 @@ def sql_stock_delete_quote():
         for exg in exg_list:
             product_list = exg.products
             for product in product_list:
-                stmt = delete(QuoteDaily).where((QuoteDaily.product_id == product.id) &
-                                                (QuoteDaily.time>"2026-03-15"))
-                result = session.execute(stmt)
-                session.commit()
-                print(product)
-                print(f"delete QuoteDaily data: {result.rowcount}")
+                # stmt = delete(QuoteDaily).where((QuoteDaily.product_id == product.id) &
+                #                                 (QuoteDaily.time>"2026-03-15"))
+                # result = session.execute(stmt)
+                # session.commit()
+                # print(product)
+                # print(f"delete QuoteDaily data: {result.rowcount}")
 
-                stmt = delete(QuoteHourly).where((QuoteHourly.product_id == product.id) &
-                                                (QuoteHourly.time>"2026-03-15"))
-                result = session.execute(stmt)
-                session.commit()
-                print(product)
-                print(f"delete QuoteHourly data: {result.rowcount}")
+                # stmt = delete(QuoteHourly).where((QuoteHourly.product_id == product.id) &
+                #                                 (QuoteHourly.time>"2026-03-15"))
+                # result = session.execute(stmt)
+                # session.commit()
+                # print(product)
+                # print(f"delete QuoteHourly data: {result.rowcount}")
 
-                stmt = delete(QuoteWeekly).where((QuoteWeekly.product_id == product.id) &
-                                                (QuoteWeekly.time>"2026-03-08"))
-                result = session.execute(stmt)
-                session.commit()
-                print(product)
-                print(f"delete QuoteWeekly data: {result.rowcount}")
+                # stmt = delete(QuoteWeekly).where((QuoteWeekly.product_id == product.id) &
+                #                                 (QuoteWeekly.time>"2026-03-08"))
+                # result = session.execute(stmt)
+                # session.commit()
+                # print(product)
+                # print(f"delete QuoteWeekly data: {result.rowcount}")
 
                 stmt = delete(QuoteMonthly).where((QuoteMonthly.product_id == product.id) &
-                                                (QuoteMonthly.time>"2026-03-08"))
+                                                (QuoteMonthly.time>"2026-08-30"))
                 result = session.execute(stmt)
                 session.commit()
                 print(product)
@@ -325,5 +325,5 @@ def update_stock_product():
                 product.tdx_code = data['Code']
                 session.commit()
 if __name__ == '__main__':
-    sql_delete_quote_future()
+    sql_stock_delete_quote()
     pass

@@ -9,7 +9,7 @@ from quant.update import update_stock_product_quote, update_future_product_quote
 from quant.libs.enums import QuotePeriodEnum
 import time
 from quant.libs.log import XLog
-from .event import QuoteUpdateEvent, EventQueue
+from .event import QuoteUpdateEvent, EventQueue, XLogEvent
 from server.lib.worker_task import WorkerTaskBase
 from quant.spider.tdx import TdxQuery
 
@@ -126,7 +126,7 @@ class ServerXLogEventWorker(WorkerBass):
                 continue
             message = XLog.fastapi_get()
             if message:
-                event = QuoteUpdateEvent(message)
+                event = XLogEvent(message)
                 EventQueue.put_event(event)
 
 
