@@ -158,7 +158,10 @@ class TdxQuery:
             date_time_start = None
             date_time_end = None
         else:
-            date_time_start = str(pd.to_datetime(start_time, format='%Y%m%d'))
+            if len(start_time.split(' ')) == 2:
+                date_time_start = str(pd.to_datetime(start_time, format='%Y%m%d  %H:%M:%S'))
+            else:
+                date_time_start = str(pd.to_datetime(start_time, format='%Y%m%d'))
             if len(end_time.split(' ')) == 2:
                 date_time_end = str(pd.to_datetime(end_time, format='%Y%m%d %H:%M:%S'))
             else:

@@ -25,7 +25,7 @@ class CronSchedule:
              now = datetime.now(shanghai_tz)
              XLog.info("@cron(%s) cron_start() xquant running." % str(now))
 
-        @crons.cron("*/10 0-6 * * 1-6", name="cron_future_update", tags=["server"])
+        @crons.cron("*/1 0-6 * * 1-6", name="cron_future_update", tags=["server"])
         async def cron_future_update():
             FutureUpdateCronWorkerTask.is_active = True
             XLog.info("@cron cron_future_update()")
@@ -48,7 +48,7 @@ class CronSchedule:
             TdxQuery.disconnect()
 
 
-        @crons.cron("*/10 15-23 * * 1-5", name="cron_future_forbidden_update", tags=["server"])
+        @crons.cron("*/1 15-23 * * 1-5", name="cron_future_forbidden_update", tags=["server"])
         async def cron_future_forbidden_update():
             FutureUpdateCronWorkerTask.is_active = False
             XLog.info("@cron cron_future_forbidden_update()")
