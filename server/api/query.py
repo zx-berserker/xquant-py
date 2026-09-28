@@ -3,6 +3,7 @@ from server.schema import QuoteUpdate, Fail, Success, CookieUpdate
 import json
 from quant.spider.tdx.tdx_query import TdxQuery, QuotePeriodEnum as TdxQuotePeriodEnum
 from quant.libs.enums import QuotePeriodEnum
+from quant.libs.log import XLog
 
 __all__ = ["router"]
 
@@ -27,5 +28,6 @@ async def realtime_quote(
         TdxQuery.is_bad_query()
         return Success(data_js)
     except Exception as e:
+        XLog.print(e)
         TdxQuery.is_bad_query(True)
         return Fail(str(e))

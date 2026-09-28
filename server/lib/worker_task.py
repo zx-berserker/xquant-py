@@ -29,7 +29,7 @@ class WorkerTaskBase(XTask):
 
 
 class StockUpdateWorkerTask(WorkerTaskBase):
-    update_state = 'Update State'
+    update_state = 'StockUpdateWorkerTask Update State'
     is_active = True 
 
     def __init__(self, period:QuotePeriodEnum, start_time=None, end_time=None, limit=100, tdx_code:str=None, exchange_code=None):
@@ -115,9 +115,8 @@ class StockUpdateWorkerTask(WorkerTaskBase):
         StockUpdateWorkerTask.update_state = "StockUpdateWorkerTask State: finished."
     
 
-
 class FutureUpdateWorkerTask(XTask):
-    update_state = 'Update State'
+    update_state = 'FutureUpdateWorkerTask Update State'
     is_active = True 
 
     def __init__(self, period:QuotePeriodEnum, start_time=None, end_time=None, limit=100, market_code:str=None, future_code:str=None):
@@ -135,8 +134,12 @@ class FutureUpdateWorkerTask(XTask):
         self.updater.exit()
         TdxQuery.is_active = False
 
+    @classmethod
+    def set_update_state(cls, state:str):
+        cls.update_state = state
+
     def task_main(self):
-        FutureUpdateWorkerTask.update_state = "FutureUpdateWorkerTask State: running."
+        self.set_update_state(f"{self.name} State: running.")
         tdx_period_type = TdxQuotePeriodEnum[self.period.name]
         query_list = []
         with SQLAlchemy.session_context() as session:
@@ -197,8 +200,17 @@ class FutureUpdateWorkerTask(XTask):
             XLog.info(preflex + "finish")
 
         XLog.info("update_future_product_quote end.")
-        FutureUpdateWorkerTask.update_state = "FutureUpdateWorkerTask State: finished."
+        self.set_update_state(f"{self.name} State: finished.")
 
+
+
+class FutureUpdateCronWorkerTask(FutureUpdateWorkerTask):
+    update_state = 'FutureUpdateCronWorkerTask Update State'
+    is_active = False 
+
+    def __init__(self, period:QuotePeriodEnum, start_time=None, end_time=None, limit=100, market_code:str=None, future_code:str=None):
+        super(FutureUpdateCronWorkerTask, self).__init__(period, start_time, end_time, limit, market_code, future_code)
+        self.name = 'FutureUpdateCronWorkerTask'
 
 
 if __name__ == '__main__':

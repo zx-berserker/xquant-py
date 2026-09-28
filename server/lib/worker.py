@@ -109,7 +109,6 @@ class ServerWebWorker(WorkerBass):
 
             except Exception as e:
                 time.sleep(10)
-                # XLog.error(f'ServerWebWorker(): {str(e)}')
                 pass
 
 
@@ -128,6 +127,7 @@ class ServerXLogEventWorker(WorkerBass):
             if message:
                 event = XLogEvent(message)
                 EventQueue.put_event(event)
+
 
 
 class ServerWorkerController:

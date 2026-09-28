@@ -3,7 +3,7 @@
 date: 2026/01/02
 author: Berserker
 """
-from quant.spider.tdx.lib.host import hq_hosts, ex_hq_hosts 
+from quant.spider.tdx.lib.host import hq_hosts, ex_hq_hk_hosts, ex_hq_funture_hosts 
 from tools.pytdx.hq import TdxHq_API
 from tools.pytdx.exhq import TdxExHq_API
 from quant.libs.error import XException, ErrorCodeEnum
@@ -82,7 +82,7 @@ class TdxQuery:
                 continue
         while cls.is_active:
             if len(ex_hq_hosts_list) == 0:
-                ex_hq_hosts_list.extend(ex_hq_hosts[0:5])
+                ex_hq_hosts_list.extend(ex_hq_hk_hosts)
             _ex_hq_name, _ex_hq_ip, _ex_hq_port, _ex_hq_is_new = ex_hq_hosts_list.pop(0)
             try:
                 cls.ex_api = TdxExHq_API(_ex_hq_is_new, heartbeat=False, auto_retry=True, raise_exception=True, multithread=True)
@@ -95,7 +95,7 @@ class TdxQuery:
 
         while cls.is_active:
             if len(ex_hq_future_hosts_list) == 0:
-                ex_hq_future_hosts_list.extend(ex_hq_hosts[-2:])
+                ex_hq_future_hosts_list.extend(ex_hq_funture_hosts)
             _ex_hq_future_name, _ex_hq_future_ip, _ex_hq_future_port, _ex_hq_future_is_new = ex_hq_future_hosts_list.pop(0)
             try:
                 cls.ex_future_api = TdxExHq_API(_ex_hq_future_is_new, heartbeat=False, auto_retry=True, raise_exception=True, multithread=True)
@@ -159,7 +159,10 @@ class TdxQuery:
             date_time_end = None
         else:
             date_time_start = str(pd.to_datetime(start_time, format='%Y%m%d'))
-            date_time_end = str(pd.to_datetime(end_time+' 23:59:59', format='%Y%m%d %H:%M:%S'))
+            if len(end_time.split(' ')) == 2:
+                date_time_end = str(pd.to_datetime(end_time, format='%Y%m%d %H:%M:%S'))
+            else:
+                date_time_end = str(pd.to_datetime(end_time+' 23:59:59', format='%Y%m%d %H:%M:%S'))
         start = 0
 
         if period == QuotePeriodEnum.MINUTELY10:
@@ -234,9 +237,9 @@ class TdxQuery:
 
         data_df.loc[:,'datetime'] = data_df['datetime'].apply(data_time_fix)
         
-        data_df.loc[:,'time'] = pd.to_datetime(data_df['datetime'])
+        data_df['time'] = pd.to_datetime(data_df['datetime'])
         # data_df.loc[:,'time'] = data_df['datetime']
-        data_df.loc[:,'datetime'] = pd.to_datetime(data_df['datetime'])
+        data_df['datetime'] = pd.to_datetime(data_df['datetime'])
         data_df = data_df.copy().infer_objects(copy=False).set_index('datetime').sort_index()
         if period == QuotePeriodEnum.MINUTELY10:
             args = {
@@ -307,9 +310,12 @@ class TdxQuery:
         if not cls.is_connected:
             raise XException(ErrorCodeEnum.CODE_SYSTEM_ERROR,"TdxQuery: not connected.")
        
-        data_df = cls._get_quote(period, market, code, start_time, end_time, count, True)
+        data_df:pd.DataFrame = cls._get_quote(period, market, code, start_time, end_time, count, True)
         for index, row in data_df.iterrows():
-            time = str(row["time"].strftime('%Y-%m-%d %H:%M:%S'))
+            if type(row["time"]) is str:
+                time = row["time"]
+            else:
+                time = str(row["time"].strftime('%Y-%m-%d %H:%M:%S'))
             data_list.append({
                 "Date": time,
                 "Open": row["open"],
@@ -386,24 +392,31 @@ class TdxQuery:
 
 if __name__ == '__main__':
     TdxQuery.connect()
-    # market = 1
-    # # stock_code = "512880"
-    # data = TdxQuery.get_quote(QuotePeriodEnum.HOURLY,market,stock_code, "20260320", "20260320", count=100)
-    time_str = '20260812'
-    market = 30
-    code = "SS2707"
-    data = TdxQuery.get_realtime_quote(QuotePeriodEnum.DAILY, market, code, time_str, time_str, count=1)
-    
-    print(data)
+    # for _hq_name, _hq_ip, _hq_port, _hq_is_new in hq_hosts[0:]:
+    #     print(_hq_name)
+    #     api = TdxHq_API(_hq_is_new, heartbeat=False, auto_retry=True, raise_exception=True, multithread=True)
+    #     ret = api.connect(_hq_ip, _hq_port)
+    #     # market = 1
+    #     # # stock_code = "512880"
+    #     # data = TdxQuery.get_quote(QuotePeriodEnum.HOURLY,market,stock_code, "20260320", "20260320", count=100)
+    #     time_str = '20260812'
+    #     market = 1
+    #     code = "512100"
+    #     # data = TdxQuery.get_realtime_quote(QuotePeriodEnum.DAILY, market, code, time_str, time_str, count=1)
+    #     data = api.get_security_bars(QuotePeriodEnum.DAILY.value, market, code, 0, 3)
+    #     api.disconnect()
+    #     print(data)
     # data = TdxQuery.ex_api.get_markets()
     # ex_api = TdxExHq_API(False, heartbeat=False, auto_retry=True, raise_exception=True, multithread=True)
     # ret = ex_api.connect(ex_hq_hosts[2][1], ex_hq_hosts[2][2])
     # if ret:
     #     pass
-    # category = QuotePeriodEnum.DAILY.value
-    # # market = 71
-    # # code = "09988"
-
+    category = QuotePeriodEnum.HOURLY
+    market = 1
+    code = "512880"
+    data = TdxQuery.get_realtime_quote(category, market, code, '', '', 240)
+    data_js = json.dumps(data)
+    print(data_js)
     # market = 30
     # code = "AUL9"
     # start = 0

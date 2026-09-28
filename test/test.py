@@ -113,27 +113,32 @@ def pandas_test():
 
 
 
+class Test:
+    info = "AAAAAAAAA"
+
+    @classmethod
+    def set_update_state(cls, info:str):
+        cls.info = info
+
+    def __init__(self):
+
+        self.set_update_state("BBBBBBBBBB")
+
+
+
+class Test2(Test):
+
+    def __init__(self):
+        super(Test2, self).__init__()
+
 def xthread_test():
     test =  ProxyPool()
     test.start()
     test.join()
     
 if __name__ == '__main__':
-    # test = "".join(random.choices(string.digits, k=14))
-    # # test = "".join(random.sample(string.ascii_letters + string.digits + "-_", 25))
-    # print(test)
-    # # a = [0,1,2,3,4,5]
-    # # print(a[:1])
-    a = f'{True}'
-    print(a)
-
-    from datetime import datetime, timedelta
-
-    # 获取当前日期和时间
-    now = datetime.today()
-
-    # 减去 2 天
-    time = now - timedelta(days=2)
-
-    start_time = datetime(year=time.year,month=time.month,day=time.day,hour=17,tzinfo=)
-    print(start_time.timestamp())
+    t = Test2()
+    t.set_update_state("CCCCCCCCCCC")
+    print(Test.info)
+    print(t.info)
+    print(Test2.info)

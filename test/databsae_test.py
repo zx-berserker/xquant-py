@@ -113,20 +113,27 @@ def sql_stock_hk_delete_quote():
 
 def sql_stock_delete_quote():
     with SQLAlchemy.session_context() as session:
-        exg_list = session.query(Exchange).filter((Exchange.code == "SH") |
-                                                  (Exchange.code == "SZ") |
+        exg_list = session.query(Exchange).filter(
+                                                #   (Exchange.code == "SH") |
+                                                #   (Exchange.code == "SZ") |
                                                   (Exchange.code == "HK") |
                                                   (Exchange.code == "GI") |
                                                   (Exchange.code == "HKI")).all()
         for exg in exg_list:
             product_list = exg.products
             for product in product_list:
-                # stmt = delete(QuoteDaily).where((QuoteDaily.product_id == product.id) &
-                #                                 (QuoteDaily.time>"2026-03-15"))
-                # result = session.execute(stmt)
-                # session.commit()
-                # print(product)
-                # print(f"delete QuoteDaily data: {result.rowcount}")
+                data_list = session.query(QuoteDaily).filter((QuoteDaily.time == '2026-09-21') &
+                                                             (QuoteDaily.product_id == product.id)).all()
+                length = len(data_list)
+                if length > 1:
+                    for i in range(0, length-1):
+                        print(product, data_list[i].id)
+                        stmt = delete(QuoteDaily).where((QuoteDaily.product_id == product.id) &
+                                                        (QuoteDaily.id== data_list[i].id))
+                        result = session.execute(stmt)
+                        session.commit()
+                        print(product)
+                        print(f"delete QuoteDaily data: {result.rowcount}")
 
                 # stmt = delete(QuoteHourly).where((QuoteHourly.product_id == product.id) &
                 #                                 (QuoteHourly.time>"2026-03-15"))
@@ -142,12 +149,12 @@ def sql_stock_delete_quote():
                 # print(product)
                 # print(f"delete QuoteWeekly data: {result.rowcount}")
 
-                stmt = delete(QuoteMonthly).where((QuoteMonthly.product_id == product.id) &
-                                                (QuoteMonthly.time>"2026-08-30"))
-                result = session.execute(stmt)
-                session.commit()
-                print(product)
-                print(f"delete QuoteMonthly data: {result.rowcount}")
+                # stmt = delete(QuoteMonthly).where((QuoteMonthly.product_id == product.id) &
+                #                                 (QuoteMonthly.time>"2026-08-30"))
+                # result = session.execute(stmt)
+                # session.commit()
+                # print(product)
+                # print(f"delete QuoteMonthly data: {result.rowcount}")
 
 def sql_delete_quote_future():
     with SQLAlchemy.session_context() as session:
@@ -163,28 +170,24 @@ def sql_delete_quote_future():
             print(mrk)
             product_list = mrk.products
             for prod in product_list:
-                print(prod)
+                data_list = session.query(QuoteDaily).filter((QuoteDaily.time == '2026-09-21') &
+                                                             (QuoteDaily.product_id == prod.id)).all()
+                if len(data_list)>1:
+                    print(prod)
 
-                stmt = delete(QuoteDaily).where(
-                    (QuoteDaily.id >= 24088472) 
-                    & (QuoteDaily.time>="2026-08-06 00:00:00") 
-                    & (QuoteDaily.time<"2026-08-07 00:00:00")
-                    # & (QuoteDaily.id>=23306669)
-                )
-                result = session.execute(stmt)
-                session.commit()
-                print(f"delete QuoteDaily data: {result.rowcount}")
+                # temp_index = index + 1
+                # if temp_index * 2 > len(data_list):
+                #     break
+                # temp_list = [it.time for it in data_list[temp_index:]]
+                # if data.time in temp_list:
+                #     print(prod, data.time)
+                #     stmt = delete(QuoteHourly).where(
+                #         (QuoteHourly.id == data.id) 
+                #     )
+                #     result = session.execute(stmt)
+                #     session.commit()
+                #     print(f"delete QuoteHourly data: {result.rowcount}")
 
-
-                stmt = delete(QuoteHourly).where(
-                    (QuoteHourly.id>= 9431159)
-                    & (QuoteHourly.time>="2026-08-06 00:00:00") 
-                    & (QuoteHourly.time<"2026-08-07 00:00:00") 
-                    # & (QuoteHourly.id>=6174852)
-                )
-                result = session.execute(stmt)
-                session.commit()
-                print(f"delete QuoteHourly data: {result.rowcount}")
 
 
 def future_quote_hourly_update_v2():

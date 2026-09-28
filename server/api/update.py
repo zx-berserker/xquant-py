@@ -4,7 +4,7 @@ from sse_starlette.sse import EventSourceResponse
 from fastapi import FastAPI, Request
 import time
 from server.lib.worker import ServerWebWorker
-from server.lib.worker_task import StockUpdateWorkerTask, FutureUpdateWorkerTask
+from server.lib.worker_task import StockUpdateWorkerTask, FutureUpdateWorkerTask, FutureUpdateCronWorkerTask
 from quant.libs.log import XLog
 from typing import List
 from quant.spider.east_money import ProductQuery
@@ -59,6 +59,21 @@ async def update_quote(data_list:List[QuoteUpdate]):
         return Fail(str(e))
     return Success()
 
+@router.post("/quote_future_cron")
+async def update_quote_cron(data_list:List[QuoteUpdate]):
+    FutureUpdateCronWorkerTask.update_state = "FutureUpdateCronWorkerTask State: Start."
+    try:
+        for i, item in enumerate(data_list):
+            task = FutureUpdateCronWorkerTask(**item.to_dic())
+            if i == len(data_list) - 1:
+                task.add_done_callback(update_worker_task_finish_callback)
+            ServerWebWorker.put_task(task)
+            XLog.info("FutureUpdateCronWorkerTask(start_time:%s, end_time:%s, period:%s)." % (item.startTime, item.endTime, item.period))
+    except Exception as e:
+        return Fail(str(e))
+    return Success()
+
+
 
 @router.get("/sse")
 async def sse_update_quote_root(request: Request):
@@ -73,7 +88,7 @@ async def sse_update_quote_root(request: Request):
                 XLog.print("XQuant Client disconnected from SSE.")
                 break
             if is_first:
-                message = f'Stock {StockUpdateWorkerTask.update_state} || Future {FutureUpdateWorkerTask.update_state}({FutureUpdateWorkerTask.is_active}) <Task: {ServerWebWorker.get_task_num()}>'
+                message = f'{StockUpdateWorkerTask.update_state} || {FutureUpdateWorkerTask.update_state} || {FutureUpdateCronWorkerTask.update_state}({FutureUpdateCronWorkerTask.is_active}) <Task: {ServerWebWorker.get_task_num()}>'
                 event_id = str(time.time())
                 event = {
                     "event": "XLogEvent", 

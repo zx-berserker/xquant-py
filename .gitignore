@@ -1,6 +1,7 @@
 .conda/
 *.pyc
 .venv/
+.venv312/
 .vscode/
 config/secure.py
 .DS_Store

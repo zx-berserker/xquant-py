@@ -7,7 +7,7 @@ from tools import Crons
 from server.lib.worker import ServerWebWorker
 from quant.libs.log import XLog
 from datetime import datetime
-from server.lib.worker_task import FutureUpdateWorkerTask
+from server.lib.worker_task import FutureUpdateWorkerTask, FutureUpdateCronWorkerTask
 from quant.spider.tdx import TdxQuery
 import pytz
 # from server.lib.cookie import Cookie
@@ -27,7 +27,7 @@ class CronSchedule:
 
         @crons.cron("*/10 0-6 * * 1-6", name="cron_future_update", tags=["server"])
         async def cron_future_update():
-            FutureUpdateWorkerTask.is_active = True
+            FutureUpdateCronWorkerTask.is_active = True
             XLog.info("@cron cron_future_update()")
 
         @crons.cron("0-45 8 * * 1-5", name="cron_tdx_deacitve", tags=["server"])
@@ -50,7 +50,7 @@ class CronSchedule:
 
         @crons.cron("*/10 15-23 * * 1-5", name="cron_future_forbidden_update", tags=["server"])
         async def cron_future_forbidden_update():
-            FutureUpdateWorkerTask.is_active = False
+            FutureUpdateCronWorkerTask.is_active = False
             XLog.info("@cron cron_future_forbidden_update()")
 
 
