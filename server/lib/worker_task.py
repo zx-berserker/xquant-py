@@ -118,9 +118,9 @@ class StockUpdateWorkerTask(WorkerTaskBase):
 class FutureUpdateWorkerTask(XTask):
     update_state = 'FutureUpdateWorkerTask Update State'
     is_active = True 
-
+    name = 'FutureUpdateWorkerTask'
     def __init__(self, period:QuotePeriodEnum, start_time=None, end_time=None, limit=100, market_code:str=None, future_code:str=None):
-        super(FutureUpdateWorkerTask, self).__init__('FutureUpdateWorkerTask')
+        super(FutureUpdateWorkerTask, self).__init__(self.name)
         TdxQuery.is_active = True
         self.period:QuotePeriodEnum = period
         self.start_time = start_time
@@ -207,10 +207,10 @@ class FutureUpdateWorkerTask(XTask):
 class FutureUpdateCronWorkerTask(FutureUpdateWorkerTask):
     update_state = 'FutureUpdateCronWorkerTask Update State'
     is_active = False 
+    name = 'FutureUpdateCronWorkerTask'
 
     def __init__(self, period:QuotePeriodEnum, start_time=None, end_time=None, limit=100, market_code:str=None, future_code:str=None):
         super(FutureUpdateCronWorkerTask, self).__init__(period, start_time, end_time, limit, market_code, future_code)
-        self.name = 'FutureUpdateCronWorkerTask'
 
 
 if __name__ == '__main__':

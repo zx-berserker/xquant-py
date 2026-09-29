@@ -59,6 +59,7 @@ async def update_quote(data_list:List[QuoteUpdate]):
         return Fail(str(e))
     return Success()
 
+
 @router.post("/quote_future_cron")
 async def update_quote_cron(data_list:List[QuoteUpdate]):
     FutureUpdateCronWorkerTask.update_state = "FutureUpdateCronWorkerTask State: Start."
