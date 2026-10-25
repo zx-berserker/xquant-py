@@ -10,3 +10,4 @@ migrations/*
 alembic.ini
 config/temp_cookies.json
 log/
+cache/

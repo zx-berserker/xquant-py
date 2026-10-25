@@ -20,6 +20,8 @@ from quant.models.quote_monthly import QuoteMonthly
 from quant.models.quote_weekly import QuoteWeekly
 from quant.libs.log import XLog
 import shutil
+import requests
+from config.settings import GlobeConfig
 
 def update_industry_table():
     reader = IniFileReader('./file/industry.ini')
@@ -78,6 +80,8 @@ def update_stock_block_table():
 
 
 def update_quote_from_cache_file(dir_path:str='/home/xquant/cache', dst_path='/home/xquant/cache/Done'):
+    GlobeConfig.is_print = True
+    GlobeConfig.is_log_file = False
     file_name_list = os.listdir(dir_path)
     data_list_dic:dict[str, list[str]] = {}
     data_list_dic[QuotePeriodEnum.DAILY.name] = []
@@ -126,7 +130,11 @@ def update_quote_from_cache_file(dir_path:str='/home/xquant/cache', dst_path='/h
             shutil.move(src, dst)
         XLog.info(key + " finish")
 
-    
+    try:
+        rss = requests.get('http://65.49.207.215:8010/api/v1/xquant/tool/json/remove')
+        XLog.info("remove_json")
+    except Exception as e:
+        XLog.error(e)
     XLog.info("end.")
 
 
