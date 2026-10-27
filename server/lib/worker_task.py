@@ -96,7 +96,7 @@ class StockUpdateWorkerTask(WorkerTaskBase):
             exg = query["exhange"]
             data_list = query["products"]
             preflex = "%s_%s-%s(%s)-" % (self.start_time, self.end_time, exg.code, exg.east_money_code)
-            preflex = preflex.replace(" ", "-")
+            preflex = preflex.replace(" ", "T").replace(':','')
             update_task_factory = CacheFileWriterTaskFactory(file_path, file_base_name, data_list, flush_count, slice_capacity, file_prefix_base_name=preflex)
             spider_factory = TdxQuoteSpiderTaskTaskFactory(tdx_period_type, self.start_time, self.end_time, self.limit)
             param_list = spider_factory.task_param_list_generator(None, data_list)
@@ -185,7 +185,7 @@ class FutureUpdateWorkerTask(XTask):
             market = query["market"]
             data_list = query["products"]
             preflex = "%s_%s-%s(%s)-" % (self.start_time, self.end_time, market.sname, market.code)
-            preflex = preflex.replace(" ", "-")
+            preflex = preflex.replace(" ", "T").replace(':','')
             update_task_factory = CacheFileWriterTaskFactory(file_path, file_base_name, data_list, flush_count, slice_capacity, file_prefix_base_name=preflex)
             spider_factory = TdxQuoteSpiderTaskTaskFactory(tdx_period_type, self.start_time, self.end_time, self.limit)
             param_list = spider_factory.task_param_list_generator(market, data_list)
