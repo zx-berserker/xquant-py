@@ -137,8 +137,6 @@ def xthread_test():
     test.join()
     
 if __name__ == '__main__':
-    t = Test2()
-    t.set_update_state("CCCCCCCCCCC")
-    print(Test.info)
-    print(t.info)
-    print(Test2.info)
+    temp = 'asdas ddd'
+    temp = temp.replace(' ', '-')
+    print(temp)
