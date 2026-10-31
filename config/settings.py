@@ -8,6 +8,7 @@ from config.secure import LOG_FILE_PATH
 import os
 
 root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 class GlobeConfig:
     is_fastapi_server = True

@@ -39,3 +39,6 @@ class CookieUpdate(BaseModel):
             'temp_cookie_nid18': self.cookieNid18,
         }
 
+
+class CotUpdate(BaseModel):
+    year:str

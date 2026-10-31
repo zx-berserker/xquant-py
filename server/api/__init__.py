@@ -7,4 +7,4 @@ __all__ = ["router"]
 router = APIRouter()
 router.include_router(update_router, prefix="/xquant/update")
 router.include_router(query_router, prefix="/xquant/query")
-router.include_router(tool_router, prefix="/xquant/tool")
+router.include_router(tool_router, prefix="/xquant/tool")    

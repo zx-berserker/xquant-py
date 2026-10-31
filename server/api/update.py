@@ -1,17 +1,17 @@
 from fastapi import APIRouter
-from server.schema import QuoteUpdate, Fail, Success, CookieUpdate
+from server.schema import QuoteUpdate, Fail, Success, CookieUpdate, CotUpdate
 from sse_starlette.sse import EventSourceResponse
 from fastapi import FastAPI, Request
-import time
+import time, json
 from server.lib.worker import ServerWebWorker
 from server.lib.worker_task import StockUpdateWorkerTask, FutureUpdateWorkerTask, FutureUpdateCronWorkerTask
 from quant.libs.log import XLog
 from typing import List
 from quant.spider.east_money import ProductQuery
 from server.lib.event import EventQueue, QuoteUpdateEvent
-import json
 from server.lib.worker import ServerWebWorker
 from uuid import uuid4
+from quant.tool.cftc.task import FutureCotUpdateTask
 
 __all__ = ["router"]
 
@@ -30,8 +30,8 @@ def update_worker_task_finish_callback():
 #     event = QuoteUpdateEvent(str(e))
 #     EventQueue.put_event(event)
 
-@router.post("/quote")
-async def update_quote(data_list:List[QuoteUpdate]):
+@router.post("/stock/quote")
+async def update_stock_quote(data_list:List[QuoteUpdate]):
     StockUpdateWorkerTask.update_state = "StockUpdateWorkerTask State: Start."
     try:
         for i, item in enumerate(data_list):
@@ -45,8 +45,8 @@ async def update_quote(data_list:List[QuoteUpdate]):
     return Success()
 
 
-@router.post("/quote_future")
-async def update_quote(data_list:List[QuoteUpdate]):
+@router.post("/future/quote")
+async def update_future_quote(data_list:List[QuoteUpdate]):
     FutureUpdateWorkerTask.update_state = "FutureUpdateWorkerTask State: Start."
     try:
         for i, item in enumerate(data_list):
@@ -60,8 +60,8 @@ async def update_quote(data_list:List[QuoteUpdate]):
     return Success()
 
 
-@router.post("/quote_future_cron")
-async def update_quote_cron(data_list:List[QuoteUpdate]):
+@router.post("/future/quote_cron")
+async def update_future_quote_cron(data_list:List[QuoteUpdate]):
     FutureUpdateCronWorkerTask.update_state = "FutureUpdateCronWorkerTask State: Start."
     try:
         for i, item in enumerate(data_list):
@@ -73,6 +73,18 @@ async def update_quote_cron(data_list:List[QuoteUpdate]):
     except Exception as e:
         return Fail(str(e))
     return Success()
+
+
+@router.post("/future/cot")
+async def update_future_cot(psat_data:CotUpdate):
+    try:
+        task = FutureCotUpdateTask(psat_data.year)
+        ServerWebWorker.put_task(task)
+    except Exception as e:
+        return Fail(str(e))
+    return Success()
+
+
 
 
 

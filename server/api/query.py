@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Query
 from server.schema import QuoteUpdate, Fail, Success, CookieUpdate
-import json
+import json, os
 from quant.spider.tdx.tdx_query import TdxQuery, QuotePeriodEnum as TdxQuotePeriodEnum
 from quant.libs.enums import QuotePeriodEnum
 from quant.libs.log import XLog
+from config.settings import ROOT_DIR
+import pandas as pd
 
 __all__ = ["router"]
 
@@ -16,8 +18,8 @@ async def realtime_quote(
     period:str = Query('DAILY', description="period"),
     market:str = Query('-1', description="market"),
     code:str = Query("*", description="code"),
-    startTime:str = Query("", description="code"),
-    endTime:str = Query("", description="code"),
+    startTime:str = Query("", description="start time"),
+    endTime:str = Query("", description="end time"),
     count:int = Query(100, description="count"),
 ):
     tdx_period = TdxQuotePeriodEnum[period]
@@ -30,4 +32,20 @@ async def realtime_quote(
     except Exception as e:
         XLog.print(e)
         TdxQuery.is_bad_query(True)
+        return Fail(str(e))
+
+
+@router.get('/cot')
+async def get_cot(
+    code:str = Query("*", description="code"),
+):
+
+    cache_path = os.path.join(ROOT_DIR, 'quant', 'tool', 'cache', 'indicator.json')
+    try:
+        with open(cache_path, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+        data_js = data[code]
+        Success(data_js) 
+    except Exception as e:
+        XLog.print(e)
         return Fail(str(e))

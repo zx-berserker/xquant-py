@@ -1,3 +1,8 @@
+# -*- encoding:utf-8 -*-
+"""
+date: 2026/10/29
+author: Berserker
+"""
 import asyncio, httpx
 from pathlib import Path
 import json
@@ -12,7 +17,7 @@ else:
     HOST = "65.49.207.215"
 
 
-async def adownload(name: str):
+async def json_adownload(name: str):
     url = f'http://{HOST}:8010/api/v1/xquant/tool/json/download'
     param = {"name":name}
     file_path = os.path.join('/home/xquant/cache', name)
@@ -25,13 +30,13 @@ async def adownload(name: str):
                     f.write(data)
             XLog.info('Download: ', name)
 
-async def main():
+async def json_adownload_main():
     try:
         res = httpx.get(f'http://{HOST}:8010/api/v1/xquant/tool/json/list')
         res_json = res.json()
         name_list = json.loads(res_json['data'])
         XLog.info("json_list:", name_list)
-        await asyncio.gather(*(adownload(name) for name in name_list))
+        await asyncio.gather(*(json_adownload(name) for name in name_list))
     except Exception as e:
         XLog.error(e)
 
@@ -40,4 +45,4 @@ async def main():
 if __name__ == '__main__':
     GlobeConfig.is_print = True
     GlobeConfig.is_log_file = False
-    asyncio.run(main())
+    asyncio.run(json_adownload_main())
